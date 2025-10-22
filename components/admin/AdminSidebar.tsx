@@ -14,10 +14,10 @@ const NavLink: React.FC<{
 }> = ({ tabName, label, activeTab, setActiveTab }) => (
     <button
         onClick={() => setActiveTab(tabName)}
-        className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors duration-200 ${
+        className={`w-full text-left px-4 py-2.5 rounded-lg transition-all duration-300 ${
             activeTab === tabName
-                ? 'bg-brand-purple text-white shadow-md'
-                : 'text-gray-600 hover:bg-gray-200'
+                ? 'bg-brand-purple text-white shadow-lg neon-glow'
+                : 'text-gray-300 hover:bg-brand-purple/20 hover:text-brand-purple hover:neon-glow-hover'
         }`}
     >
         {label}
@@ -41,9 +41,16 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
     ];
 
     return (
-        <div className="w-64 bg-white border-r flex flex-col h-full shadow-lg">
-            <div className="p-4 border-b">
-                <h2 className="text-2xl font-bold text-gray-800">Admin Panel</h2>
+        <div className="w-64 glass border-r border-white/10 flex flex-col h-full shadow-2xl">
+            <div className="p-4 border-b border-white/10">
+                <div className="flex items-center gap-3 mb-4">
+                    <img
+                        src="/images/pmlogo.png"
+                        alt="Priyesh Mishra Logo"
+                        className="h-8 w-auto"
+                    />
+                    <h2 className="text-xl font-bold gradient-text">Admin Panel</h2>
+                </div>
             </div>
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {navItems.map(item => (
@@ -56,10 +63,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
                     />
                 ))}
             </nav>
-            <div className="p-4 border-t">
+            <div className="p-4 border-t border-white/10">
                 <button
                     onClick={onLogout}
-                    className="w-full text-left px-4 py-2.5 rounded-lg text-gray-600 hover:bg-red-100 hover:text-red-700 transition-colors duration-200"
+                    className="w-full text-left px-4 py-2.5 rounded-lg text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-all duration-300"
                 >
                     Logout
                 </button>

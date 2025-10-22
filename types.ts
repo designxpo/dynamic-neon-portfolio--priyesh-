@@ -111,12 +111,14 @@ export interface Skill {
   id: string;
   skillName: string;
   icon: string;
+  image?: Image;
 }
 
 export interface RawSkill {
     id: string;
     skillName: string;
     skillIcon: string;
+    image?: Image;
 }
 
 

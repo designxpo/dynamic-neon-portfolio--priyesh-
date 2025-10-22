@@ -28,7 +28,7 @@ export const getIcon = (iconName: string): React.ReactNode => {
 // --- Data Transformation Functions ---
 const toSocialLink = (raw: RawSocialLink): SocialLink => ({ ...raw, icon: getIcon(raw.icon) });
 const toService = (raw: RawService): Service => ({ ...raw, icon: getIcon(raw.icon) });
-const toSkill = (raw: RawSkill): Skill => ({ ...raw, icon: raw.skillIcon });
+const toSkill = (raw: RawSkill): Skill => ({ ...raw, icon: raw.skillIcon, image: raw.image });
 const toHeroData = (raw: RawHeroData): HeroData => ({ ...raw, socialLinks: (raw.socialLinks || []).map(toSocialLink) });
 const toContactData = (raw: RawContactData): ContactData => ({ ...raw, socialLinks: (raw.socialLinks || []).map(toSocialLink) });
 const toProject = (raw: RawProject): Project => ({...raw});
