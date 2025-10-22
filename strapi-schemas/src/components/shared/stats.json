@@ -1,0 +1,19 @@
+
+{
+  "collectionName": "components_shared_stats",
+  "info": {
+    "displayName": "Stats",
+    "icon": "chart-bar"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "value": {
+      "type": "string",
+      "required": true
+    }
+  }
+}
