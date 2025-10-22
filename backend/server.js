@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const contactsRouter = require('./routes/contacts');
 
 dotenv.config();
@@ -14,12 +15,31 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+async function connectDB() {
+  try {
+    let mongoUri = process.env.MONGODB_URI;
+
+    // If no MongoDB URI is provided or it's localhost (which might not be running), use in-memory MongoDB
+    if (!mongoUri || mongoUri.includes('localhost')) {
+      console.log('Starting in-memory MongoDB...');
+      const mongoServer = await MongoMemoryServer.create();
+      mongoUri = mongoServer.getUri();
+      console.log('In-memory MongoDB started');
+    }
+
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    // Continue running even if DB connection fails, for development purposes
+    console.log('Continuing without database connection...');
+  }
+}
+
+connectDB();
 
 // Routes
 app.use('/api/contacts', contactsRouter);
