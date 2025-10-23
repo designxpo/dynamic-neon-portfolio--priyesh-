@@ -174,3 +174,41 @@ export const resetDbToDefaults = (): boolean => {
         return false;
     }
 };
+
+// Export the current database to a JSON string
+export const exportDb = (): string => {
+    const db = getDb();
+    try {
+        return JSON.stringify(db, null, 2);
+    } catch (e) {
+        console.error('Failed to export DB', e);
+        throw e;
+    }
+};
+
+type ImportMode = 'replace' | 'merge';
+
+// Import database from provided JSON object, with simple top-level merge/replace strategies
+export const importDb = (incoming: Partial<Database> | string, mode: ImportMode = 'replace'): boolean => {
+    try {
+        const parsed: Partial<Database> = typeof incoming === 'string' ? JSON.parse(incoming) : incoming;
+        if (!parsed || typeof parsed !== 'object') throw new Error('Invalid DB payload');
+
+        if (mode === 'replace') {
+            // Replace entire DB, but ensure required defaults if missing
+            const current = getDefaultDb();
+            const next: Database = { ...current, ...(parsed as Database) };
+            saveDb(next);
+            return true;
+        }
+
+        // Merge mode: shallow merge top-level keys into current DB
+        const current = getDb();
+        const next: Database = { ...current, ...(parsed as Database) };
+        saveDb(next);
+        return true;
+    } catch (e) {
+        console.error('Failed to import DB', e);
+        return false;
+    }
+};
