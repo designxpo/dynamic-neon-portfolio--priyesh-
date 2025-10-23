@@ -11,7 +11,8 @@ import {
 } from '../data/mockData';
 import { v4 as uuidv4 } from 'uuid';
 
-// Bump this key to reinitialize localStorage with updated mock data when you change core data
+// IMPORTANT: Keep this key stable to avoid unintentional resets across deployments.
+// Only bump when you truly need to force-refresh seed data, and prefer migrating instead.
 const DB_KEY = 'portfolio-db-v2';
 
 const getDefaultDb = (): Database => {
@@ -87,12 +88,33 @@ const getDefaultDb = (): Database => {
 export const initDb = () => {
     const existing = localStorage.getItem(DB_KEY);
     console.log('initDb called, existing data:', existing ? 'EXISTS' : 'NULL');
-    if (!existing) {
-        console.log('Initializing database with default data');
-        localStorage.setItem(DB_KEY, JSON.stringify(getDefaultDb()));
-    } else {
+    if (existing) {
         console.log('Database already exists, not reinitializing');
+        return;
     }
+
+    // Try migrating from legacy keys instead of wiping user changes
+    const legacyKeys = ['portfolio-db-v1', 'portfolio-db'];
+    for (const key of legacyKeys) {
+        const legacy = localStorage.getItem(key);
+        if (legacy) {
+            try {
+                const parsed = JSON.parse(legacy) as Database;
+                // Basic sanity check
+                if (parsed && typeof parsed === 'object') {
+                    console.log(`Migrating data from legacy key: ${key} -> ${DB_KEY}`);
+                    localStorage.setItem(DB_KEY, JSON.stringify(parsed));
+                    return;
+                }
+            } catch (e) {
+                console.warn(`Failed to parse legacy DB at ${key}, skipping migration`, e);
+            }
+        }
+    }
+
+    // If no legacy data found, initialize with defaults
+    console.log('Initializing database with default data');
+    localStorage.setItem(DB_KEY, JSON.stringify(getDefaultDb()));
 };
 
 export const getDb = (): Database => {
