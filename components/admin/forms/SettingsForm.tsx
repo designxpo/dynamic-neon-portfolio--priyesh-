@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { getAdminPassword, setAdminPassword, resetDbToDefaults, exportDb, importDb } from '../../../lib/db';
+import { Shield, Save, RotateCcw, Database, Upload as UploadIcon } from 'lucide-react';
 
 const SettingsForm: React.FC = () => {
     const [currentPassword, setCurrentPassword] = useState('');
@@ -107,85 +108,93 @@ const SettingsForm: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-10 max-w-2xl">
-            <div>
-                <h3 className="text-xl font-semibold mb-1 text-gray-800">Change Admin Password</h3>
-                <p className="text-sm text-gray-500">Update the password used to log in to this admin panel.</p>
-            </div>
-            
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Current Password</label>
-                    <input
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">New Password</label>
-                    <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                    <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
-                        required
-                    />
-                </div>
-            </div>
-
+        <form onSubmit={handleSubmit} className="space-y-10 max-w-4xl">
+            {/* Feedback */}
             {message && (
-                <div className={`p-3 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800' : message.type === 'info' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>
-                    {message.text}
+                <div className={`admin-card flex items-center gap-3 ${
+                    message.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+                    message.type === 'info' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+                    'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}>
+                    <span>{message.text}</span>
                 </div>
             )}
 
-            <div className="flex justify-end">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-brand-purple text-white px-5 py-2 rounded-lg hover:bg-brand-purple-light transition-colors duration-300 disabled:bg-gray-400"
-                >
-                    {loading ? 'Saving...' : 'Update Password'}
-                </button>
-                <button
-                    type="button"
-                    onClick={handleResetData}
-                    className="ml-3 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-300"
-                >
-                    Reset Data
-                </button>
+            {/* Change Password */}
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                    <Shield size={20} className="text-electric-blue" />
+                    Change Admin Password
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="admin-label">Current Password</label>
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="admin-input"
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="admin-label">New Password</label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="admin-input"
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="admin-label">Confirm New Password</label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="admin-input"
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="admin-button-primary flex items-center gap-2"
+                    >
+                        <Save size={18} />
+                        {loading ? 'Saving...' : 'Update Password'}
+                    </button>
+                </div>
             </div>
 
             {/* Backup & Restore */}
-            <div className="pt-4 border-t border-gray-200">
-                <h3 className="text-xl font-semibold mb-1 text-gray-800">Backup & Restore</h3>
-                <p className="text-sm text-gray-500 mb-4">Export your current content to a JSON file or restore from a backup. Note: backups are origin-specific.</p>
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                    <Database size={20} className="text-electric-blue" />
+                    Backup & Restore
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">Export your current content to a JSON file or restore from a backup. Note: backups are origin-specific.</p>
                 <div className="flex flex-wrap gap-3">
                     <button
                         type="button"
                         onClick={handleExport}
-                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-300"
+                        className="admin-button-secondary flex items-center gap-2"
                     >
+                        <Save size={16} />
                         Export Backup (JSON)
                     </button>
                     <button
                         type="button"
                         onClick={triggerImport}
-                        className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-300"
+                        className="admin-button-secondary flex items-center gap-2"
                     >
+                        <UploadIcon size={16} />
                         Import Backup
                     </button>
                     <input
@@ -196,6 +205,22 @@ const SettingsForm: React.FC = () => {
                         onChange={handleImportFile}
                     />
                 </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                    <RotateCcw size={20} className="text-electric-blue" />
+                    Danger Zone
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">Resetting will restore default seed data and remove your local changes.</p>
+                <button
+                    type="button"
+                    onClick={handleResetData}
+                    className="admin-button-danger"
+                >
+                    Reset Data to Defaults
+                </button>
             </div>
         </form>
     );
