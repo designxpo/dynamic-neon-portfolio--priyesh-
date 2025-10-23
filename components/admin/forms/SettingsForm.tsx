@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { getAdminPassword, setAdminPassword, resetDbToDefaults, exportDb, importDb } from '../../../lib/db';
-import { Shield, Save, RotateCcw, Database, Upload as UploadIcon } from 'lucide-react';
+import { getAdminPassword, setAdminPassword, resetDbToDefaults, exportDb, importDb, setBaselineFromCurrent } from '../../../lib/db';
+import { Shield, Save, RotateCcw, Database, Upload as UploadIcon, Flag as FlagIcon } from 'lucide-react';
 
 const SettingsForm: React.FC = () => {
     const [currentPassword, setCurrentPassword] = useState('');
@@ -107,6 +107,20 @@ const SettingsForm: React.FC = () => {
         }
     };
 
+    const handleSetBaseline = () => {
+        try {
+            const ok = setBaselineFromCurrent();
+            if (ok) {
+                setMessage({ type: 'success', text: 'Current content set as the default baseline. Future resets will restore to this snapshot.' });
+            } else {
+                setMessage({ type: 'error', text: 'Failed to set baseline. See console for details.' });
+            }
+        } catch (e) {
+            console.error(e);
+            setMessage({ type: 'error', text: 'Unexpected error while setting baseline.' });
+        }
+    };
+
     return (
         <form onSubmit={handleSubmit} className="space-y-10 max-w-4xl">
             {/* Feedback */}
@@ -207,13 +221,34 @@ const SettingsForm: React.FC = () => {
                 </div>
             </div>
 
+            {/* Defaults / Baseline */}
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                    <FlagIcon size={20} className="text-electric-blue" />
+                    Defaults / Baseline
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                    Choose what "Reset" restores to by updating the baseline to your current content when you are satisfied with changes.
+                </p>
+                <div className="flex gap-3">
+                    <button
+                        type="button"
+                        onClick={handleSetBaseline}
+                        className="admin-button-primary flex items-center gap-2"
+                    >
+                        <FlagIcon size={16} />
+                        Make Current Content the Default
+                    </button>
+                </div>
+            </div>
+
             {/* Danger Zone */}
             <div className="admin-card">
                 <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
                     <RotateCcw size={20} className="text-electric-blue" />
                     Danger Zone
                 </h3>
-                <p className="text-sm text-gray-400 mb-4">Resetting will restore default seed data and remove your local changes.</p>
+                <p className="text-sm text-gray-400 mb-4">Resetting will restore your selected default (baseline) and remove any unsaved changes.</p>
                 <button
                     type="button"
                     onClick={handleResetData}

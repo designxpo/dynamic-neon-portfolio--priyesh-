@@ -14,6 +14,10 @@ import { v4 as uuidv4 } from 'uuid';
 // IMPORTANT: Keep this key stable to avoid unintentional resets across deployments.
 // Only bump when you truly need to force-refresh seed data, and prefer migrating instead.
 const DB_KEY = 'portfolio-db-v2';
+// Baseline snapshot key: what "Reset to Defaults" should restore to.
+// We keep this in sync with the latest admin-published changes so reset restores your latest content,
+// not the original seed mocks.
+const BASELINE_KEY = 'portfolio-db-v2-baseline';
 
 const getDefaultDb = (): Database => {
     return {
@@ -104,6 +108,10 @@ export const initDb = () => {
                 if (parsed && typeof parsed === 'object') {
                     console.log(`Migrating data from legacy key: ${key} -> ${DB_KEY}`);
                     localStorage.setItem(DB_KEY, JSON.stringify(parsed));
+                    // Initialize baseline from migrated data if not present
+                    if (!localStorage.getItem(BASELINE_KEY)) {
+                        localStorage.setItem(BASELINE_KEY, JSON.stringify(parsed));
+                    }
                     return;
                 }
             } catch (e) {
@@ -112,9 +120,18 @@ export const initDb = () => {
         }
     }
 
-    // If no legacy data found, initialize with defaults
-    console.log('Initializing database with default data');
-    localStorage.setItem(DB_KEY, JSON.stringify(getDefaultDb()));
+    // If no legacy data found, initialize from existing baseline if present; otherwise use defaults
+    const baseline = localStorage.getItem(BASELINE_KEY);
+    if (baseline) {
+        console.log('Initializing database from baseline snapshot');
+        localStorage.setItem(DB_KEY, baseline);
+    } else {
+        console.log('Initializing database with default data');
+        const defaults = JSON.stringify(getDefaultDb());
+        localStorage.setItem(DB_KEY, defaults);
+        // Also seed the baseline so future resets restore to this snapshot
+        localStorage.setItem(BASELINE_KEY, defaults);
+    }
 };
 
 export const getDb = (): Database => {
@@ -166,11 +183,38 @@ export const resetDbToDefaults = (): boolean => {
         // remove legacy keys if present
         try { localStorage.removeItem('portfolio-db'); } catch (e) { /* ignore */ }
         try { localStorage.removeItem('portfolio-db-v1'); } catch (e) { /* ignore */ }
-        // set the current DB key with defaults
-        localStorage.setItem(DB_KEY, JSON.stringify(getDefaultDb()));
+        // Restore from baseline snapshot if available, otherwise fall back to current defaults
+        const baseline = localStorage.getItem(BASELINE_KEY);
+        if (baseline) {
+            localStorage.setItem(DB_KEY, baseline);
+        } else {
+            const defaults = JSON.stringify(getDefaultDb());
+            localStorage.setItem(DB_KEY, defaults);
+            // Seed the baseline for future resets
+            localStorage.setItem(BASELINE_KEY, defaults);
+        }
         return true;
     } catch (e) {
         console.error('Failed to reset DB to defaults', e);
+        return false;
+    }
+};
+
+// Manually set the baseline snapshot to the current DB content.
+// Use this after you publish changes you want to consider the new defaults.
+export const setBaselineFromCurrent = (): boolean => {
+    try {
+        const current = localStorage.getItem(DB_KEY);
+        if (!current) {
+            console.warn('setBaselineFromCurrent: No current DB found, initializing defaults');
+            const defaults = JSON.stringify(getDefaultDb());
+            localStorage.setItem(BASELINE_KEY, defaults);
+            return true;
+        }
+        localStorage.setItem(BASELINE_KEY, current);
+        return true;
+    } catch (e) {
+        console.error('Failed to set baseline from current DB', e);
         return false;
     }
 };
