@@ -33,7 +33,6 @@ export interface HeroData {
   ctaButtonText: string;
   ctaButtonLink: string;
   stats: Stat[];
-  socialLinks: SocialLink[];
 }
 
 export interface RawHeroData {
@@ -44,7 +43,6 @@ export interface RawHeroData {
   ctaButtonText: string;
   ctaButtonLink: string;
   stats: Stat[];
-  socialLinks: RawSocialLink[];
 }
 
 export interface Service {
@@ -159,11 +157,36 @@ export interface BlogData {
   content: string;
   author: string;
   publishedAt: string; // ISO string date
+  // Added for portfolio blog cards
+  url?: string; // external link (e.g., Medium)
+  thumbnail?: Image; // card image
+  excerpt?: string; // short description shown on the card
 }
 
 export interface Blog extends BlogData {
   id: string;
 }
+
+// --- SEO ---
+export type SectionKey =
+  | 'home'
+  | 'hero'
+  | 'services'
+  | 'projects'
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'testimonials'
+  | 'blogs'
+  | 'contact';
+
+export interface SeoMeta {
+  metaTitle: string;
+  metaKeywords: string; // comma-separated keywords for simplicity
+  metaDescription: string;
+}
+
+export type SEOConfig = Record<SectionKey, SeoMeta>;
 
 export interface PortfolioData {
   hero: HeroData | null;
@@ -186,5 +209,6 @@ export interface Database {
   testimonials: RawTestimonial[];
   contact: RawContactData;
   blogs: Blog[];
+  seo?: SEOConfig; // optional for backward compatibility
   adminPassword?: string;
 }

@@ -4,7 +4,7 @@ import * as Icons from '../components/icons/Icons';
 import {
     HeroData, RawHeroData, Service, RawService, Skill, RawSkill, SocialLink, RawSocialLink,
     Project, RawProject, Testimonial, RawTestimonial, ContactData, RawContactData,
-    Blog, BlogData, Education, Experience,
+    Blog, BlogData, Education, Experience, SEOConfig, SectionKey, SeoMeta,
 } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -29,7 +29,7 @@ export const getIcon = (iconName: string): React.ReactNode => {
 const toSocialLink = (raw: RawSocialLink): SocialLink => ({ ...raw, icon: getIcon(raw.icon) });
 const toService = (raw: RawService): Service => ({ ...raw, icon: getIcon(raw.icon) });
 const toSkill = (raw: RawSkill): Skill => ({ ...raw, icon: raw.skillIcon, image: raw.image });
-const toHeroData = (raw: RawHeroData): HeroData => ({ ...raw, socialLinks: (raw.socialLinks || []).map(toSocialLink) });
+const toHeroData = (raw: RawHeroData): HeroData => ({ ...raw });
 const toContactData = (raw: RawContactData): ContactData => ({ ...raw, socialLinks: (raw.socialLinks || []).map(toSocialLink) });
 const toProject = (raw: RawProject): Project => ({...raw});
 const toTestimonial = (raw: RawTestimonial): Testimonial => ({...raw});
@@ -49,9 +49,18 @@ const getIconName = (iconNode: React.ReactNode): string => {
 export const getRawHeroData = async (): Promise<RawHeroData> => Promise.resolve(getDb().hero);
 export const getHeroData = async (): Promise<HeroData> => Promise.resolve(toHeroData(getDb().hero));
 export const updateHeroData = async (data: RawHeroData): Promise<void> => {
-    const db = getDb();
-    db.hero = data;
-    saveDb(db);
+    console.log('Updating hero data:', data);
+    try {
+        const db = getDb();
+        console.log('Current DB hero before update:', db.hero);
+        db.hero = data;
+        console.log('DB hero after update:', db.hero);
+        saveDb(db);
+        console.log('Hero data saved successfully');
+    } catch (error) {
+        console.error('Error saving hero data:', error);
+        throw error;
+    }
 };
 
 // Services
@@ -113,9 +122,24 @@ export const updateTestimonials = async (testimonials: RawTestimonial[]): Promis
 export const getRawContactData = async (): Promise<RawContactData> => Promise.resolve(getDb().contact);
 export const getContactData = async (): Promise<ContactData> => Promise.resolve(toContactData(getDb().contact));
 export const updateContactData = async (data: RawContactData): Promise<void> => {
-    const db = getDb();
-    db.contact = data;
-    saveDb(db);
+    console.log('Updating contact data:', data);
+    console.log('Social links being saved:', data.socialLinks);
+    try {
+        const db = getDb();
+        console.log('Current DB contact before update:', db.contact);
+        db.contact = data;
+        console.log('DB contact after update:', db.contact);
+        console.log('DB contact social links after update:', db.contact.socialLinks);
+        saveDb(db);
+        console.log('Contact data saved successfully');
+        
+        // Verify it was actually saved
+        const verifyDb = getDb();
+        console.log('Verification - contact social links in localStorage:', verifyDb.contact.socialLinks);
+    } catch (error) {
+        console.error('Error saving contact data:', error);
+        throw error;
+    }
 };
 
 // Blogs
@@ -137,4 +161,78 @@ export const deleteBlog = async (blogId: string): Promise<void> => {
     const db = getDb();
     db.blogs = (db.blogs || []).filter(b => b.id !== blogId);
     saveDb(db);
+};
+
+// --- SEO ---
+const defaultSEO = (): SEOConfig => ({
+    home: {
+        metaTitle: 'Priyesh Mishra — Portfolio',
+        metaKeywords: 'designer, ui, ux, product design, portfolio',
+        metaDescription: 'Portfolio site showcasing projects, services, and experience of Priyesh Mishra.'
+    },
+    hero: {
+        metaTitle: 'Home — Hero',
+        metaKeywords: 'hero, introduction, headline',
+        metaDescription: 'Top section introducing the designer and value proposition.'
+    },
+    services: {
+        metaTitle: 'Services',
+        metaKeywords: 'services, ui design, ux design, product strategy',
+        metaDescription: 'Professional services including UI/UX design, strategy, and more.'
+    },
+    projects: {
+        metaTitle: 'Projects',
+        metaKeywords: 'projects, case studies, portfolio work',
+        metaDescription: 'Selected recent work and case studies.'
+    },
+    experience: {
+        metaTitle: 'Experience',
+        metaKeywords: 'experience, work history, roles',
+        metaDescription: 'Professional experience and roles held.'
+    },
+    education: {
+        metaTitle: 'Education',
+        metaKeywords: 'education, certifications, degrees',
+        metaDescription: 'Academic background and certifications.'
+    },
+    skills: {
+        metaTitle: 'Skills',
+        metaKeywords: 'skills, tools, technologies',
+        metaDescription: 'Skills and tools used across design and development.'
+    },
+    testimonials: {
+        metaTitle: 'Testimonials',
+        metaKeywords: 'testimonials, reviews, feedback',
+        metaDescription: 'Client testimonials and feedback.'
+    },
+    blogs: {
+        metaTitle: 'Blog',
+        metaKeywords: 'blog, articles, writing',
+        metaDescription: 'Articles and writing on design and product.'
+    },
+    contact: {
+        metaTitle: 'Contact',
+        metaKeywords: 'contact, email, connect',
+        metaDescription: 'Contact information and ways to get in touch.'
+    },
+});
+
+export const getSEO = async (): Promise<SEOConfig> => {
+    const db = getDb();
+    return Promise.resolve(db.seo ?? defaultSEO());
+};
+
+export const updateSectionSEO = async (section: SectionKey, meta: SeoMeta): Promise<void> => {
+    const db = getDb();
+    const current = db.seo ?? defaultSEO();
+    db.seo = { ...current, [section]: meta };
+    saveDb(db);
+};
+
+export const updateSEO = async (seo: Partial<SEOConfig>): Promise<SEOConfig> => {
+    const db = getDb();
+    const merged = { ...defaultSEO(), ...(db.seo ?? {}), ...(seo as SEOConfig) } as SEOConfig;
+    db.seo = merged;
+    saveDb(db);
+    return merged;
 };

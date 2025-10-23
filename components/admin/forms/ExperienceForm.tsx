@@ -3,6 +3,7 @@ import { Experience } from '../../../types';
 import { getExperiencesData, updateExperiences } from '../../../lib/api';
 import Modal from '../common/Modal';
 import { v4 as uuidv4 } from 'uuid';
+import { Edit2, Trash2, Plus, Briefcase, Calendar } from 'lucide-react';
 
 const ExperienceForm: React.FC = () => {
     const [experiences, setExperiences] = useState<Experience[]>([]);
@@ -63,60 +64,138 @@ const ExperienceForm: React.FC = () => {
         setCurrentItem(null);
     };
 
-    if (isLoading) return <div>Loading experiences...</div>;
+    if (isLoading) return (
+        <div className="flex items-center justify-center py-12">
+            <div className="text-gray-400">Loading experiences...</div>
+        </div>
+    );
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Manage Experience</h3>
-                <button onClick={handleAddNew} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h3 className="text-2xl font-bold text-white">Manage Experience</h3>
+                    <p className="text-gray-400 text-sm mt-1">Add and manage your work experience</p>
+                </div>
+                <button 
+                    onClick={handleAddNew} 
+                    className="admin-button-primary flex items-center gap-2"
+                >
+                    <Plus size={20} />
                     Add New Experience
                 </button>
             </div>
-            <div className="space-y-2">
+
+            {/* Experience Timeline */}
+            <div className="space-y-4">
                 {experiences.map((exp) => (
-                    <div key={exp.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
-                        <div>
-                            <p className="font-semibold text-gray-800">{exp.positionTitle} at {exp.companyName}</p>
-                            <p className="text-sm text-gray-500">{exp.startYear} - {exp.endYear}</p>
-                        </div>
-                         <div className="space-x-2">
-                            <button onClick={() => handleEdit(exp)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                            <button onClick={() => handleDelete(exp.id)} className="text-sm text-red-600 hover:underline">Delete</button>
+                    <div key={exp.id} className="admin-card group hover:border-electric-blue/30">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex gap-4 flex-1">
+                                <div className="w-12 h-12 rounded-lg backdrop-blur-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center text-electric-blue flex-shrink-0">
+                                    <Briefcase size={24} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-white text-lg">{exp.positionTitle}</p>
+                                    <p className="text-electric-blue">{exp.companyName}</p>
+                                    <div className="flex items-center gap-2 text-sm text-gray-400 mt-2">
+                                        <Calendar size={14} />
+                                        <span>{exp.startYear} - {exp.endYear}</span>
+                                    </div>
+                                    <p className="text-gray-400 text-sm mt-2 line-clamp-2">{exp.description}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                    onClick={() => handleEdit(exp)} 
+                                    className="admin-icon-button"
+                                    title="Edit"
+                                >
+                                    <Edit2 size={16} />
+                                </button>
+                                <button 
+                                    onClick={() => handleDelete(exp.id)} 
+                                    className="admin-button-danger"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
+            {/* Modal */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && experiences.some(e => e.id === currentItem.id) ? 'Edit Experience' : 'Add Experience'}>
-               {currentItem && (
-                    <div className="space-y-4 text-gray-800">
+                {currentItem && (
+                    <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Position Title</label>
-                            <input type="text" value={currentItem.positionTitle} onChange={e => setCurrentItem(p => p ? {...p, positionTitle: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Position Title</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.positionTitle} 
+                                onChange={e => setCurrentItem(p => p ? {...p, positionTitle: e.target.value} : null)} 
+                                className="admin-input"
+                                placeholder="e.g., Senior Developer"
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Company Name</label>
-                            <input type="text" value={currentItem.companyName} onChange={e => setCurrentItem(p => p ? {...p, companyName: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Company Name</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.companyName} 
+                                onChange={e => setCurrentItem(p => p ? {...p, companyName: e.target.value} : null)} 
+                                className="admin-input"
+                                placeholder="e.g., Tech Company Inc."
+                            />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Start Year</label>
-                                <input type="text" value={currentItem.startYear} onChange={e => setCurrentItem(p => p ? {...p, startYear: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="admin-label">Start Year</label>
+                                <input 
+                                    type="text" 
+                                    value={currentItem.startYear} 
+                                    onChange={e => setCurrentItem(p => p ? {...p, startYear: e.target.value} : null)} 
+                                    className="admin-input"
+                                    placeholder="2020"
+                                />
                             </div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-700">End Year</label>
-                                <input type="text" value={currentItem.endYear} onChange={e => setCurrentItem(p => p ? {...p, endYear: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <div>
+                                <label className="admin-label">End Year</label>
+                                <input 
+                                    type="text" 
+                                    value={currentItem.endYear} 
+                                    onChange={e => setCurrentItem(p => p ? {...p, endYear: e.target.value} : null)} 
+                                    className="admin-input"
+                                    placeholder="Present or 2023"
+                                />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea rows={3} value={currentItem.description} onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"></textarea>
+                            <label className="admin-label">Description</label>
+                            <textarea 
+                                rows={4} 
+                                value={currentItem.description} 
+                                onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} 
+                                className="admin-textarea"
+                                placeholder="Describe your role and responsibilities..."
+                            />
                         </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                            <button onClick={handleSave} disabled={saving} className="bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-brand-purple-light disabled:bg-gray-400">
-                                {saving ? 'Saving...' : 'Save'}
+                        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                            <button 
+                                onClick={() => setIsModalOpen(false)} 
+                                className="admin-button-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSave} 
+                                disabled={saving} 
+                                className="admin-button-primary"
+                            >
+                                {saving ? 'Saving...' : 'Save Experience'}
                             </button>
                         </div>
                     </div>

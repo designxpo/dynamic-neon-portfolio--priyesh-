@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RawHeroData } from '../../../types';
 import { getRawHeroData, updateHeroData, convertFileToBase64 } from '../../../lib/api';
 import { v4 as uuidv4 } from 'uuid';
+import { Upload, X, Plus, Trash2, User, Briefcase, Link, AlertCircle, CheckCircle } from 'lucide-react';
 
 const HeroForm: React.FC = () => {
     const [formData, setFormData] = useState<RawHeroData | null>(null);
@@ -12,7 +13,9 @@ const HeroForm: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                console.log('Fetching hero data from database...');
                 const data = await getRawHeroData();
+                console.log('Hero data loaded:', data);
                 setFormData(data);
             } catch (error) {
                 console.error("Failed to fetch hero data", error);
@@ -49,25 +52,6 @@ const HeroForm: React.FC = () => {
         setFormData({ ...formData, stats: newStats });
     };
 
-    const handleSocialLinkChange = (index: number, field: 'platform' | 'url' | 'icon', value: string) => {
-        if (!formData) return;
-        const newLinks = [...formData.socialLinks];
-        newLinks[index] = { ...newLinks[index], [field]: value };
-        setFormData({ ...formData, socialLinks: newLinks });
-    };
-
-    const addSocialLink = () => {
-        if (!formData) return;
-        const newLinks = [...formData.socialLinks, { id: uuidv4(), platform: '', url: '', icon: '' }];
-        setFormData({ ...formData, socialLinks: newLinks });
-    };
-
-    const removeSocialLink = (index: number) => {
-        if (!formData) return;
-        const newLinks = formData.socialLinks.filter((_, i) => i !== index);
-        setFormData({ ...formData, socialLinks: newLinks });
-    };
-
     const removeProfileImage = () => {
         if (!formData) return;
         setFormData({ ...formData, profileImage: { ...formData.profileImage, url: '' } });
@@ -91,113 +75,202 @@ const HeroForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData) return;
+        console.log('Form submitted');
+        
+        if (!formData) {
+            console.error('No formData available');
+            setMessage({ type: 'error', text: "No data to save." });
+            return;
+        }
 
+        console.log('Submitting form data:', formData);
         setSaving(true);
         setMessage(null);
+        
         try {
             await updateHeroData(formData);
+            console.log('Update successful');
             setMessage({ type: 'success', text: "Hero section data saved successfully!" });
         } catch (error) {
-            setMessage({ type: 'error', text: "An error occurred while saving." });
-            console.error(error);
+            console.error('Save error:', error);
+            setMessage({ type: 'error', text: "An error occurred while saving. Check console for details." });
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (!formData) return <div className="text-red-500">Could not load hero data.</div>;
+    if (loading) return (
+        <div className="flex items-center justify-center py-12">
+            <div className="text-gray-400">Loading hero data...</div>
+        </div>
+    );
+    
+    if (!formData) return (
+        <div className="admin-card">
+            <div className="flex items-center gap-3 text-red-400">
+                <AlertCircle size={20} />
+                <span>Could not load hero data.</span>
+            </div>
+        </div>
+    );
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 text-gray-800">
+        <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Success/Error Message */}
+            {message && (
+                <div className={`admin-card flex items-center gap-3 ${
+                    message.type === 'success' 
+                        ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}>
+                    {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                    <span>{message.text}</span>
+                </div>
+            )}
+
             {/* Profile Image */}
-            <div className="p-4 border rounded-lg">
-                <h3 className="text-lg font-medium mb-4">Profile Image</h3>
-                <div className="flex items-center gap-6">
-                    <img src={formData.profileImage.url} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover border-2 border-gray-300" />
-                    <div>
-                        <label htmlFor="profileImage" className="block text-sm font-medium text-gray-700 mb-1">Upload New Image</label>
-                        <input type="file" id="profileImage" accept="image/*" onChange={handleImageUpload} className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-brand-purple hover:file:bg-violet-100"/>
-                        <p className="text-xs text-gray-500 mt-2">Recommended size: 400x400 pixels.</p>
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                    <User size={20} className="text-electric-blue" />
+                    Profile Image
+                </h3>
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="relative group">
+                        <img 
+                            src={formData.profileImage.url} 
+                            alt="Profile Preview" 
+                            className="w-32 h-32 rounded-full object-cover border-2 border-white/20 shadow-glow-blue"
+                        />
+                        <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Upload size={24} className="text-white" />
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <label className="admin-label">Upload New Image</label>
+                        <label className="admin-button-secondary flex items-center gap-2 cursor-pointer w-fit">
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageUpload} 
+                                className="hidden"
+                            />
+                            <Upload size={18} />
+                            Choose Image
+                        </label>
+                        <p className="text-xs text-gray-500 mt-2">Recommended size: 400x400 pixels</p>
                         {formData.profileImage.url && (
-                            <button type="button" onClick={removeProfileImage} className="mt-2 text-sm text-red-600 hover:underline">Remove Image</button>
+                            <button 
+                                type="button" 
+                                onClick={removeProfileImage} 
+                                className="admin-button-danger mt-3 flex items-center gap-2"
+                            >
+                                <Trash2 size={16} />
+                                Remove Image
+                            </button>
                         )}
                     </div>
                 </div>
             </div>
 
             {/* General Info */}
-            <div className="p-4 border rounded-lg">
-                <h3 className="text-lg font-medium mb-4">General Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                    <Briefcase size={20} className="text-electric-blue" />
+                    General Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" name="name" id="name" value={formData.name || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <label htmlFor="name" className="admin-label">Full Name</label>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            id="name" 
+                            value={formData.name || ''} 
+                            onChange={handleChange} 
+                            className="admin-input"
+                            placeholder="Enter your full name"
+                        />
                     </div>
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">Job Title / Tagline</label>
-                        <input type="text" name="title" id="title" value={formData.title || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                    </div>
-                </div>
-                <div className="mt-4">
-                    <label htmlFor="shortBio" className="block text-sm font-medium text-gray-700">Short Bio</label>
-                    <textarea name="shortBio" id="shortBio" rows={3} value={formData.shortBio || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"></textarea>
-                </div>
-                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="ctaButtonText" className="block text-sm font-medium text-gray-700">CTA Button Text</label>
-                        <input type="text" name="ctaButtonText" id="ctaButtonText" value={formData.ctaButtonText || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <label htmlFor="title" className="admin-label">Job Title / Tagline</label>
+                        <input 
+                            type="text" 
+                            name="title" 
+                            id="title" 
+                            value={formData.title || ''} 
+                            onChange={handleChange} 
+                            className="admin-input"
+                            placeholder="e.g., Full Stack Developer"
+                        />
                     </div>
                     <div>
-                        <label htmlFor="ctaButtonLink" className="block text-sm font-medium text-gray-700">CTA Button Link</label>
-                        <input type="text" name="ctaButtonLink" id="ctaButtonLink" value={formData.ctaButtonLink || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <label htmlFor="ctaButtonLink" className="admin-label flex items-center gap-2">
+                            <Link size={14} />
+                            CTA Button Link
+                        </label>
+                        <input 
+                            type="text" 
+                            name="ctaButtonLink" 
+                            id="ctaButtonLink" 
+                            value={formData.ctaButtonLink || ''} 
+                            onChange={handleChange} 
+                            className="admin-input"
+                            placeholder="e.g., #contact"
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Stats */}
-            <div className="p-4 border rounded-lg">
-                 <h3 className="text-lg font-medium mb-4">Stats</h3>
-                 <div className="space-y-3">
+            <div className="admin-card">
+                <h3 className="text-xl font-semibold text-white mb-6">Stats & Achievements</h3>
+                <div className="space-y-4">
                     {formData.stats?.map((stat, index) => (
-                        <div key={index} className="flex items-center gap-4">
+                        <div key={index} className="flex items-center gap-4 admin-card bg-white/3">
                             <div className="grid grid-cols-2 gap-4 flex-1">
-                                 <input type="text" value={stat.label} onChange={e => handleStatChange(index, 'label', e.target.value)} placeholder="Label (e.g., Projects)" className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                                 <input type="text" value={stat.value} onChange={e => handleStatChange(index, 'value', e.target.value)} placeholder="Value (e.g., 50+)" className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                                <input 
+                                    type="text" 
+                                    value={stat.label} 
+                                    onChange={e => handleStatChange(index, 'label', e.target.value)} 
+                                    placeholder="Label (e.g., Projects)" 
+                                    className="admin-input"
+                                />
+                                <input 
+                                    type="text" 
+                                    value={stat.value} 
+                                    onChange={e => handleStatChange(index, 'value', e.target.value)} 
+                                    placeholder="Value (e.g., 50+)" 
+                                    className="admin-input"
+                                />
                             </div>
-                            <button type="button" onClick={() => removeStat(index)} className="text-red-600 hover:text-red-800 px-2 py-1">Remove</button>
+                            <button 
+                                type="button" 
+                                onClick={() => removeStat(index)} 
+                                className="admin-button-danger"
+                                title="Remove stat"
+                            >
+                                <Trash2 size={16} />
+                            </button>
                         </div>
                     ))}
-                 </div>
-                 <button type="button" onClick={addStat} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Add Stat</button>
-            </div>
-
-            {/* Social Links */}
-             <div className="p-4 border rounded-lg">
-                 <h3 className="text-lg font-medium mb-4">Social Links (Icon name must match component, e.g., GitHubIcon)</h3>
-                 <div className="space-y-3">
-                    {formData.socialLinks?.map((link, index) => (
-                        <div key={index} className="flex items-center gap-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                                <input type="text" value={link.platform} onChange={e => handleSocialLinkChange(index, 'platform', e.target.value)} placeholder="Platform (e.g., GitHub)" className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                                <input type="url" value={link.url} onChange={e => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="URL" className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                                <input type="text" value={link.icon} onChange={e => handleSocialLinkChange(index, 'icon', e.target.value)} placeholder="Icon Name (e.g., GitHubIcon)" className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                            </div>
-                            <button type="button" onClick={() => removeSocialLink(index)} className="text-red-600 hover:text-red-800 px-2 py-1">Remove</button>
-                        </div>
-                    ))}
-                 </div>
-                 <button type="button" onClick={addSocialLink} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Add Social Link</button>
-            </div>
-
-            {message && (
-                <div className={`p-3 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {message.text}
                 </div>
-            )}
-            <div className="flex justify-end">
-                <button type="submit" disabled={saving} className="bg-brand-purple text-white px-5 py-2 rounded-lg hover:bg-brand-purple-light transition-colors duration-300 disabled:bg-gray-400">
+                <button 
+                    type="button" 
+                    onClick={addStat} 
+                    className="admin-button-secondary mt-4 flex items-center gap-2"
+                >
+                    <Plus size={18} />
+                    Add Stat
+                </button>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end pt-4 border-t border-white/10">
+                <button 
+                    type="submit" 
+                    disabled={saving} 
+                    className="admin-button-primary"
+                >
                     {saving ? 'Saving...' : 'Save Hero Section'}
                 </button>
             </div>

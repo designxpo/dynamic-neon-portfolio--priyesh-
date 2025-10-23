@@ -8,6 +8,7 @@ import Experience from './components/Experience';
 import Education from './components/Education';
 import Skills from './components/Skills';
 import Testimonials from './components/Testimonials';
+import Blogs from './components/Blogs';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AnimatedSection from './components/AnimatedSection';
@@ -21,6 +22,7 @@ import {
     getSkillsData,
     getTestimonialsData,
     getContactData,
+    getBlogs,
 } from './lib/api';
 
 import { 
@@ -32,17 +34,20 @@ import {
     Skill, 
     Testimonial,
     ContactData as ContactDataType,
-    PortfolioData
+    PortfolioData,
+    Blog
 } from './types';
 
 
 const PortfolioPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+    const [blogs, setBlogs] = useState<Blog[] | null>(null);
 
     useEffect(() => {
         const fetchAllData = async () => {
             try {
+                console.log('PortfolioPage: Fetching all data...');
                 const [
                     hero, 
                     services, 
@@ -51,7 +56,8 @@ const PortfolioPage: React.FC = () => {
                     educations,
                     skills,
                     testimonials,
-                    contact
+                    contact,
+                    blogItems
                 ] = await Promise.all([
                     getHeroData(),
                     getServicesData(),
@@ -61,7 +67,10 @@ const PortfolioPage: React.FC = () => {
                     getSkillsData(),
                     getTestimonialsData(),
                     getContactData(),
+                    getBlogs(),
                 ]);
+                
+                console.log('PortfolioPage: Hero data loaded:', hero);
                 
                 setPortfolioData({
                     hero,
@@ -73,6 +82,7 @@ const PortfolioPage: React.FC = () => {
                     testimonials,
                     contact,
                 });
+                setBlogs(blogItems);
 
             } catch (error) {
                 console.error("Failed to fetch portfolio data:", error);
@@ -96,7 +106,7 @@ const PortfolioPage: React.FC = () => {
         <div className="bg-gradient-to-br from-dark-bg to-purple-900/20 text-white font-sans leading-relaxed selection:bg-brand-purple selection:text-white">
             <Header heroData={portfolioData?.hero || null} />
             <main>
-                {portfolioData?.hero && portfolioData.hero.socialLinks && <Hero data={portfolioData.hero} />}
+                {portfolioData?.hero && <Hero data={portfolioData.hero} />}
                 
                 {portfolioData?.projects.length > 0 && (
                      <AnimatedSection>
@@ -135,6 +145,12 @@ const PortfolioPage: React.FC = () => {
                 {portfolioData?.testimonials.length > 0 && (
                     <AnimatedSection>
                         <Testimonials data={portfolioData.testimonials} />
+                    </AnimatedSection>
+                )}
+
+                {(blogs && blogs.length > 0) && (
+                    <AnimatedSection>
+                        <Blogs data={blogs} />
                     </AnimatedSection>
                 )}
 

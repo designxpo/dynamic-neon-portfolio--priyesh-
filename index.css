@@ -1,3 +1,11 @@
+/* Theme variables */
+:root {
+  --color-electric-blue: #00D4FF;
+  --color-electric-blue-rgb: 0, 212, 255;
+  --color-deep-violet: #7B2CBF;
+  --color-deep-violet-rgb: 123, 44, 191;
+}
+
 /* Custom animations and styles */
 @keyframes fade-in {
   from {
@@ -54,6 +62,277 @@
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Electric Blue and Deep Violet Color Utilities */
+.text-electric-blue {
+  color: var(--color-electric-blue);
+}
+
+.bg-electric-blue {
+  background-color: var(--color-electric-blue);
+}
+
+.border-electric-blue {
+  border-color: var(--color-electric-blue);
+}
+
+.text-deep-violet {
+  color: var(--color-deep-violet);
+}
+
+.bg-deep-violet {
+  background-color: var(--color-deep-violet);
+}
+
+.border-deep-violet {
+  border-color: var(--color-deep-violet);
+}
+
+/* Gradient Text with Electric Colors */
+.gradient-text-electric {
+  background: linear-gradient(135deg, var(--color-electric-blue), var(--color-deep-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shadow Glow Effects */
+.shadow-glow-blue {
+  box-shadow: 0 0 20px rgba(var(--color-electric-blue-rgb), 0.4), 0 0 40px rgba(var(--color-electric-blue-rgb), 0.2);
+}
+
+.shadow-glow-violet {
+  box-shadow: 0 0 20px rgba(var(--color-deep-violet-rgb), 0.4), 0 0 40px rgba(var(--color-deep-violet-rgb), 0.2);
+}
+
+.drop-shadow-glow {
+  filter: drop-shadow(0 0 10px rgba(var(--color-electric-blue-rgb), 0.5));
+}
+
+/* Enhanced Glassmorphism */
+.glass-card {
+  backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(var(--color-electric-blue-rgb), 0.3);
+}
+
+/* Custom Scrollbar for Admin */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(10, 10, 26, 0.5);
+  border-radius: 10px;
+  margin: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(var(--color-electric-blue-rgb), 0.4), rgba(var(--color-deep-violet-rgb), 0.4));
+  border-radius: 10px;
+  border: 2px solid rgba(10, 10, 26, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(var(--color-electric-blue-rgb), 0.6), rgba(var(--color-deep-violet-rgb), 0.6));
+}
+
+/* Firefox scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--color-electric-blue-rgb), 0.4) rgba(10, 10, 26, 0.5);
+}
+
+/* Ensure scroll works on all browsers */
+.scrollbar-thin {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Admin Form Styles - Glassmorphism Dark Mode */
+.admin-input,
+.admin-textarea,
+.admin-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.admin-textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: rgba(156, 163, 175, 0.6);
+}
+
+.admin-input:focus,
+.admin-textarea:focus,
+.admin-select:focus {
+  outline: none;
+  border-color: var(--color-electric-blue); /* Electric Blue */
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(var(--color-electric-blue-rgb), 0.3);
+}
+
+.admin-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.025em;
+}
+
+.admin-button-primary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--color-electric-blue), var(--color-deep-violet)); /* Electric Blue → Deep Violet */
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 0 20px rgba(var(--color-electric-blue-rgb), 0.4);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.admin-button-primary:hover {
+  background: linear-gradient(135deg, #33E1FF, #8C3FD8);
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(var(--color-electric-blue-rgb), 0.5);
+}
+
+.admin-button-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d1d5db;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.admin-button-secondary:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-button-danger {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  backdrop-filter: blur(16px);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.admin-button-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.admin-card {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-table {
+  width: 100%;
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.admin-table-container {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.admin-table thead {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-table th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-table td {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  color: #d1d5db;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-icon-button {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-icon-button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(var(--color-electric-blue-rgb), 0.5);
 }
 
 /* Smooth transitions for all elements */

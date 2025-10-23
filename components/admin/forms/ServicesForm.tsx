@@ -3,6 +3,7 @@ import { Service, RawService } from '../../../types';
 import { getServicesData, updateServices } from '../../../lib/api';
 import Modal from '../common/Modal';
 import { v4 as uuidv4 } from 'uuid';
+import { Edit2, Trash2, Plus, Zap } from 'lucide-react';
 
 const ServicesForm: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
@@ -76,54 +77,141 @@ const ServicesForm: React.FC = () => {
         setCurrentItem(null);
     };
 
-    if (isLoading) return <div>Loading services...</div>;
+    if (isLoading) return (
+        <div className="flex items-center justify-center py-12">
+            <div className="text-gray-400">Loading services...</div>
+        </div>
+    );
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Manage Services</h3>
-                <button onClick={handleAddNew} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h3 className="text-2xl font-bold text-white">Manage Services</h3>
+                    <p className="text-gray-400 text-sm mt-1">Create and manage your service offerings</p>
+                </div>
+                <button 
+                    onClick={handleAddNew} 
+                    className="admin-button-primary flex items-center gap-2"
+                >
+                    <Plus size={20} />
                     Add New Service
                 </button>
             </div>
-            <div className="space-y-2">
-                {services.map((service) => (
-                    <div key={service.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
-                        <div>
-                            <p className="font-semibold text-gray-800">{service.title}</p>
-                            <p className="text-sm text-gray-500">{service.description?.substring(0, 50)}...</p>
-                        </div>
-                         <div className="space-x-2">
-                            <button onClick={() => handleEdit(service)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                            <button onClick={() => handleDelete(service.id)} className="text-sm text-red-600 hover:underline">Delete</button>
-                        </div>
-                    </div>
-                ))}
+
+            {/* Services Table */}
+            <div className="admin-table-container">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Description</th>
+                            <th>Order</th>
+                            <th className="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {services.map((service) => (
+                            <tr key={service.id}>
+                                <td>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg backdrop-blur-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center text-electric-blue">
+                                            <Zap size={20} />
+                                        </div>
+                                        <p className="font-semibold text-white">{service.title}</p>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p className="text-gray-400 line-clamp-2">{service.description}</p>
+                                </td>
+                                <td>
+                                    <span className="px-3 py-1 rounded-full text-xs backdrop-blur-xl bg-white/5 text-gray-400 border border-white/10">
+                                        #{service.order}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button 
+                                            onClick={() => handleEdit(service)} 
+                                            className="admin-icon-button"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(service.id)} 
+                                            className="admin-button-danger"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
+            {/* Modal for Add/Edit */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem && services.some(s => s.id === currentItem.id) ? 'Edit Service' : 'Add Service'}>
-               {currentItem && (
-                    <div className="space-y-4 text-gray-800">
+                {currentItem && (
+                    <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Title</label>
-                            <input type="text" value={currentItem.title} onChange={e => setCurrentItem(p => p ? {...p, title: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Title</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.title} 
+                                onChange={e => setCurrentItem(p => p ? {...p, title: e.target.value} : null)} 
+                                className="admin-input"
+                                placeholder="Enter service title"
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea rows={3} value={currentItem.description} onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"></textarea>
+                            <label className="admin-label">Description</label>
+                            <textarea 
+                                rows={3} 
+                                value={currentItem.description} 
+                                onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} 
+                                className="admin-textarea"
+                                placeholder="Describe the service"
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Icon Name (e.g., BrandingIcon)</label>
-                            <input type="text" value={currentItem.icon} onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Icon Name</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.icon} 
+                                onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} 
+                                className="admin-input"
+                                placeholder="e.g., BrandingIcon"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Order</label>
-                            <input type="number" value={currentItem.order || 0} onChange={e => setCurrentItem(p => p ? {...p, order: parseInt(e.target.value)} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Display Order</label>
+                            <input 
+                                type="number" 
+                                value={currentItem.order || 0} 
+                                onChange={e => setCurrentItem(p => p ? {...p, order: parseInt(e.target.value)} : null)} 
+                                className="admin-input"
+                                placeholder="1"
+                            />
                         </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                            <button onClick={handleSave} disabled={saving} className="bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-brand-purple-light disabled:bg-gray-400">
-                                {saving ? 'Saving...' : 'Save'}
+                        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                            <button 
+                                onClick={() => setIsModalOpen(false)} 
+                                className="admin-button-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSave} 
+                                disabled={saving} 
+                                className="admin-button-primary"
+                            >
+                                {saving ? 'Saving...' : 'Save Service'}
                             </button>
                         </div>
                     </div>

@@ -11,10 +11,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // In development, reset the DB to defaults so local changes don't block updates
-      if ((import.meta as any).env?.MODE !== 'production') {
-        try { resetDbToDefaults(); } catch (e) { /* ignore */ }
-      }
+      // NOTE: resetDbToDefaults() was removed from here because it was resetting
+      // the database on every page refresh, causing data loss in development.
+      // To reset the database manually, use the Settings page in the admin panel.
+      
       // Client-side only effects
       setIsAdmin(sessionStorage.getItem('isAdmin') === 'true');
       setLocation(window.location.hash);

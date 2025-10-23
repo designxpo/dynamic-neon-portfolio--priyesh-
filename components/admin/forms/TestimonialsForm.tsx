@@ -3,6 +3,7 @@ import { RawTestimonial } from '../../../types';
 import { getTestimonialsData, updateTestimonials, convertFileToBase64 } from '../../../lib/api';
 import Modal from '../common/Modal';
 import { v4 as uuidv4 } from 'uuid';
+import { Edit2, Trash2, Plus, Star, Upload, X } from 'lucide-react';
 
 const TestimonialsForm: React.FC = () => {
     const [testimonials, setTestimonials] = useState<RawTestimonial[]>([]);
@@ -77,63 +78,165 @@ const TestimonialsForm: React.FC = () => {
         setCurrentItem(null);
     };
 
-    if (isLoading) return <div>Loading testimonials...</div>;
+    if (isLoading) return (
+        <div className="flex items-center justify-center py-12">
+            <div className="text-gray-400">Loading testimonials...</div>
+        </div>
+    );
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Manage Testimonials</h3>
-                <button onClick={handleAddNew} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+        <div className="h-full flex flex-col" style={{ maxHeight: '100%' }}>
+            {/* Header - Fixed */}
+            <div className="flex justify-between items-center flex-shrink-0 mb-6">
+                <div>
+                    <h3 className="text-2xl font-bold text-white">Manage Testimonials</h3>
+                    <p className="text-gray-400 text-sm mt-1">Add and manage client testimonials</p>
+                </div>
+                <button 
+                    onClick={handleAddNew} 
+                    className="admin-button-primary flex items-center gap-2"
+                >
+                    <Plus size={20} />
                     Add New Testimonial
                 </button>
             </div>
-            <div className="space-y-2">
+
+            {/* Scrollable Testimonials Grid */}
+            <div className="scrollbar-thin flex-1" style={{ 
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                maxHeight: 'calc(100vh - 280px)', /* Account for header, padding, etc */
+                minHeight: 0
+            }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pr-2">
                 {testimonials.map((testimonial) => (
-                    <div key={testimonial.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
-                        <div className="flex items-center gap-4">
-                            <img src={testimonial.avatar.url} alt={testimonial.clientName} className="w-12 h-12 object-cover rounded-full"/>
-                            <div>
-                                <p className="font-semibold text-gray-800">{testimonial.clientName}</p>
-                                <p className="text-sm text-gray-500">{testimonial.roleCompany}</p>
+                    <div key={testimonial.id} className="admin-card group hover:border-electric-blue/30">
+                        <div className="flex items-start gap-4">
+                            <div className="relative flex-shrink-0">
+                                <img 
+                                    src={testimonial.avatar.url} 
+                                    alt={testimonial.clientName} 
+                                    className="w-16 h-16 object-cover rounded-full border-2 border-electric-blue/20"
+                                />
+                                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full backdrop-blur-xl bg-electric-blue/20 border border-electric-blue/30 flex items-center justify-center">
+                                    <Star size={12} className="text-electric-blue fill-electric-blue" />
+                                </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-white">{testimonial.clientName}</p>
+                                <p className="text-sm text-electric-blue mb-2">{testimonial.roleCompany}</p>
+                                <p className="text-gray-400 text-sm line-clamp-3 italic">"{testimonial.quote}"</p>
                             </div>
                         </div>
-                        <div className="space-x-2">
-                            <button onClick={() => handleEdit(testimonial)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                            <button onClick={() => handleDelete(testimonial.id)} className="text-sm text-red-600 hover:underline">Delete</button>
+                        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                                onClick={() => handleEdit(testimonial)} 
+                                className="admin-icon-button flex-1"
+                            >
+                                <Edit2 size={16} />
+                                <span className="ml-2">Edit</span>
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(testimonial.id)} 
+                                className="admin-button-danger flex-1"
+                            >
+                                <Trash2 size={16} />
+                                <span className="ml-2">Delete</span>
+                            </button>
                         </div>
                     </div>
                 ))}
+                </div>
             </div>
 
+            {/* Modal */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && testimonials.some(t => t.id === currentItem.id) ? 'Edit Testimonial' : 'Add Testimonial'}>
                 {currentItem && (
-                    <div className="space-y-4 text-gray-800">
+                    <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Client Name</label>
-                            <input type="text" value={currentItem.clientName} onChange={e => setCurrentItem(p => p ? { ...p, clientName: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Client Name</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.clientName} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, clientName: e.target.value } : null)} 
+                                className="admin-input"
+                                placeholder="e.g., John Smith"
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Role & Company</label>
-                            <input type="text" value={currentItem.roleCompany} onChange={e => setCurrentItem(p => p ? { ...p, roleCompany: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Role & Company</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.roleCompany} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, roleCompany: e.target.value } : null)} 
+                                className="admin-input"
+                                placeholder="e.g., CEO at TechCorp"
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Quote</label>
-                            <textarea rows={4} value={currentItem.quote} onChange={e => setCurrentItem(p => p ? { ...p, quote: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"></textarea>
+                            <label className="admin-label">Quote</label>
+                            <textarea 
+                                rows={6} 
+                                value={currentItem.quote} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, quote: e.target.value } : null)} 
+                                className="admin-textarea"
+                                placeholder="Enter the testimonial quote..."
+                                style={{ 
+                                    background: 'rgba(0, 0, 0, 0.3)',
+                                    lineHeight: '1.7'
+                                }}
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                                💡 Tip: Write a compelling testimonial that highlights the client's experience
+                            </p>
                         </div>
-                        <div className="flex items-center gap-4">
-                             <img src={currentItem.avatar.url} alt="Avatar preview" className="w-20 h-20 object-cover rounded-full border"/>
-                             <div>
-                                 <label className="block text-sm font-medium text-gray-700">Avatar Image</label>
-                                 <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-brand-purple hover:file:bg-violet-100" />
-                                 {currentItem.avatar.url && (
-                                     <button type="button" onClick={() => setCurrentItem(p => p ? { ...p, avatar: { ...p.avatar, url: '' } } : null)} className="mt-2 text-sm text-red-600 hover:underline">Remove Image</button>
-                                 )}
-                             </div>
+                        <div>
+                            <label className="admin-label">Avatar Image</label>
+                            <div className="flex items-center gap-6">
+                                {currentItem.avatar.url && (
+                                    <div className="relative">
+                                        <img 
+                                            src={currentItem.avatar.url} 
+                                            alt="Avatar preview" 
+                                            className="w-24 h-24 object-cover rounded-full border-2 border-electric-blue/20"
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setCurrentItem(p => p ? { ...p, avatar: { ...p.avatar, url: '' } } : null)} 
+                                            className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center backdrop-blur-xl transition-colors"
+                                            title="Remove image"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                )}
+                                <label className="flex-1">
+                                    <div className="admin-button-secondary flex items-center justify-center gap-2 cursor-pointer">
+                                        <Upload size={18} />
+                                        <span>Upload Avatar</span>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={handleImageUpload} 
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
                         </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                            <button onClick={handleSave} disabled={saving} className="bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-brand-purple-light disabled:bg-gray-400">
-                                {saving ? 'Saving...' : 'Save'}
+                        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                            <button 
+                                onClick={() => setIsModalOpen(false)} 
+                                className="admin-button-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSave} 
+                                disabled={saving} 
+                                className="admin-button-primary"
+                            >
+                                {saving ? 'Saving...' : 'Save Testimonial'}
                             </button>
                         </div>
                     </div>

@@ -3,6 +3,7 @@ import { Skill, RawSkill } from '../../../types';
 import { getSkillsData, updateSkills, convertFileToBase64 } from '../../../lib/api';
 import Modal from '../common/Modal';
 import { v4 as uuidv4 } from 'uuid';
+import { Edit2, Trash2, Plus, Award, Upload } from 'lucide-react';
 
 const SkillsForm: React.FC = () => {
     const [skills, setSkills] = useState<Skill[]>([]);
@@ -77,74 +78,153 @@ const SkillsForm: React.FC = () => {
         setCurrentItem(null);
     };
 
-    if (isLoading) return <div>Loading skills...</div>;
+    if (isLoading) return (
+        <div className="flex items-center justify-center py-12">
+            <div className="text-gray-400">Loading skills...</div>
+        </div>
+    );
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Manage Skills</h3>
-                <button onClick={handleAddNew} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h3 className="text-2xl font-bold text-white">Manage Skills</h3>
+                    <p className="text-gray-400 text-sm mt-1">Manage your technical and professional skills</p>
+                </div>
+                <button 
+                    onClick={handleAddNew} 
+                    className="admin-button-primary flex items-center gap-2"
+                >
+                    <Plus size={20} />
                     Add New Skill
                 </button>
             </div>
-            <div className="space-y-2">
+
+            {/* Skills Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {skills.map((skill) => (
-                    <div key={skill.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
-                        <div className="flex items-center gap-4">
+                    <div key={skill.id} className="admin-card group">
+                        <div className="flex flex-col items-center text-center gap-3">
                             {skill.image?.url ? (
-                                <img src={skill.image.url} alt={skill.skillName} className="w-8 h-8 rounded-lg object-cover" />
+                                <img src={skill.image.url} alt={skill.skillName} className="w-12 h-12 rounded-lg object-cover" />
                             ) : (
-                                <span className="text-brand-purple text-2xl">{skill.icon}</span>
+                                <div className="text-electric-blue text-3xl">
+                                    <Award size={32} />
+                                </div>
                             )}
-                            <p className="font-semibold text-gray-800">{skill.skillName}</p>
+                            <p className="font-semibold text-white">{skill.skillName}</p>
+                            <div className="flex items-center gap-2">
+                                {skill.image?.url ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20">
+                                        Custom Logo
+                                    </span>
+                                ) : (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/5 text-gray-400 border border-white/10">
+                                        Default Icon
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                         <div className="space-x-2">
-                            <button onClick={() => handleEdit(skill)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                            <button onClick={() => handleDelete(skill.id)} className="text-sm text-red-600 hover:underline">Delete</button>
+                        <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                                onClick={() => handleEdit(skill)} 
+                                className="admin-icon-button"
+                                title="Edit"
+                            >
+                                <Edit2 size={14} />
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(skill.id)} 
+                                className="admin-button-danger p-1.5"
+                                title="Delete"
+                            >
+                                <Trash2 size={14} />
+                            </button>
                         </div>
                     </div>
                 ))}
             </div>
 
+            {/* Modal */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && skills.some(s => s.id === currentItem.id) ? 'Edit Skill' : 'Add Skill'}>
-               {currentItem && (
-                    <div className="space-y-4 text-gray-800">
+                {currentItem && (
+                    <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Skill Name</label>
-                            <input type="text" value={currentItem.skillName} onChange={e => setCurrentItem(p => p ? {...p, skillName: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Skill Name</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.skillName} 
+                                onChange={e => setCurrentItem(p => p ? {...p, skillName: e.target.value} : null)} 
+                                className="admin-input"
+                                placeholder="e.g., React, Python, AWS"
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Icon Name (e.g., ReactIcon)</label>
-                            <input type="text" value={currentItem.skillIcon} onChange={e => setCurrentItem(p => p ? {...p, skillIcon: e.target.value} : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Icon Name</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.skillIcon} 
+                                onChange={e => setCurrentItem(p => p ? {...p, skillIcon: e.target.value} : null)} 
+                                className="admin-input"
+                                placeholder="e.g., ReactIcon"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Skill Image (Optional)</label>
-                            <div className="flex items-center gap-6 mt-2">
-                                {currentItem.image?.url && (
-                                    <img src={currentItem.image.url} alt="Skill Preview" className="w-16 h-16 rounded-lg object-cover border-2 border-gray-300" />
-                                )}
-                                <div>
-                                    <input type="file" accept="image/*" onChange={async (e) => {
-                                        if (e.target.files && e.target.files[0] && currentItem) {
-                                            try {
-                                                const base64 = await convertFileToBase64(e.target.files[0]);
-                                                setCurrentItem({ ...currentItem, image: { ...currentItem.image, url: base64 } });
-                                            } catch (error) {
-                                                console.error("Image conversion error:", error);
+                        <div className="admin-card">
+                            <label className="admin-label">Skill Image (Optional)</label>
+                            {currentItem.image?.url && (
+                                <img 
+                                    src={currentItem.image.url} 
+                                    alt="Skill Preview" 
+                                    className="w-24 h-24 rounded-lg object-cover border border-white/10 mb-4"
+                                />
+                            )}
+                            <div className="flex gap-3">
+                                <label className="admin-button-secondary flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={async (e) => {
+                                            if (e.target.files && e.target.files[0] && currentItem) {
+                                                try {
+                                                    const base64 = await convertFileToBase64(e.target.files[0]);
+                                                    setCurrentItem({ ...currentItem, image: { ...currentItem.image, url: base64 } });
+                                                } catch (error) {
+                                                    console.error("Image conversion error:", error);
+                                                }
                                             }
-                                        }
-                                    }} className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-brand-purple hover:file:bg-violet-100"/>
-                                    <p className="text-xs text-gray-500 mt-1">Recommended size: 64x64 pixels.</p>
-                                    {currentItem.image?.url && (
-                                        <button type="button" onClick={() => setCurrentItem(p => p ? {...p, image: { url: '', alternativeText: '' }} : null)} className="mt-1 text-sm text-red-600 hover:underline">Remove Image</button>
-                                    )}
-                                </div>
+                                        }}
+                                        className="hidden"
+                                    />
+                                    <Upload size={18} />
+                                    Upload Image
+                                </label>
+                                {currentItem.image?.url && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setCurrentItem(p => p ? {...p, image: { url: '', alternativeText: '' }} : null)} 
+                                        className="admin-button-danger"
+                                    >
+                                        Remove
+                                    </button>
+                                )}
                             </div>
+                            <p className="text-xs text-gray-500 mt-2">Recommended size: 64x64 pixels</p>
                         </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                            <button onClick={handleSave} disabled={saving} className="bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-brand-purple-light disabled:bg-gray-400">
-                                {saving ? 'Saving...' : 'Save'}
+                        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                            <button 
+                                onClick={() => setIsModalOpen(false)} 
+                                className="admin-button-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSave} 
+                                disabled={saving} 
+                                className="admin-button-primary"
+                            >
+                                {saving ? 'Saving...' : 'Save Skill'}
                             </button>
                         </div>
                     </div>

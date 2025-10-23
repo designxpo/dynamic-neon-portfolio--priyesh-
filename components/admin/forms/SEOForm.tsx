@@ -1,0 +1,131 @@
+import React, { useEffect, useState } from 'react';
+import { SEOConfig, SectionKey, SeoMeta } from '../../../types';
+import { getSEO, updateSEO } from '../../../lib/api';
+import { FileText, Save, Info } from 'lucide-react';
+
+const sectionLabels: Record<SectionKey, string> = {
+  home: 'Home',
+  hero: 'Hero',
+  services: 'Services',
+  projects: 'Projects',
+  experience: 'Experience',
+  education: 'Education',
+  skills: 'Skills',
+  testimonials: 'Testimonials',
+  blogs: 'Blog',
+  contact: 'Contact',
+};
+
+const SEOForm: React.FC = () => {
+  const [seo, setSeo] = useState<SEOConfig | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const data = await getSEO();
+      setSeo(data);
+    })();
+  }, []);
+
+  const handleChange = (section: SectionKey, field: keyof SeoMeta, value: string) => {
+    setSeo(prev => prev ? { ...prev, [section]: { ...prev[section], [field]: value } } as SEOConfig : prev);
+  };
+
+  const handleSave = async () => {
+    if (!seo) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      await updateSEO(seo);
+      setMessage('SEO settings saved');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!seo) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-400">Loading SEO settings...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-bold text-white flex items-center gap-2"><FileText size={20} /> Section SEO</h3>
+          <p className="text-gray-400 text-sm mt-1">Meta title, keywords, and description for each section.</p>
+        </div>
+        <button className="admin-button-primary flex items-center gap-2" onClick={handleSave} disabled={saving}>
+          <Save size={18} /> {saving ? 'Saving...' : 'Save All'}
+        </button>
+      </div>
+
+      {/* Info */}
+      <div className="admin-card text-gray-300">
+        <div className="flex items-start gap-3">
+          <div className="text-electric-blue"><Info size={18} /></div>
+          <div className="text-sm">
+            <p>Tips:</p>
+            <ul className="list-disc ml-5 mt-1 space-y-1 text-gray-400">
+              <li>Meta title: 50–60 characters.</li>
+              <li>Meta description: 150–160 characters.</li>
+              <li>Meta keywords: comma-separated (optional in modern SEO).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {(Object.keys(sectionLabels) as SectionKey[]).map((key) => (
+          <div className="admin-card" key={key}>
+            <h4 className="text-lg font-semibold text-white mb-4">{sectionLabels[key]}</h4>
+            <div className="space-y-4">
+              <div>
+                <label className="admin-label">Meta Title</label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  value={seo[key].metaTitle}
+                  onChange={(e) => handleChange(key, 'metaTitle', e.target.value)}
+                  placeholder="e.g., Projects — Case Studies"
+                />
+              </div>
+              <div>
+                <label className="admin-label">Meta Keywords</label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  value={seo[key].metaKeywords}
+                  onChange={(e) => handleChange(key, 'metaKeywords', e.target.value)}
+                  placeholder="design, ui, ux, product"
+                />
+              </div>
+              <div>
+                <label className="admin-label">Meta Description</label>
+                <textarea
+                  rows={3}
+                  className="admin-textarea"
+                  value={seo[key].metaDescription}
+                  onChange={(e) => handleChange(key, 'metaDescription', e.target.value)}
+                  placeholder="A concise summary for search engines..."
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {message && (
+        <div className="text-sm text-emerald-400">{message}</div>
+      )}
+    </div>
+  );
+};
+
+export default SEOForm;

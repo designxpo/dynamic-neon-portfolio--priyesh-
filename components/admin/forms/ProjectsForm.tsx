@@ -3,6 +3,7 @@ import { RawProject } from '../../../types';
 import { getProjectsData, updateProjects, convertFileToBase64 } from '../../../lib/api';
 import Modal from '../common/Modal';
 import { v4 as uuidv4 } from 'uuid';
+import { Edit2, Trash2, Plus, ExternalLink, Github } from 'lucide-react';
 
 const ProjectsForm: React.FC = () => {
     const [projects, setProjects] = useState<RawProject[]>([]);
@@ -82,85 +83,253 @@ const ProjectsForm: React.FC = () => {
         setCurrentItem(null);
     };
 
-    if (isLoading) return <div>Loading projects...</div>;
+    if (isLoading) return (
+        <div className="flex items-center justify-center py-12">
+            <div className="text-gray-400">Loading projects...</div>
+        </div>
+    );
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Manage Projects</h3>
-                <button onClick={handleAddNew} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h3 className="text-2xl font-bold text-white">Manage Projects</h3>
+                    <p className="text-gray-400 text-sm mt-1">Create and manage your portfolio projects</p>
+                </div>
+                <button 
+                    onClick={handleAddNew} 
+                    className="admin-button-primary flex items-center gap-2"
+                >
+                    <Plus size={20} />
                     Add New Project
                 </button>
             </div>
-            <div className="space-y-2">
-                {projects.map((project) => (
-                    <div key={project.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border">
-                        <div className="flex items-center gap-4">
-                            <img src={project.coverImage.url} alt={project.title} className="w-16 h-12 object-cover rounded"/>
-                            <div>
-                                <p className="font-semibold text-gray-800">{project.title}</p>
-                                <p className="text-sm text-gray-500">{project.category}</p>
-                            </div>
-                        </div>
-                        <div className="space-x-2">
-                            <button onClick={() => handleEdit(project)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                            <button onClick={() => handleDelete(project.id)} className="text-sm text-red-600 hover:underline">Delete</button>
-                        </div>
-                    </div>
-                ))}
+
+            {/* Projects Table */}
+            <div className="admin-table-container">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Category</th>
+                            <th>Technologies</th>
+                            <th>Status</th>
+                            <th className="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {projects.map((project) => (
+                            <tr key={project.id}>
+                                <td>
+                                    <div className="flex items-center gap-4">
+                                        <img 
+                                            src={project.coverImage.url} 
+                                            alt={project.title} 
+                                            className="w-16 h-12 object-cover rounded-lg border border-white/10"
+                                        />
+                                        <div>
+                                            <p className="font-semibold text-white">{project.title}</p>
+                                            <p className="text-xs text-gray-500 line-clamp-1">{project.descriptionShort}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span className="px-3 py-1 rounded-full text-xs font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20">
+                                        {project.category}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div className="flex flex-wrap gap-1">
+                                        {project.technologies?.slice(0, 3).map((tech, idx) => (
+                                            <span key={idx} className="px-2 py-1 rounded-md text-xs backdrop-blur-xl bg-white/5 text-gray-400 border border-white/10">
+                                                {tech}
+                                            </span>
+                                        ))}
+                                        {project.technologies && project.technologies.length > 3 && (
+                                            <span className="px-2 py-1 rounded-md text-xs text-gray-500">
+                                                +{project.technologies.length - 3}
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td>
+                                    {project.featured ? (
+                                        <span className="px-3 py-1 rounded-full text-xs font-medium backdrop-blur-xl bg-deep-violet/10 text-white border border-deep-violet/20">
+                                            Featured
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-600 text-xs">Standard</span>
+                                    )}
+                                </td>
+                                <td>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button 
+                                            onClick={() => handleEdit(project)} 
+                                            className="admin-icon-button"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(project.id)} 
+                                            className="admin-button-danger"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && projects.some(p => p.id === currentItem.id) ? 'Edit Project' : 'Add Project'}>
                 {currentItem && (
-                    <div className="space-y-4 text-gray-800">
+                    <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Title</label>
-                            <input type="text" value={currentItem.title} onChange={e => setCurrentItem(p => p ? { ...p, title: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Title</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.title} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, title: e.target.value } : null)} 
+                                className="admin-input"
+                                placeholder="Enter project title"
+                            />
                         </div>
+                        
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Category</label>
-                            <input type="text" value={currentItem.category} onChange={e => setCurrentItem(p => p ? { ...p, category: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Category</label>
+                            <input 
+                                type="text" 
+                                value={currentItem.category} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, category: e.target.value } : null)} 
+                                className="admin-input"
+                                placeholder="e.g., Web Development, Mobile App"
+                            />
                         </div>
+                        
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Short Description</label>
-                            <textarea rows={2} value={currentItem.descriptionShort} onChange={e => setCurrentItem(p => p ? { ...p, descriptionShort: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"></textarea>
+                            <label className="admin-label">Short Description</label>
+                            <textarea 
+                                rows={2} 
+                                value={currentItem.descriptionShort} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, descriptionShort: e.target.value } : null)} 
+                                className="admin-textarea"
+                                placeholder="Brief description for cards"
+                            />
                         </div>
-                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Long Description</label>
-                            <textarea rows={4} value={currentItem.descriptionLong} onChange={e => setCurrentItem(p => p ? { ...p, descriptionLong: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"></textarea>
-                        </div>
+                        
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Technologies (comma-separated)</label>
-                            <input type="text" value={(currentItem.technologies || []).join(', ')} onChange={e => setCurrentItem(p => p ? { ...p, technologies: e.target.value.split(',').map(s => s.trim()) } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <label className="admin-label">Long Description</label>
+                            <textarea 
+                                rows={4} 
+                                value={currentItem.descriptionLong} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, descriptionLong: e.target.value } : null)} 
+                                className="admin-textarea"
+                                placeholder="Detailed project description"
+                            />
                         </div>
-                         <div className="grid grid-cols-2 gap-4">
+                        
+                        <div>
+                            <label className="admin-label">Technologies (comma-separated)</label>
+                            <input 
+                                type="text" 
+                                value={(currentItem.technologies || []).join(', ')} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, technologies: e.target.value.split(',').map(s => s.trim()) } : null)} 
+                                className="admin-input"
+                                placeholder="React, TypeScript, Node.js"
+                            />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Live URL</label>
-                                <input type="url" value={currentItem.liveUrl} onChange={e => setCurrentItem(p => p ? { ...p, liveUrl: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                                <label className="admin-label flex items-center gap-2">
+                                    <ExternalLink size={14} />
+                                    Live URL
+                                </label>
+                                <input 
+                                    type="url" 
+                                    value={currentItem.liveUrl} 
+                                    onChange={e => setCurrentItem(p => p ? { ...p, liveUrl: e.target.value } : null)} 
+                                    className="admin-input"
+                                    placeholder="https://example.com"
+                                />
                             </div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Source Code URL</label>
-                                <input type="url" value={currentItem.sourceUrl} onChange={e => setCurrentItem(p => p ? { ...p, sourceUrl: e.target.value } : null)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                            <div>
+                                <label className="admin-label flex items-center gap-2">
+                                    <Github size={14} />
+                                    Source Code URL
+                                </label>
+                                <input 
+                                    type="url" 
+                                    value={currentItem.sourceUrl} 
+                                    onChange={e => setCurrentItem(p => p ? { ...p, sourceUrl: e.target.value } : null)} 
+                                    className="admin-input"
+                                    placeholder="https://github.com/..."
+                                />
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                             <img src={currentItem.coverImage.url} alt="Cover preview" className="w-24 h-24 object-cover rounded border"/>
-                             <div>
-                                 <label className="block text-sm font-medium text-gray-700">Cover Image</label>
-                                 <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-brand-purple hover:file:bg-violet-100" />
-                                 {currentItem.coverImage.url && (
-                                     <button type="button" onClick={() => setCurrentItem(p => p ? { ...p, coverImage: { ...p.coverImage, url: '' } } : null)} className="mt-2 text-sm text-red-600 hover:underline">Remove Image</button>
-                                 )}
-                             </div>
+                        
+                        <div className="admin-card">
+                            <label className="admin-label">Cover Image</label>
+                            {currentItem.coverImage.url && (
+                                <img 
+                                    src={currentItem.coverImage.url} 
+                                    alt="Cover preview" 
+                                    className="w-full h-48 object-cover rounded-lg border border-white/10 mb-4"
+                                />
+                            )}
+                            <div className="flex gap-3">
+                                <label className="admin-button-secondary flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={handleImageUpload} 
+                                        className="hidden"
+                                    />
+                                    Upload Image
+                                </label>
+                                {currentItem.coverImage.url && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setCurrentItem(p => p ? { ...p, coverImage: { ...p.coverImage, url: '' } } : null)} 
+                                        className="admin-button-danger"
+                                    >
+                                        Remove
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center">
-                            <input id="featured" type="checkbox" checked={currentItem.featured} onChange={e => setCurrentItem(p => p ? { ...p, featured: e.target.checked } : null)} className="h-4 w-4 text-brand-purple border-gray-300 rounded" />
-                            <label htmlFor="featured" className="ml-2 block text-sm text-gray-900">Featured Project</label>
+                        
+                        <div className="flex items-center gap-3 admin-card">
+                            <input 
+                                id="featured" 
+                                type="checkbox" 
+                                checked={currentItem.featured} 
+                                onChange={e => setCurrentItem(p => p ? { ...p, featured: e.target.checked } : null)} 
+                                className="w-5 h-5 rounded border-white/20 bg-white/5 text-electric-blue focus:ring-electric-blue focus:ring-offset-0"
+                            />
+                            <label htmlFor="featured" className="text-sm text-gray-300 cursor-pointer">
+                                Mark as Featured Project
+                            </label>
                         </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                            <button onClick={handleSave} disabled={saving} className="bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-brand-purple-light disabled:bg-gray-400">
-                                {saving ? 'Saving...' : 'Save'}
+                        
+                        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                            <button 
+                                onClick={() => setIsModalOpen(false)} 
+                                className="admin-button-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSave} 
+                                disabled={saving} 
+                                className="admin-button-primary"
+                            >
+                                {saving ? 'Saving...' : 'Save Project'}
                             </button>
                         </div>
                     </div>

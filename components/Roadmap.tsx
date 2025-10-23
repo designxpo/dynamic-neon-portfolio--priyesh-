@@ -60,14 +60,14 @@ export default function Roadmap() {
         </div>
 
         <div className="relative">
-          {/* Animated Connection Line */}
+          {/* Animated Connection Line: Desktop/Tablet (horizontal) */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"
             viewBox="0 0 1200 200"
             fill="none"
           >
             <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <linearGradient id="lineGradientH" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="transparent" />
                 <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="#6C63FF" />
                 <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="transparent" />
@@ -75,7 +75,32 @@ export default function Roadmap() {
             </defs>
             <motion.path
               d="M50 100 Q300 50 600 100 Q900 150 1150 100" // Extended path from left to right
-              stroke="url(#lineGradient)"
+              stroke="url(#lineGradientH)"
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: (activeStep + 1) / steps.length }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+            />
+          </svg>
+
+          {/* Animated Connection Line: Mobile (vertical) */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none md:hidden"
+            viewBox="0 0 200 1200"
+            fill="none"
+          >
+            <defs>
+              <linearGradient id="lineGradientV" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="transparent" />
+                <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="#6C63FF" />
+                <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="transparent" />
+              </linearGradient>
+            </defs>
+            <motion.path
+              d="M100 50 Q150 300 100 600 Q50 900 100 1150" // Vertical flow from top to bottom with slight curves
+              stroke="url(#lineGradientV)"
               strokeWidth="4"
               fill="none"
               strokeLinecap="round"

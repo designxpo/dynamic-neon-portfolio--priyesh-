@@ -49,11 +49,23 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
                 title={skill.skillName}
               >
                 <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
-                  <img
-                    src={skill.icon as string}
-                    alt={skill.skillName}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  {skill.image?.url ? (
+                    <img
+                      src={skill.image.url}
+                      alt={skill.skillName}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  ) : (
+                    <img
+                      src={typeof skill.icon === 'string' ? (skill.icon as string) : ''}
+                      alt={skill.skillName}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        // hide broken image if icon string isn't a valid URL
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             ))}

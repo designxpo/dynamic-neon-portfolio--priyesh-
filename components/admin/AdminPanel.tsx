@@ -40,6 +40,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                 return <TestimonialsForm />;
             case 'blogs':
                 return <BlogsForm />;
+                case 'seo':
+                    return <SEOForm />;
             case 'contact':
                 return <ContactForm />;
             case 'contact-submissions':
@@ -62,4 +64,5 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     );
 };
 
+    import SEOForm from './forms/SEOForm';
 export default AdminPanel;

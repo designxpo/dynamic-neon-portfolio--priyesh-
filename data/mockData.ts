@@ -14,11 +14,6 @@ export const mockHeroData: Omit<RawHeroData, 'profileImage'> = {
         { id: uuidv4(), label: "Projects", value: "10+" },
         { id: uuidv4(), label: "Clients", value: "8+" },
         { id: uuidv4(), label: "Social Following", value: "160K+" }
-    ],
-    socialLinks: [
-        { id: uuidv4(), platform: 'LinkedIn', url: 'https://linkedin.com/in/priyeshmishra16', icon: 'LinkedInIcon' },
-        { id: uuidv4(), platform: 'Instagram', url: 'https://instagram.com/designxpo.in', icon: 'InstagramIcon' },
-        { id: uuidv4(), platform: 'X', url: 'https://twitter.com/mepriyeshm', icon: 'TwitterIcon' },
     ]
 };
 

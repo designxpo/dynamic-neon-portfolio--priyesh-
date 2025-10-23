@@ -77,9 +77,22 @@ A modern, responsive portfolio website built with React, TypeScript, and Vite. F
    ```
 
 7. **Access the application**
-   - Frontend: http://localhost:5173
+   - Frontend: http://localhost:3000 (Vite dev server is configured to run on port 3000)
    - Backend API: http://localhost:5000
-   - Admin panel: http://localhost:5173/#/admin
+   - Admin panel: http://localhost:3000/#/admin
+
+## Configuration (env)
+
+Copy `.env.example` to `.env` and adjust as needed:
+
+```
+VITE_API_BASE_URL=
+GEMINI_API_KEY=
+```
+
+- Leave `VITE_API_BASE_URL` empty during local development to use the Vite dev proxy (configured in `vite.config.ts`).
+- In production, set `VITE_API_BASE_URL` to the public URL of your backend API (for example, `https://api.yourdomain.com`).
+- If you serve the frontend and backend from the same origin (reverse proxy), you may keep it empty as long as `/api/*` routes are proxied to the backend.
 
 ## API Endpoints
 
