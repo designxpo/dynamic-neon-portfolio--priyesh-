@@ -82,7 +82,41 @@ const PortfolioPage: React.FC = () => {
                     testimonials,
                     contact,
                 });
-                setBlogs(blogItems);
+                // Fallback: if no blogs in DB/localStorage, seed with temporary dummy posts for testing
+                const fallbackBlogs: Blog[] = [
+                    {
+                        id: 'dummy-1',
+                        title: 'How I Design Fast Without Breaking UX',
+                        author: 'Priyesh Mishra',
+                        content: 'Rapid design doesn’t mean careless. Here’s my tight loop that balances speed with quality.',
+                        excerpt: 'A short system for moving from idea to validated UI quickly.',
+                        url: 'https://example.com/blog/design-fast',
+                        thumbnail: { url: 'https://picsum.photos/id/1005/800/450', alternativeText: 'Design fast' },
+                        publishedAt: new Date().toISOString(),
+                    },
+                    {
+                        id: 'dummy-2',
+                        title: '3 Portfolio Case Study Patterns That Work',
+                        author: 'Priyesh Mishra',
+                        content: 'Patterns that make case studies readable and persuasive—without fluff.',
+                        excerpt: 'Make your work easy to understand and remember with these simple sections.',
+                        url: 'https://example.com/blog/case-studies',
+                        thumbnail: { url: 'https://picsum.photos/id/1011/800/450', alternativeText: 'Case studies' },
+                        publishedAt: new Date(Date.now() - 86400000).toISOString(),
+                    },
+                    {
+                        id: 'dummy-3',
+                        title: 'Visual Consistency: Small Rules, Big Impact',
+                        author: 'Priyesh Mishra',
+                        content: 'A few consistent choices compound into trust and clarity across your product.',
+                        excerpt: 'A checklist I use for spacing, type, color and motion to keep products coherent.',
+                        url: 'https://example.com/blog/visual-consistency',
+                        thumbnail: { url: 'https://picsum.photos/id/1016/800/450', alternativeText: 'Consistency' },
+                        publishedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+                    },
+                ];
+
+                setBlogs((blogItems && blogItems.length > 0) ? blogItems : fallbackBlogs);
 
             } catch (error) {
                 console.error("Failed to fetch portfolio data:", error);

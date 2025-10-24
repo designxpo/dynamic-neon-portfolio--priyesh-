@@ -8,6 +8,10 @@ interface RecentWorksProps {
   data: Project[];
 }
 
+// Show link icons whenever a non-empty string is provided (including placeholders like '#').
+// To hide the icons, leave the field blank in the Admin panel.
+const hasAnyLink = (url?: string) => !!url && url.trim().length > 0;
+
 const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
   <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full">
     <div className="relative overflow-hidden">
@@ -25,7 +29,7 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
           {project.category}
         </span>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {project.sourceUrl && (
+          {hasAnyLink(project.sourceUrl) && (
             <a
               href={project.sourceUrl}
               target="_blank"
@@ -35,7 +39,7 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
               <GitHubIcon />
             </a>
           )}
-          {project.liveUrl && (
+          {hasAnyLink(project.liveUrl) && (
             <a
               href={project.liveUrl}
               target="_blank"

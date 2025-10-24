@@ -257,6 +257,7 @@ const ProjectsForm: React.FC = () => {
                                     className="admin-input"
                                     placeholder="https://example.com"
                                 />
+                                <p className="mt-1 text-xs text-gray-500">Leave blank to hide the Live link on the card.</p>
                             </div>
                             <div>
                                 <label className="admin-label flex items-center gap-2">
@@ -270,6 +271,7 @@ const ProjectsForm: React.FC = () => {
                                     className="admin-input"
                                     placeholder="https://github.com/..."
                                 />
+                                <p className="mt-1 text-xs text-gray-500">Leave blank to hide the GitHub icon/link on the card.</p>
                             </div>
                         </div>
                         

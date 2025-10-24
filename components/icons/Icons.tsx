@@ -19,6 +19,31 @@ export const InstagramIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" view
 export const BrandingIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>);
 export const WebDesignIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>);
 export const AppDesignIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>);
+// New: Icons used by Services cards
+export const UXIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-8 md:h-8">
+        <rect x="3.5" y="5" width="17" height="14" rx="2.5" className="opacity-80" />
+        <path d="M3.5 9.5h17M8 13h4M8 16h7" className="opacity-80" />
+        <circle cx="6.25" cy="13" r="1.25" />
+    </svg>
+);
+
+export const ProductIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-8 md:h-8">
+        <path d="M3.5 7.75L12 3l8.5 4.75v8.5L12 21l-8.5-4.75z" />
+        <path d="M12 3v18M3.5 7.75L12 12.5l8.5-4.75" className="opacity-80" />
+    </svg>
+);
+
+export const SocialIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-8 md:h-8">
+        <path d="M4 12h16M12 4v16" className="opacity-80" />
+        <circle cx="6.5" cy="6.5" r="2" />
+        <circle cx="17.5" cy="6.5" r="2" />
+        <circle cx="6.5" cy="17.5" r="2" />
+        <circle cx="17.5" cy="17.5" r="2" />
+    </svg>
+);
 export const FigmaIcon = () => (<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="w-full h-full"><path d="M12 24a6 6 0 0 1-6-6V6a6 6 0 0 1 6-6h1.5a6 6 0 1 1 0 12H12a6 6 0 0 0 0 12zm0-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" /></svg>);
 export const ReactIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="-11.5 -10.23174 23 20.46348" fill="currentColor" className="w-full h-full"><circle cx="0" cy="0" r="2.05" fill="#61dafb" /><g stroke="#61dafb" strokeWidth="1" fill="none"><ellipse rx="11" ry="4.2" /><ellipse rx="11" ry="4.2" transform="rotate(60)" /><ellipse rx="11" ry="4.2" transform="rotate(120)" /></g></svg>);
 export const TypeScriptIcon = () => (<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#3178C6" className="w-full h-full"><path d="M1.5 0 h21 v21 h-1.5 v1.5 h-18 v-1.5 H0V0h1.5z m1.5 1.5 v18 h18 V1.5z M10.875 16.5h1.875V9.375h2.25V7.5h-6.375v1.875h2.25v7.125z" /></svg>);
