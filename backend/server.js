@@ -17,10 +17,14 @@ app.use(express.json());
 // Connect to MongoDB
 async function connectDB() {
   try {
+    const useMemory = process.env.MONGODB_USE_MEMORY === 'true';
     let mongoUri = process.env.MONGODB_URI;
 
-    // If no MongoDB URI is provided or it's localhost (which might not be running), use in-memory MongoDB
-    if (!mongoUri || mongoUri.includes('localhost')) {
+    if (!mongoUri && !useMemory) {
+      console.warn('MONGODB_URI not set. Falling back to in-memory MongoDB for development.');
+    }
+
+    if (!mongoUri || useMemory) {
       console.log('Starting in-memory MongoDB...');
       const mongoServer = await MongoMemoryServer.create();
       mongoUri = mongoServer.getUri();

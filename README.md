@@ -76,6 +76,11 @@ A modern, responsive portfolio website built with React, TypeScript, and Vite. F
    npm run dev
    ```
 
+Alternatively, start both frontend and backend together from the project root:
+```bash
+npm run dev:all
+```
+
 7. **Access the application**
    - Frontend: http://localhost:3000 (Vite dev server is configured to run on port 3000)
    - Backend API: http://localhost:5000
