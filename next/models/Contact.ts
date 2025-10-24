@@ -1,0 +1,19 @@
+import mongoose, { Schema, InferSchemaType, models, model } from 'mongoose';
+
+const contactSchema = new Schema({
+  name: { type: String, required: true, trim: true },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email'],
+  },
+  contactNumber: { type: String, required: true, trim: true },
+  message: { type: String, required: true, trim: true },
+  submittedAt: { type: Date, default: Date.now },
+});
+
+export type ContactDoc = InferSchemaType<typeof contactSchema> & { _id: mongoose.Types.ObjectId };
+
+export default (models.Contact as mongoose.Model<ContactDoc>) || model<ContactDoc>('Contact', contactSchema);

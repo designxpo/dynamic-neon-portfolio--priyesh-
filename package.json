@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently -n FE,API -c green,blue \"npm run dev\" \"npm --prefix backend run dev\"",
+    "dev:next": "npm --prefix next run dev",
+    "build:next": "npm --prefix next run build",
+    "start:next": "npm --prefix next run start",
     "build": "vite build",
     "preview": "vite preview"
   },

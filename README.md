@@ -81,6 +81,24 @@ Alternatively, start both frontend and backend together from the project root:
 npm run dev:all
 ```
 
+### Next.js (Unified frontend + API in one app)
+
+This repo now also includes a Next.js app in `next/` that combines the frontend and backend API via Route Handlers.
+
+- Health endpoint: `http://localhost:3001/api/health`
+- Contacts API: `http://localhost:3001/api/contacts`
+
+Run the Next.js app:
+```bash
+npm run dev:next
+```
+
+Configure database for Next.js (copy `next/.env.example` to `next/.env.local`):
+```
+MONGODB_URI=your_mongodb_atlas_connection_string
+```
+If unset, API routes requiring DB will fail until you provide the URI.
+
 7. **Access the application**
    - Frontend: http://localhost:3000 (Vite dev server is configured to run on port 3000)
    - Backend API: http://localhost:5000
@@ -107,6 +125,8 @@ GEMINI_API_KEY=
 
 ### Health Check
 - `GET /api/health` - Server health status
+
+For Next.js app, use port 3001 by default: `GET http://localhost:3001/api/health`.
 
 ## Admin Panel
 
