@@ -141,6 +141,10 @@ GEMINI_API_KEY=
 - In production, set `VITE_API_BASE_URL` to the public URL of your backend API (for example, `https://api.yourdomain.com`).
 - If you serve the frontend and backend from the same origin (reverse proxy), you may keep it empty as long as `/api/*` routes are proxied to the backend.
 
+### Next.js env (client)
+
+For the unified Next app under `next/`, you can optionally set a public API base for the browser via `NEXT_PUBLIC_API_BASE_URL` in `next/.env.local`. If omitted, the app will use relative `/api` paths against the same origin.
+
 ## API Endpoints
 
 ### Contact Form
