@@ -27,10 +27,8 @@ async function connectDB() {
       console.log('In-memory MongoDB started');
     }
 
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // With modern Mongoose, no need to pass deprecated options
+    await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('MongoDB connection error:', err);
