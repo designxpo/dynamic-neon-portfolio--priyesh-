@@ -8,12 +8,13 @@
     ],
     "allowJs": false,
     "skipLibCheck": true,
-    "strict": true,
+  "strict": false,
     "noEmit": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+  "allowImportingTsExtensions": true,
     "jsx": "preserve",
     "incremental": true,
     "baseUrl": ".",
@@ -22,6 +23,7 @@
         "./*"
       ]
     },
+    "types": ["react", "react-dom", "node"],
     "esModuleInterop": true,
     "plugins": [
       {

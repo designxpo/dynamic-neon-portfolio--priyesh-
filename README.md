@@ -81,6 +81,30 @@ Alternatively, start both frontend and backend together from the project root:
 npm run dev:all
 ```
 
+### New: Run unified Next.js app (frontend + API in one)
+
+We've added a Next.js app under `next/` that serves both the UI and API routes together. This is the recommended path going forward.
+
+1. Configure database for Next (copy and edit env):
+   ```bash
+   cp next/.env.example next/.env.local
+   # edit next/.env.local to set MONGODB_URI
+   ```
+
+2. Run the Next.js dev server:
+   ```bash
+   npm run dev:next
+   ```
+
+3. Test:
+   - Frontend: http://localhost:3001/
+   - API (Next): http://localhost:3001/api/health
+   - Contacts API (Next): http://localhost:3001/api/contacts
+
+Notes:
+- During migration we import existing components into Next (experimental.externalDir). Tailwind is configured to scan the root components.
+- The current Vite app continues to work. You can migrate sections incrementally, then retire the Vite + Express setup later.
+
 ### Next.js (Unified frontend + API in one app)
 
 This repo now also includes a Next.js app in `next/` that combines the frontend and backend API via Route Handlers.
