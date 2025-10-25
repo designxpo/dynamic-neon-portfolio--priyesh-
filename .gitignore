@@ -26,3 +26,8 @@ next/.next
 *.njsproj
 *.sln
 *.sw?
+
+# Guard against accidental npm init at repo root
+# The Next app lives in next/, so ignore only the root-level files
+/package.json
+/package-lock.json
