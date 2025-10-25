@@ -1,6 +1,18 @@
-# Dynamic Neon Portfolio
+# Dynamic Neon Portfolio — Monorepo
 
-A modern, responsive portfolio website built with React, TypeScript, and Vite. Features a dynamic neon theme, admin panel for content management, and contact form with MongoDB backend.
+> API documentation: see docs/API.md for all Next.js API routes (health, contacts, admin content, and config endpoints).
+
+This repository now uses npm workspaces to manage multiple projects side‑by‑side. You can develop the legacy Vite app, the unified Next.js app, and the Express backend independently.
+
+Monorepo layout:
+
+- Frontend (Vite) — root folder (this package)
+- Unified Next.js app (frontend + API) — `next/`
+- Express backend API — `backend/`
+- Experimental Next app — `next-app/`
+- Strapi schemas — `strapi-schemas/`
+
+Workspace setup: root `package.json` defines workspaces for `next`, `backend`, `next-app`, and `strapi-schemas`. You can run each directly with npm `--prefix` or via helper scripts below.
 
 ## Features
 
@@ -44,9 +56,10 @@ A modern, responsive portfolio website built with React, TypeScript, and Vite. F
    cd dynamic-neon-portfolio
    ```
 
-2. **Install frontend dependencies**
+2. **Install dependencies (monorepo)**
    ```bash
    npm install
+   # installs root (Vite) and bootstraps workspaces: next, backend, next-app, strapi-schemas
    ```
 
 3. **Set up the backend**
@@ -81,7 +94,12 @@ Alternatively, start both frontend and backend together from the project root:
 npm run dev:all
 ```
 
-### New: Run unified Next.js app (frontend + API in one)
+Or start Next.js + backend together:
+```bash
+npm run dev:next:api
+```
+
+### Run unified Next.js app (frontend + API in one)
 
 We've added a Next.js app under `next/` that serves both the UI and API routes together. This is the recommended path going forward.
 
@@ -97,9 +115,10 @@ We've added a Next.js app under `next/` that serves both the UI and API routes t
    ```
 
 3. Test:
-   - Frontend: http://localhost:3001/
-   - API (Next): http://localhost:3001/api/health
-   - Contacts API (Next): http://localhost:3001/api/contacts
+   - The Next dev server prints the active port (usually 3011 or fallback 3012)
+   - App: http://localhost:3011/ (or shown port)
+   - API (Next): http://localhost:3011/api/health
+   - Contacts API (Next): http://localhost:3011/api/contacts
 
 Notes:
 - During migration we import existing components into Next (experimental.externalDir). Tailwind is configured to scan the root components.
@@ -123,10 +142,11 @@ MONGODB_URI=your_mongodb_atlas_connection_string
 ```
 If unset, API routes requiring DB will fail until you provide the URI.
 
-7. **Access the application**
-   - Frontend: http://localhost:3000 (Vite dev server is configured to run on port 3000)
-   - Backend API: http://localhost:5000
-   - Admin panel: http://localhost:3000/#/admin
+7. **Access the applications**
+   - Vite Frontend: http://localhost:3000 (proxy to backend on /api)
+   - Express Backend API: http://localhost:5000
+   - Next.js App: http://localhost:3011 (or port displayed by dev server)
+   - Admin panel (Next): http://localhost:3011/admin
 
 ## Configuration (env)
 

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/mongoose';
-import Contact from '@/models/Contact';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+import { connectDB } from '../../../lib/db/mongoose';
+import Contact from '../../../models/Contact';
 
 export async function POST(request: Request) {
   try {
