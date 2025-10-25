@@ -164,7 +164,7 @@ export default function Chatbot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="rounded-full bg-primary text-white shadow-lg px-4 py-3 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="rounded-full bg-primary text-white shadow-xl drop-shadow-lg px-4 py-3 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/20 border border-white/10 backdrop-blur-md"
           aria-label="Open chat"
         >
           Chat
@@ -172,7 +172,12 @@ export default function Chatbot() {
       )}
 
       {open && (
-        <div className="w-[90vw] max-w-sm h-[60vh] max-h-[70vh] rounded-xl border border-white/10 bg-[#0b0b12]/95 backdrop-blur-md shadow-2xl flex flex-col">
+        <div className="relative w-[90vw] max-w-sm h-[60vh] max-h-[70vh] rounded-xl border border-white/10 bg-[#0b0b12]/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] drop-shadow-2xl flex flex-col">
+          {/* Side pop arrow */}
+          <div
+            aria-hidden
+            className="hidden md:block absolute -right-2 bottom-16 w-4 h-4 bg-[#0b0b12]/95 border border-white/10 rotate-45 shadow-xl"
+          />
           <div className="p-3 border-b border-white/10 flex items-center justify-between">
             <div className="text-sm">
               <div className="font-semibold">Ask about Priyesh</div>
