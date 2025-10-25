@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
 import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog } from '../types';
-import { Bot, Send } from 'lucide-react';
+import { Bot, Send, X } from 'lucide-react';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -117,6 +117,7 @@ export default function Chatbot() {
     } catch { return []; }
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -130,6 +131,20 @@ export default function Chatbot() {
   }, [messages]);
 
   const disabled = useMemo(() => !db || !input.trim(), [db, input]);
+
+  const openChat = () => {
+    setOpening(true);
+    // slight delay to let ripple render beneath panel
+    setTimeout(() => {
+      setOpen(true);
+      // stop ripple after animation window
+      setTimeout(() => setOpening(false), 500);
+    }, 10);
+  };
+
+  const closeChat = () => {
+    setOpen(false);
+  };
 
   const send = async () => {
     const q = input.trim();
@@ -215,17 +230,36 @@ export default function Chatbot() {
   return (
     <div className="fixed bottom-4 right-4 z-[9999]" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
       {/* Toggle button */}
-      <AnimatePresence initial={false} mode="wait">
+      <AnimatePresence initial={false} mode="sync">
         {open ? (
           <motion.div
             key="chat-panel"
+            layoutId="chat-surface"
             className="relative w-[90vw] max-w-md h-[65vh] rounded-2xl border border-brand-purple/10 bg-dark-bg/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden"
             style={{ transformOrigin: 'bottom right', willChange: 'transform, opacity' }}
-            initial={{ opacity: 0, x: 16, scale: 0.98, scaleY: 0 }}
-            animate={{ opacity: 1, x: 0, scale: 1, scaleY: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98, scaleY: 0 }}
-            transition={{ type: 'tween', ease: [0.22, 1, 0.36, 1], duration: 0.28 }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ type: 'tween', ease: [0.4, 0, 0.2, 1], duration: 0.45 }}
           >
+            {/* Optional glow ripple on open for premium feel */}
+            <AnimatePresence>
+              {opening && (
+                <motion.span
+                  key="open-ripple"
+                  className="pointer-events-none absolute -bottom-3 -right-3 w-20 h-20 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse at center, rgba(108,99,255,0.35), rgba(108,99,255,0) 60%)',
+                    filter: 'blur(12px)'
+                  }}
+                  initial={{ opacity: 0.5, scale: 1 }}
+                  animate={{ opacity: 0, scale: 1.8 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                />
+              )}
+            </AnimatePresence>
             {/* Content fade-in to avoid popping during scale animation */}
             <motion.div className="contents" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.08, duration: 0.2 }}>
             {/* Side pop arrow */}
@@ -247,7 +281,17 @@ export default function Chatbot() {
                   <div className="text-white/60">Ask about projects, skills, and more</div>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white" aria-label="Close">✕</button>
+              <motion.button
+                onClick={closeChat}
+                className="text-white/60 hover:text-white p-1 rounded-md"
+                aria-label="Close"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              >
+                <X size={18} />
+              </motion.button>
             </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -328,7 +372,7 @@ export default function Chatbot() {
         ) : (
           <motion.button
             key="chat-toggle"
-            onClick={() => setOpen(true)}
+            onClick={openChat}
             aria-label="Open chat"
             initial={{ opacity: 0, scale: 0.9, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -338,10 +382,16 @@ export default function Chatbot() {
             transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
             className="group relative select-none w-14 h-14 md:w-16 md:h-16 rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
           >
-            {/* Outer neon aura */}
-            <span aria-hidden className="pointer-events-none absolute -inset-2 rounded-[26px] bg-[radial-gradient(ellipse_at_center,rgba(108,99,255,0.35),rgba(108,99,255,0)_60%)] opacity-70 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
+            {/* Outer neon aura with breathing glow */}
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute -inset-2 rounded-[26px] bg-[radial-gradient(ellipse_at_center,rgba(108,99,255,0.35),rgba(108,99,255,0)_60%)] blur-xl"
+              animate={{ opacity: [0.55, 0.85, 0.55], scale: [1, 1.05, 1] }}
+              transition={{ duration: 3, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
+            />
             {/* Button core with subtle gradient and inner glow */}
-            <span
+            <motion.span
+              layoutId="chat-surface"
               className="relative inline-flex w-full h-full items-center justify-center rounded-[22px] bg-gradient-to-br from-dark-bg via-[#231c4a] to-deep-violet text-white shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] transition-shadow duration-300"
               style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)' }}
             >
@@ -353,7 +403,7 @@ export default function Chatbot() {
               </span>
               {/* Glow on hover */}
               <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[22px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </span>
+            </motion.span>
           </motion.button>
         )}
       </AnimatePresence>
