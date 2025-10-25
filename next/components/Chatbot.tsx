@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
 import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog } from '../types';
@@ -161,30 +162,49 @@ export default function Chatbot() {
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {/* Toggle button */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="rounded-full bg-primary text-white shadow-xl drop-shadow-lg px-4 py-3 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/20 border border-white/10 backdrop-blur-md"
-          aria-label="Open chat"
-        >
-          Chat
-        </button>
-      )}
+      <AnimatePresence initial={false}>
+        {!open && (
+          <motion.button
+            key="chat-toggle"
+            onClick={() => setOpen(true)}
+            className="rounded-full bg-primary text-white shadow-xl drop-shadow-lg px-4 py-3 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/20 border border-white/10 backdrop-blur-md"
+            aria-label="Open chat"
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
+          >
+            Chat
+          </motion.button>
+        )}
+      </AnimatePresence>
 
-      {open && (
-        <div className="relative w-[90vw] max-w-sm h-[60vh] max-h-[70vh] rounded-xl border border-white/10 bg-[#0b0b12]/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] drop-shadow-2xl flex flex-col">
-          {/* Side pop arrow */}
-          <div
-            aria-hidden
-            className="hidden md:block absolute -right-2 bottom-16 w-4 h-4 bg-[#0b0b12]/95 border border-white/10 rotate-45 shadow-xl"
-          />
-          <div className="p-3 border-b border-white/10 flex items-center justify-between">
-            <div className="text-sm">
-              <div className="font-semibold">Ask about Priyesh</div>
-              <div className="text-white/60">Friendly chat about projects, skills, and more</div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="chat-panel"
+            className="relative w-[90vw] max-w-sm h-[60vh] max-h-[70vh] rounded-xl border border-white/10 bg-[#0b0b12]/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] drop-shadow-2xl flex flex-col"
+            initial={{ opacity: 0, x: 24, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 24, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.9 }}
+          >
+            {/* Side pop arrow */}
+            <motion.div
+              aria-hidden
+              className="hidden md:block absolute -right-2 bottom-16 w-4 h-4 bg-[#0b0b12]/95 border border-white/10 rotate-45 shadow-xl"
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8 }}
+              transition={{ duration: 0.2 }}
+            />
+            <div className="p-3 border-b border-white/10 flex items-center justify-between">
+              <div className="text-sm">
+                <div className="font-semibold">Ask about Priyesh</div>
+                <div className="text-white/60">Friendly chat about projects, skills, and more</div>
+              </div>
+              <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white">✕</button>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white">✕</button>
-          </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
             {messages.length === 0 && (
@@ -201,7 +221,7 @@ export default function Chatbot() {
             ))}
           </div>
 
-          <div className="p-3 border-t border-white/10 flex gap-2">
+            <div className="p-3 border-t border-white/10 flex gap-2">
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -212,9 +232,10 @@ export default function Chatbot() {
             <button disabled={disabled} onClick={send} className={`px-3 py-2 rounded-md text-sm ${disabled ? 'bg-white/10 text-white/40' : 'bg-primary text-white hover:brightness-110'}`}>
               Send
             </button>
-          </div>
-        </div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
