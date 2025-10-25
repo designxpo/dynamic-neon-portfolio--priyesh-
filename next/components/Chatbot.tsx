@@ -157,7 +157,7 @@ export default function Chatbot() {
     }
   };
 
-  if (pathname?.startsWith('/admin')) return null; // Hide on admin pages
+  // Previously hidden on /admin to avoid UI overlap. Showing it everywhere for visibility.
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
