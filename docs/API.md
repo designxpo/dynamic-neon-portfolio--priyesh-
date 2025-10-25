@@ -221,3 +221,10 @@ Provider configuration (env in next/.env.local)
   - AZURE_OPENAI_API_KEY=...
   - AZURE_OPENAI_DEPLOYMENT=<your-deployment-name>
   - AZURE_OPENAI_API_VERSION=2024-02-15-preview (default)
+
+- Google Gemini
+  - GEMINI_API_KEY=AIza... (or GOOGLE_API_KEY=...)
+  - GEMINI_MODEL=gemini-1.5-flash (default)
+  Notes
+  - This project uses the REST API endpoint: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+  - We pass portfolio context as part of the user content, temperature=0.4 for concise, credible answers.

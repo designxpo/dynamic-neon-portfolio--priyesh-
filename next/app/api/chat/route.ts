@@ -3,7 +3,7 @@ import { connectDB } from '../../../lib/db/mongoose';
 import SiteConfig from '../../../models/SiteConfig';
 import { mockContactData, mockEducationsData, mockExperiencesData, mockHeroData, mockProjectsData, mockServicesData, mockSkillsData, mockTestimonialsData } from '../../../data/mockData';
 
-type LLMProvider = 'openai' | 'azure-openai';
+type LLMProvider = 'openai' | 'azure-openai' | 'gemini';
 
 function buildContextFromConfig(cfg: any) {
   // cfg is a SiteConfig document object; keep only readable bits
@@ -117,6 +117,41 @@ async function callAzureOpenAI(systemPrompt: string, userQuestion: string): Prom
   return json?.choices?.[0]?.message?.content?.trim() || '';
 }
 
+async function callGemini(systemPrompt: string, userQuestion: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  if (!apiKey) throw new Error('Missing GEMINI_API_KEY/GOOGLE_API_KEY');
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const payload = {
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { text: `${systemPrompt}\n\nUser question: ${userQuestion}` }
+        ],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.4,
+    },
+  } as any;
+
+  const res = await fetch(url + `?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gemini error ${res.status}: ${text}`);
+  }
+  const json: any = await res.json();
+  const parts = json?.candidates?.[0]?.content?.parts || [];
+  const text = parts.map((p: any) => p?.text || '').join('').trim();
+  return text;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { question } = await req.json();
@@ -127,12 +162,15 @@ export async function POST(req: NextRequest) {
     const systemPrompt = `You are a friendly, concise assistant for a personal portfolio website. Answer only about the person using the provided context. If the question is unrelated, politely steer back to the portfolio. Keep answers short, helpful, and warm.\n\nContext:\n${context}`;
 
     let answer = '';
-    const provider: LLMProvider | null = process.env.AZURE_OPENAI_ENDPOINT ? 'azure-openai' : (process.env.OPENAI_API_KEY ? 'openai' : null);
+    const provider: LLMProvider | null = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? 'gemini'
+      : (process.env.AZURE_OPENAI_ENDPOINT ? 'azure-openai' : (process.env.OPENAI_API_KEY ? 'openai' : null));
     if (!provider) {
       return NextResponse.json({ error: 'LLM not configured' }, { status: 503 });
     }
 
-    if (provider === 'azure-openai') {
+    if (provider === 'gemini') {
+      answer = await callGemini(systemPrompt, q);
+    } else if (provider === 'azure-openai') {
       answer = await callAzureOpenAI(systemPrompt, q);
     } else {
       answer = await callOpenAI(systemPrompt, q);
