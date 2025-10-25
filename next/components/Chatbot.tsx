@@ -400,6 +400,7 @@ export default function Chatbot() {
             exit={{ opacity: 0, scale: 0.9, y: 8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
             className="group relative select-none w-14 h-14 md:w-16 md:h-16 rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
+            style={{ transformOrigin: 'bottom right' }}
           >
             {/* Outer neon aura with breathing glow */}
             <motion.span
@@ -412,7 +413,7 @@ export default function Chatbot() {
             <motion.span
               layoutId="chat-surface"
               className="relative inline-flex w-full h-full items-center justify-center rounded-[22px] bg-gradient-to-br from-dark-bg via-[#231c4a] to-deep-violet text-white shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] transition-shadow duration-300"
-              style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)' }}
+              style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)', transformOrigin: 'bottom right' }}
               animate={prefersReducedMotion ? undefined : { scale: opening ? 1.1 : 1 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.18, ease: [0.4, 0, 0.2, 1] }}
             >
@@ -441,7 +442,7 @@ export default function Chatbot() {
                       transition={{ duration: prefersReducedMotion ? 0.12 : 0.2, ease: [0.4, 0, 0.2, 1] }}
                       className="inline-flex"
                     >
-                      <X size={20} className="opacity:90" />
+                      <X size={20} className="opacity-90" />
                     </motion.span>
                   )}
                 </AnimatePresence>
