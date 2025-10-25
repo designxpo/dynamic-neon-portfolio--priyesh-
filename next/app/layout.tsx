@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
+import dynamic from 'next/dynamic';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const poppins = Poppins({ subsets: ['latin'], weight: ['400','600','700','800'], variable: '--font-poppins' });
@@ -11,10 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const Chatbot = dynamic(() => import('../components/Chatbot'), { ssr: false });
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans`}>
         {children}
+        {/* Floating chatbot - client-side only */}
+        <Chatbot />
       </body>
     </html>
   );
