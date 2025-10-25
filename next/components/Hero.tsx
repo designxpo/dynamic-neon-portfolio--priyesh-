@@ -69,6 +69,9 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
               <a href="#works" className="border border-brand-purple text-brand-purple px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple hover:text-white transition-all duration-300 text-sm md:text-base font-medium">
                 View My Work
               </a>
+              <a href="/images/Priyesh%20Mishra%20UIUX.pdf" target="_blank" rel="noopener noreferrer" className="border border-brand-purple text-brand-purple px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple hover:text-white transition-all duration-300 text-sm md:text-base font-medium">
+                Download Resume
+              </a>
             </motion.div>
           </motion.div>
 
