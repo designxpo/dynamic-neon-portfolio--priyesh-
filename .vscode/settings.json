@@ -1,0 +1,15 @@
+{
+    "mdb.presetConnections": [
+        {
+            "name": "Preset Connection",
+            "connectionString": "mongodb://localhost:27017"
+        }
+    ],
+    // Silence editor warning "Unknown at rule @tailwind" from CSS validation
+    "css.lint.unknownAtRules": "ignore",
+    // Tailwind extension tweaks (optional)
+    "tailwindCSS.emmetCompletions": true,
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "html"
+    }
+}
