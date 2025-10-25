@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
 import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog } from '../types';
@@ -118,6 +118,7 @@ export default function Chatbot() {
   });
   const scrollRef = useRef<HTMLDivElement>(null);
   const [opening, setOpening] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -237,14 +238,14 @@ export default function Chatbot() {
             layoutId="chat-surface"
             className="relative w-[90vw] max-w-md h-[65vh] rounded-2xl border border-brand-purple/10 bg-dark-bg/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden"
             style={{ transformOrigin: 'bottom right', willChange: 'transform, opacity' }}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ type: 'tween', ease: [0.4, 0, 0.2, 1], duration: 0.45 }}
+            exit={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.96 }}
+            transition={{ type: 'tween', ease: [0.4, 0, 0.2, 1], duration: prefersReducedMotion ? 0.2 : 0.45 }}
           >
             {/* Optional glow ripple on open for premium feel */}
             <AnimatePresence>
-              {opening && (
+              {opening && !prefersReducedMotion && (
                 <motion.span
                   key="open-ripple"
                   className="pointer-events-none absolute -bottom-3 -right-3 w-20 h-20 rounded-full"
@@ -257,6 +258,24 @@ export default function Chatbot() {
                   animate={{ opacity: 0, scale: 1.8 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                />
+              )}
+            </AnimatePresence>
+            {/* Secondary ripple for richer premium feel */}
+            <AnimatePresence>
+              {opening && !prefersReducedMotion && (
+                <motion.span
+                  key="open-ripple-2"
+                  className="pointer-events-none absolute -bottom-6 -right-6 w-28 h-28 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse at center, rgba(108,99,255,0.20), rgba(108,99,255,0) 70%)',
+                    filter: 'blur(18px)'
+                  }}
+                  initial={{ opacity: 0.35, scale: 1 }}
+                  animate={{ opacity: 0, scale: 2.1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
                 />
               )}
             </AnimatePresence>
@@ -376,8 +395,8 @@ export default function Chatbot() {
             aria-label="Open chat"
             initial={{ opacity: 0, scale: 0.9, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 1.02 }}
             exit={{ opacity: 0, scale: 0.9, y: 8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
             className="group relative select-none w-14 h-14 md:w-16 md:h-16 rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
@@ -386,20 +405,46 @@ export default function Chatbot() {
             <motion.span
               aria-hidden
               className="pointer-events-none absolute -inset-2 rounded-[26px] bg-[radial-gradient(ellipse_at_center,rgba(108,99,255,0.35),rgba(108,99,255,0)_60%)] blur-xl"
-              animate={{ opacity: [0.55, 0.85, 0.55], scale: [1, 1.05, 1] }}
-              transition={{ duration: 3, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
+              animate={prefersReducedMotion ? undefined : { opacity: [0.55, 0.85, 0.55], scale: [1, 1.05, 1] }}
+              transition={prefersReducedMotion ? undefined : { duration: 3, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
             />
             {/* Button core with subtle gradient and inner glow */}
             <motion.span
               layoutId="chat-surface"
               className="relative inline-flex w-full h-full items-center justify-center rounded-[22px] bg-gradient-to-br from-dark-bg via-[#231c4a] to-deep-violet text-white shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] transition-shadow duration-300"
               style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)' }}
+              animate={prefersReducedMotion ? undefined : { scale: opening ? 1.1 : 1 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.18, ease: [0.4, 0, 0.2, 1] }}
             >
               {/* Neon edge ring intensifies on hover */}
               <span aria-hidden className="absolute inset-0 rounded-[22px] ring-1 ring-brand-purple/30 group-hover:ring-brand-purple-light/40 transition" />
               {/* Icon */}
               <span className="relative flex items-center justify-center text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.75)]">
-                <Bot size={22} className="opacity-90" />
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {!opening ? (
+                    <motion.span
+                      key="icon-bot"
+                      initial={{ opacity: 0, rotate: -10 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 10 }}
+                      transition={{ duration: prefersReducedMotion ? 0.12 : 0.2, ease: [0.4, 0, 0.2, 1] }}
+                      className="inline-flex"
+                    >
+                      <Bot size={22} className="opacity-90" />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="icon-x"
+                      initial={{ opacity: 0, rotate: -90, scale: 0.9 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      exit={{ opacity: 0, rotate: 90, scale: 0.9 }}
+                      transition={{ duration: prefersReducedMotion ? 0.12 : 0.2, ease: [0.4, 0, 0.2, 1] }}
+                      className="inline-flex"
+                    >
+                      <X size={20} className="opacity:90" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </span>
               {/* Glow on hover */}
               <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[22px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
