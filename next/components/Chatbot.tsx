@@ -160,14 +160,14 @@ export default function Chatbot() {
   if (pathname?.startsWith('/admin')) return null; // Hide on admin pages
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-[9999]">
       {/* Toggle button */}
       <AnimatePresence initial={false}>
         {!open && (
           <motion.button
             key="chat-toggle"
             onClick={() => setOpen(true)}
-            className="rounded-full bg-primary text-white shadow-xl drop-shadow-lg px-4 py-3 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/20 border border-white/10 backdrop-blur-md"
+            className="rounded-full bg-gradient-to-r from-brand-purple to-brand-accent text-white shadow-xl drop-shadow-lg px-4 py-3 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/20 border border-white/10 backdrop-blur-md"
             aria-label="Open chat"
             initial={{ opacity: 0, scale: 0.9, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
