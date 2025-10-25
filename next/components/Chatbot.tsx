@@ -219,11 +219,15 @@ export default function Chatbot() {
         {open ? (
           <motion.div
             key="chat-panel"
-            className="relative w-[90vw] max-w-md h-[65vh] max-h-[75vh] rounded-2xl border border-brand-purple/10 bg-dark-bg/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col"
-            initial={{ opacity: 0, x: 24, scale: 0.98 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.9 }}
+            className="relative w-[90vw] max-w-md rounded-2xl border border-brand-purple/10 bg-dark-bg/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden"
+            initial={{ opacity: 0, x: 24, scale: 0.98, height: 0 }}
+            animate={{ opacity: 1, x: 0, scale: 1, height: '65vh' }}
+            exit={{ opacity: 0, y: 16, scale: 0.98, height: 0 }}
+            transition={{
+              type: 'spring', stiffness: 260, damping: 24, mass: 0.9,
+              height: { duration: 0.28, ease: [0.4, 0, 0.2, 1] },
+              opacity: { duration: 0.2 }
+            }}
           >
             {/* Side pop arrow */}
             <motion.div
