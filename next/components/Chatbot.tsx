@@ -215,48 +215,14 @@ export default function Chatbot() {
   return (
     <div className="fixed bottom-4 right-4 z-[9999]" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
       {/* Toggle button */}
-      <AnimatePresence initial={false}>
-        {!open && (
-          <motion.button
-            key="chat-toggle"
-            onClick={() => setOpen(true)}
-            aria-label="Open chat"
-            initial={{ opacity: 0, scale: 0.9, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            exit={{ opacity: 0, scale: 0.9, y: 8 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
-            className="group relative select-none w-14 h-14 md:w-16 md:h-16 rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
-          >
-            {/* Outer neon aura */}
-            <span aria-hidden className="pointer-events-none absolute -inset-2 rounded-[26px] bg-[radial-gradient(ellipse_at_center,rgba(108,99,255,0.35),rgba(108,99,255,0)_60%)] opacity-70 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
-            {/* Button core with subtle gradient and inner glow */}
-            <span
-              className="relative inline-flex w-full h-full items-center justify-center rounded-[22px] bg-gradient-to-br from-dark-bg via-[#231c4a] to-deep-violet text-white shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] transition-shadow duration-300"
-              style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)' }}
-            >
-              {/* Neon edge ring intensifies on hover */}
-              <span aria-hidden className="absolute inset-0 rounded-[22px] ring-1 ring-brand-purple/30 group-hover:ring-brand-purple-light/40 transition" />
-              {/* Icon */}
-              <span className="relative flex items-center justify-center text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.75)]">
-                <Bot size={22} className="opacity-90" />
-              </span>
-              {/* Glow on hover */}
-              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[22px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {open && (
+      <AnimatePresence initial={false} mode="wait">
+        {open ? (
           <motion.div
             key="chat-panel"
             className="relative w-[90vw] max-w-md h-[65vh] max-h-[75vh] rounded-2xl border border-brand-purple/10 bg-dark-bg/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col"
             initial={{ opacity: 0, x: 24, scale: 0.98 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 24, scale: 0.98 }}
+            exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.9 }}
           >
             {/* Side pop arrow */}
@@ -355,6 +321,36 @@ export default function Chatbot() {
               </button>
             </div>
           </motion.div>
+        ) : (
+          <motion.button
+            key="chat-toggle"
+            onClick={() => setOpen(true)}
+            aria-label="Open chat"
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            exit={{ opacity: 0, scale: 0.9, y: 8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
+            className="group relative select-none w-14 h-14 md:w-16 md:h-16 rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
+          >
+            {/* Outer neon aura */}
+            <span aria-hidden className="pointer-events-none absolute -inset-2 rounded-[26px] bg-[radial-gradient(ellipse_at_center,rgba(108,99,255,0.35),rgba(108,99,255,0)_60%)] opacity-70 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
+            {/* Button core with subtle gradient and inner glow */}
+            <span
+              className="relative inline-flex w-full h-full items-center justify-center rounded-[22px] bg-gradient-to-br from-dark-bg via-[#231c4a] to-deep-violet text-white shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] transition-shadow duration-300"
+              style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)' }}
+            >
+              {/* Neon edge ring intensifies on hover */}
+              <span aria-hidden className="absolute inset-0 rounded-[22px] ring-1 ring-brand-purple/30 group-hover:ring-brand-purple-light/40 transition" />
+              {/* Icon */}
+              <span className="relative flex items-center justify-center text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.75)]">
+                <Bot size={22} className="opacity-90" />
+              </span>
+              {/* Glow on hover */}
+              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[22px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </span>
+          </motion.button>
         )}
       </AnimatePresence>
     </div>
