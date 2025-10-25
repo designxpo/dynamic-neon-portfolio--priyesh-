@@ -2,6 +2,19 @@
 
 > API documentation: see docs/API.md for all Next.js API routes (health, contacts, admin content, and config endpoints).
 
+## LLM Chatbot (optional)
+
+You can enable the on-site chatbot to answer questions about the portfolio using an LLM.
+
+1) Copy env example and configure a provider
+
+```
+cp next/.env.example next/.env.local
+# Set either OpenAI or Azure OpenAI env vars
+```
+
+2) Run the Next app and open the site. A floating “Chat” button appears (hidden on /admin). The bot will use the LLM when configured, and gracefully fall back to a local rule-based responder otherwise.
+
 This repository now uses npm workspaces to manage multiple projects side‑by‑side. You can develop the legacy Vite app, the unified Next.js app, and the Express backend independently.
 
 Monorepo layout:

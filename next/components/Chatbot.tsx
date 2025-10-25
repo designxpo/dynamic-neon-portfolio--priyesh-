@@ -126,14 +126,34 @@ export default function Chatbot() {
 
   const disabled = useMemo(() => !db || !input.trim(), [db, input]);
 
-  const send = () => {
+  const send = async () => {
     const q = input.trim();
     if (!db || !q) return;
     const userMsg: Msg = { role: 'user', content: q };
-    const reply = answerQuestion(q, db);
-    const botMsg: Msg = { role: 'assistant', content: reply };
-    setMessages(prev => [...prev, userMsg, botMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
+    // Try LLM first via server route; fallback to local rule-based answer
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const reply = (data?.answer as string) || '';
+        if (reply) {
+          setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+          return;
+        }
+      }
+      // Non-ok or empty answer => fallback
+      const reply = answerQuestion(q, db);
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+    } catch {
+      const reply = answerQuestion(q, db);
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+    }
   };
 
   if (pathname?.startsWith('/admin')) return null; // Hide on admin pages

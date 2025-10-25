@@ -19,9 +19,9 @@ Collection of contact form submissions.
 POST /api/contacts
 - Body
   {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "contactNumber": "+1 555 0100",
+    "name": "Priyesh Mishra",
+    "email": "priyesh@example.com",
+    "contactNumber": "+91 8368872108",
     "message": "Hello!"
   }
 - Responses
@@ -194,3 +194,30 @@ curl -X PUT "http://localhost:3011/api/admin/config?mode=replace" \
 
 ## Offline behavior (client)
 - When the server returns 503 on admin endpoints (DB not configured), the Admin UI in this repo switches to an offline mode and reads/writes content to localStorage. This is a client-only convenience for development; server routes do not store data offline.
+
+## Chat (LLM)
+
+POST /api/chat
+
+Use an LLM to answer user questions about the portfolio based on the site content. The route builds a concise profile context from the database (or mock fallback) and queries the configured LLM provider.
+
+- Body
+  {
+    "question": "What projects have you worked on?"
+  }
+- Responses
+  - 200 { "answer": "..." }
+  - 400 { "error": "Missing question" }
+  - 503 { "error": "LLM not configured" }
+  - 500 { "error": "Chat failed" }
+
+Provider configuration (env in next/.env.local)
+- OpenAI
+  - OPENAI_API_KEY=sk-...
+  - OPENAI_MODEL=gpt-4o-mini (default)
+
+- Azure OpenAI
+  - AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com
+  - AZURE_OPENAI_API_KEY=...
+  - AZURE_OPENAI_DEPLOYMENT=<your-deployment-name>
+  - AZURE_OPENAI_API_VERSION=2024-02-15-preview (default)
