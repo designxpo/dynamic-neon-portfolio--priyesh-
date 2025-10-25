@@ -89,16 +89,8 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
           </nav>
         </div>
 
-        {/* Right Section - Resume + Contact Button and Mobile Menu */}
+        {/* Right Section - Contact Button and Mobile Menu */}
         <div className="flex-1 flex justify-end">
-          <a
-            href="/images/Priyesh%20Mishra%20UIUX.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:inline-block border border-brand-purple text-brand-purple px-4 lg:px-5 py-2 rounded-lg hover:bg-brand-purple hover:text-white transition-all duration-300 shadow-lg/0 text-sm lg:text-base mr-3"
-          >
-              Resume
-          </a>
           <a href="#contact" className="hidden md:inline-block bg-brand-purple text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm lg:text-base">
               Contact Me
           </a>
@@ -131,15 +123,6 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
                   {link.label}
                 </a>
             ))}
-             <a
-               href="/images/Priyesh%20Mishra%20UIUX.pdf"
-               target="_blank"
-               rel="noopener noreferrer"
-               onClick={() => setIsMenuOpen(false)}
-               className="border border-brand-purple text-brand-purple px-6 md:px-8 py-3 rounded-lg hover:bg-brand-purple hover:text-white transition-all duration-300 w-4/5 text-center mt-2 text-sm md:text-base"
-             >
-               Resume
-             </a>
              <a href="#contact" onClick={() => setIsMenuOpen(false)} className="bg-brand-purple text-white px-6 md:px-8 py-3 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 w-4/5 text-center mt-4 text-sm md:text-base">
                 Contact Me
             </a>

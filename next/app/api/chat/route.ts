@@ -119,37 +119,46 @@ async function callAzureOpenAI(systemPrompt: string, userQuestion: string): Prom
 
 async function callGemini(systemPrompt: string, userQuestion: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  let preferred = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+  if (preferred === 'gemini-1.5-flash') preferred = 'gemini-1.5-flash-latest';
+  if (preferred === 'gemini-1.5-pro') preferred = 'gemini-1.5-pro-latest';
   if (!apiKey) throw new Error('Missing GEMINI_API_KEY/GOOGLE_API_KEY');
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const candidates = Array.from(new Set([
+    preferred,
+    'gemini-1.5-pro-latest',
+    'gemini-1.0-pro',
+    'gemini-pro',
+  ]));
+
   const payload = {
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          { text: `${systemPrompt}\n\nUser question: ${userQuestion}` }
-        ],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.4,
-    },
+    systemInstruction: { role: 'user', parts: [{ text: systemPrompt }] },
+    contents: [{ role: 'user', parts: [{ text: userQuestion }] }],
+    generationConfig: { temperature: 0.4 },
   } as any;
 
-  const res = await fetch(url + `?key=${encodeURIComponent(apiKey)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Gemini error ${res.status}: ${text}`);
+  let lastErr: any = null;
+  for (const model of candidates) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const res = await fetch(url + `?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const json: any = await res.json();
+      const parts = json?.candidates?.[0]?.content?.parts || [];
+      const text = parts.map((p: any) => p?.text || '').join('').trim();
+      if (text) return text;
+      lastErr = new Error('Gemini returned empty response');
+      break;
+    }
+    const t = await res.text();
+    lastErr = new Error(`Gemini error ${res.status}: ${t}`);
+    // try next model on 404/400
+    if (!(res.status === 404 || res.status === 400)) break;
   }
-  const json: any = await res.json();
-  const parts = json?.candidates?.[0]?.content?.parts || [];
-  const text = parts.map((p: any) => p?.text || '').join('').trim();
-  return text;
+  throw lastErr || new Error('Gemini call failed');
 }
 
 export async function POST(req: NextRequest) {
