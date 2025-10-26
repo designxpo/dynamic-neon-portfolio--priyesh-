@@ -190,6 +190,30 @@ const HeroForm: React.FC = () => {
                             placeholder="e.g., Full Stack Developer"
                         />
                     </div>
+                    <div className="md:col-span-2">
+                        <label htmlFor="shortBio" className="admin-label">Short Bio / Description</label>
+                        <textarea
+                            name="shortBio"
+                            id="shortBio"
+                            rows={4}
+                            value={formData.shortBio || ''}
+                            onChange={handleChange}
+                            className="admin-textarea"
+                            placeholder="A concise overview that appears in the hero section"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="ctaButtonText" className="admin-label">CTA Button Text</label>
+                        <input
+                            type="text"
+                            name="ctaButtonText"
+                            id="ctaButtonText"
+                            value={formData.ctaButtonText || ''}
+                            onChange={handleChange}
+                            className="admin-input"
+                            placeholder="e.g., Get In Touch"
+                        />
+                    </div>
                     <div>
                         <label htmlFor="ctaButtonLink" className="admin-label flex items-center gap-2">
                             <Link size={14} />

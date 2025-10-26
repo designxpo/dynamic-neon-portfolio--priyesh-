@@ -63,8 +63,8 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <a href="#contact" className="bg-brand-purple text-white px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm md:text-base font-medium">
-                Get In Touch
+              <a href={data.ctaButtonLink || "#contact"} className="bg-brand-purple text-white px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm md:text-base font-medium">
+                {data.ctaButtonText || 'Get In Touch'}
               </a>
               <a href="#works" className="border border-brand-purple text-brand-purple px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple hover:text-white transition-all duration-300 text-sm md:text-base font-medium">
                 View My Work

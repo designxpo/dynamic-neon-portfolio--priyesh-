@@ -163,11 +163,15 @@ async function callGemini(systemPrompt: string, userQuestion: string): Promise<s
 
 export async function POST(req: NextRequest) {
   try {
-    const { question } = await req.json();
+    const { question, snapshot } = await req.json();
     const q = (question || '').toString().slice(0, 2000);
     if (!q) return NextResponse.json({ error: 'Missing question' }, { status: 400 });
 
-    const context = await getProfileContext();
+    // Prefer client-provided snapshot (reflects latest admin edits in local mode);
+    // otherwise, load from DB or fall back to mocks.
+    const context = snapshot && typeof snapshot === 'object'
+      ? buildContextFromConfig(snapshot)
+      : await getProfileContext();
     const systemPrompt = `You are a friendly, concise assistant for a personal portfolio website. Answer only about the person using the provided context. If the question is unrelated, politely steer back to the portfolio. Keep answers short, helpful, and warm.\n\nContext:\n${context}`;
 
     let answer = '';

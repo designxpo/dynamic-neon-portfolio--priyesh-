@@ -156,10 +156,21 @@ export default function Chatbot() {
     setIsBotTyping(true);
     // Try LLM first via server route; fallback to local rule-based answer
     try {
+      const snapshot = db ? {
+        hero: db.hero,
+        services: db.services,
+        projects: db.projects,
+        experiences: db.experiences,
+        educations: db.educations,
+        skills: db.skills,
+        testimonials: db.testimonials,
+        contact: db.contact,
+        blogs: db.blogs,
+      } : undefined;
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: q, snapshot }),
       });
       if (res.ok) {
         const data = await res.json();

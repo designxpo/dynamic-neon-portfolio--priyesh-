@@ -33,12 +33,13 @@ const withFallback = async <T,>(fn: () => Promise<T>, fallback: () => T): Promis
     } catch {}
     try {
         const value = await fn();
-        // Some API routes may return undefined/null if DB empty; use fallback then too
+        // Mark as online as the server responded successfully, regardless of data shape
+        setOfflineMode(false);
+        // Some API routes may return undefined/null or empty arrays if DB is empty;
+        // in that case we still prefer to render fallback content but keep "online" state
         if (value === undefined || value === null) return fallback();
         // @ts-ignore
         if (Array.isArray(value) && value.length === 0) return fallback();
-        // If the call succeeded, we can consider going online again
-        setOfflineMode(false);
         return value;
     } catch (e) {
         if (process.env.NODE_ENV !== 'production') {

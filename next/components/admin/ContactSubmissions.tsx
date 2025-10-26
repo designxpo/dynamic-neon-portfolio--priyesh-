@@ -1,8 +1,9 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import Section from '@/components/Section';
-import { Mail, Phone, Calendar, MessageSquare, Inbox } from 'lucide-react';
+import { Mail, Phone, Calendar, MessageSquare, Inbox, Trash2 } from 'lucide-react';
 import { getApiBase } from '@/lib/apiBase';
+import Modal from '@/components/admin/common/Modal';
 
 interface ContactSubmission {
   _id: string;
@@ -17,6 +18,9 @@ const ContactSubmissions: React.FC = () => {
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [target, setTarget] = useState<ContactSubmission | null>(null);
 
   useEffect(() => {
     fetchSubmissions();
@@ -59,6 +63,34 @@ const ContactSubmissions: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
+  };
+
+  const deleteSubmission = async (id: string) => {
+    if (!id) return;
+    try {
+      setDeletingId(id);
+      const API_BASE = getApiBase();
+      const base = (API_BASE || '').replace(/\/+$/, '');
+      const url = `${base}/api/contacts?id=${encodeURIComponent(id)}`;
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) {
+        const ct = res.headers.get('content-type') || '';
+        const payload = ct.includes('application/json') ? await res.json().catch(() => null) : await res.text().catch(() => '');
+        const msg = (typeof payload === 'string' ? payload : payload?.error) || `Failed to delete (HTTP ${res.status})`;
+        alert(msg);
+        return;
+      }
+      // Optimistic remove
+      setSubmissions(prev => prev.filter(s => s._id !== id));
+      // Close modal on success
+      setConfirmOpen(false);
+      setTarget(null);
+    } catch (e) {
+      console.error('Delete failed', e);
+      alert('Failed to delete submission.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) {
@@ -124,9 +156,20 @@ const ContactSubmissions: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Calendar size={14} />
-                    <span>{formatDate(submission.submittedAt)}</span>
+                  <div className="flex items-center gap-3 text-sm text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} />
+                      <span>{formatDate(submission.submittedAt)}</span>
+                    </div>
+                    <button
+                      className="admin-button-danger flex items-center gap-2"
+                      title="Delete submission"
+                      onClick={() => { setTarget(submission); setConfirmOpen(true); }}
+                      disabled={deletingId === submission._id}
+                    >
+                      <Trash2 size={14} />
+                      {deletingId === submission._id ? 'Deleting...' : 'Delete'}
+                    </button>
                   </div>
                 </div>
                 <div className="rounded-lg backdrop-blur-xl bg-white/5 border border-white/10 p-4">
@@ -141,6 +184,37 @@ const ContactSubmissions: React.FC = () => {
           </div>
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={confirmOpen} onClose={() => { if (!deletingId) { setConfirmOpen(false); setTarget(null); } }} title="Delete Submission">
+        <div className="space-y-4">
+          <p className="text-gray-300">
+            Are you sure you want to delete this submission
+            {target ? (
+              <>
+                {' '}from <span className="font-semibold text-white">{target.name}</span>
+                {target.email ? (<span className="text-gray-400"> &lt;{target.email}&gt;</span>) : null}?
+              </>
+            ) : '?'}
+            This action cannot be undone.
+          </p>
+          <div className="flex items-center justify-end gap-3">
+            <button
+              className="admin-button"
+              onClick={() => { if (!deletingId) { setConfirmOpen(false); setTarget(null); } }}
+              disabled={!!deletingId}
+            >
+              Cancel
+            </button>
+            <button
+              className="admin-button-danger"
+              onClick={() => target && deleteSubmission(target._id)}
+              disabled={!target || deletingId === target._id}
+            >
+              {deletingId && target && deletingId === target._id ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </Section>
   );
 };

@@ -32,3 +32,22 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
+    await connectDB();
+    const deleted = await Contact.findByIdAndDelete(id);
+    if (!deleted) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('Error deleting contact:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

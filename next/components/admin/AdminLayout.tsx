@@ -35,10 +35,29 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiv
   });
 
   const [offline, setOffline] = useState<boolean>(isOfflineMode());
+  const [aiStatus, setAiStatus] = useState<{ configured: boolean; provider: string | null; details?: any } | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = subscribeOffline(setOffline);
     return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchStatus = async () => {
+      try {
+        setAiError(null);
+        const res = await fetch('/api/chat/provider', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setAiStatus({ configured: !!data?.configured, provider: data?.provider ?? null, details: data?.details });
+      } catch (e: any) {
+        if (!cancelled) setAiError('Unable to detect AI provider');
+      }
+    };
+    fetchStatus();
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -78,15 +97,37 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiv
         </header>
 
         <main className="flex-1 p-8" style={{ overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 72px)', maxHeight: 'calc(100vh - 72px)' }}>
-          {offline && (
+          {(offline || (aiStatus && !aiStatus.configured) || aiError) && (
             <div className="max-w-7xl mx-auto mb-4">
-              <div className="admin-card bg-amber-500/10 border-amber-500/30 text-amber-300">
-                <div className="flex items-center justify-between gap-4">
-                  <span>
-                    Database unavailable — working in local mode. Your changes are saved to this browser and will sync when the server is available.
-                  </span>
+              {offline && (
+                <div className="admin-card bg-amber-500/10 border-amber-500/30 text-amber-300 mb-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <span>
+                      Database unavailable — working in local mode. Your changes are saved to this browser and will sync when the server is available.
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
+              {aiError && (
+                <div className="admin-card bg-rose-500/10 border-rose-500/30 text-rose-300 mb-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <span>
+                      Could not determine AI provider status. The chatbot will fall back to local answers.
+                    </span>
+                    <a href="/api/chat/provider" target="_blank" rel="noopener noreferrer" className="admin-button">View Status</a>
+                  </div>
+                </div>
+              )}
+              {aiStatus && !aiStatus.configured && (
+                <div className="admin-card bg-purple-500/10 border-purple-500/30 text-purple-200">
+                  <div className="flex items-center justify-between gap-4">
+                    <span>
+                      AI provider not configured — the chatbot will use local rule-based responses. Configure keys in <code>next/.env.local</code> (OpenAI, Azure OpenAI, or Gemini).
+                    </span>
+                    <a href="/api/chat/provider" target="_blank" rel="noopener noreferrer" className="admin-button">Setup Guide</a>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <div className="max-w-7xl mx-auto h-full">
