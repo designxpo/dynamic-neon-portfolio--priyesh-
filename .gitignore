@@ -1,3 +1,6 @@
+############################
+# General
+############################
 # Logs
 logs
 *.log
@@ -7,13 +10,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build artifacts
 dist
 dist-ssr
-*.local
 
-# Next.js build output
+############################
+# Next.js (app lives in next/)
+############################
 next/.next
+next/out
 
 # Environment files (never commit secrets)
 .env
@@ -22,7 +30,12 @@ next/.env
 next/.env.*
 next/.env.local
 
+# Vercel local project settings
+.vercel
+
+############################
 # Editor directories and files
+############################
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
@@ -34,7 +47,9 @@ next/.env.local
 *.sln
 *.sw?
 
-# Guard against accidental npm init at repo root
-# The Next app lives in next/, so ignore only the root-level files
+############################
+# Root guard (prevent accidental root Node project)
+############################
 /package.json
 /package-lock.json
+
