@@ -12,12 +12,17 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [useManualControl, setUseManualControl] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const manualControlTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoverRef = useRef<boolean>(false);
+  const [isHover, setIsHover] = useState(false);
+  const [cardTotalWidth, setCardTotalWidth] = useState<number>(380); // fallback: 360 card + 20 gap
+  const ITEMS_PER_PAGE = 3; // matches desktop layout
 
   if (!data || data.length === 0) return null;
 
-  const shouldAnimate = data.length > 3;
-  const totalPages = Math.ceil(data.length / 3);
+  const shouldAnimate = data.length > ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
   // Function to reset back to auto-scroll after inactivity
   const resetToAutoScroll = () => {
@@ -28,22 +33,48 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
 
     // Set a timeout to return to auto-scroll after 5 seconds of inactivity
     manualControlTimeoutRef.current = setTimeout(() => {
+      // If user is still hovering, postpone switching back to auto-scroll
+      if (isHoverRef.current) {
+        resetToAutoScroll();
+        return;
+      }
       setUseManualControl(false);
       setIsPaused(false);
-      setCurrentIndex(0);
+      // Do not reset index to 0 to avoid jump-to-start while interacting
     }, 5000);
   };
 
   useEffect(() => {
     if (useManualControl && scrollRef.current && shouldAnimate) {
-      const cardWidth = 360; // Card width + gap
-      const scrollAmount = currentIndex * (cardWidth + 20);
-      scrollRef.current.scrollTo({
-        left: scrollAmount,
-        behavior: 'smooth',
-      });
+      const scrollAmount = currentIndex * ITEMS_PER_PAGE * cardTotalWidth;
+      scrollRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
     }
-  }, [currentIndex, useManualControl, shouldAnimate]);
+  }, [currentIndex, useManualControl, shouldAnimate, cardTotalWidth]);
+
+  // Measure card width + gap dynamically to avoid magic numbers
+  useEffect(() => {
+    const measure = () => {
+      const row = rowRef.current;
+      if (!row) return;
+      const children = row.children;
+      if (children.length < 2) {
+        // Fallback to card width if only one card
+        const one = children[0] as HTMLElement;
+        if (one) setCardTotalWidth(one.getBoundingClientRect().width + 20);
+        return;
+      }
+      const first = children[0] as HTMLElement;
+      const second = children[1] as HTMLElement;
+      const rect1 = first.getBoundingClientRect();
+      const rect2 = second.getBoundingClientRect();
+      // distance between left edges equals width + gap
+      const total = Math.round(rect2.left - rect1.left);
+      if (total > 0) setCardTotalWidth(total);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [data.length]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -88,14 +119,14 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
               <>
                 <div
                   className="overflow-hidden"
-                  onMouseEnter={() => setIsPaused(true)}
-                  onMouseLeave={() => !useManualControl && setIsPaused(false)}
+                  onMouseEnter={() => { setIsPaused(true); setIsHover(true); isHoverRef.current = true; }}
+                  onMouseLeave={() => { setIsHover(false); isHoverRef.current = false; !useManualControl && setIsPaused(false); }}
                 >
                   {!useManualControl ? (
                     // Auto-scroll mode
                     <div className="flex gap-5">
                       <div
-                        className={`flex gap-5 ${isPaused ? '' : 'animate-scroll-smooth'}`}
+                        className={`flex gap-5 animate-scroll-smooth`}
                         style={{
                           animationPlayState: isPaused ? 'paused' : 'running',
                         }}
@@ -107,11 +138,8 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
                     </div>
                   ) : (
                     // Manual control mode
-                    <div
-                      ref={scrollRef}
-                      className="overflow-x-hidden scroll-smooth"
-                    >
-                      <div className="flex gap-5">
+                    <div ref={scrollRef} className="overflow-x-hidden scroll-smooth">
+                      <div ref={rowRef} className="flex gap-5">
                         {data.map((post) => (
                           <BlogCard key={post.id} post={post} />
                         ))}
@@ -123,7 +151,7 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
                 {/* Navigation Controls - Outside the scroll container */}
                 <div className="relative mt-6 flex items-center justify-center gap-4">
                   <button
-                    onClick={handlePrevious}
+                    onClick={(e) => { e.preventDefault(); handlePrevious(); }}
                     className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-brand-purple/50 transition-all duration-300 flex items-center justify-center group"
                     aria-label="Previous"
                   >
@@ -147,7 +175,7 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
                     {Array.from({ length: totalPages }).map((_, idx) => (
                       <button
                         key={idx}
-                        onClick={() => handleDotClick(idx)}
+                        onClick={(e) => { e.preventDefault(); handleDotClick(idx); }}
                         className={`h-2 rounded-full transition-all duration-300 ${
                           idx === currentIndex
                             ? 'w-8 bg-brand-purple'
@@ -159,7 +187,7 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
                   </div>
 
                   <button
-                    onClick={handleNext}
+                    onClick={(e) => { e.preventDefault(); handleNext(); }}
                     className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-brand-purple/50 transition-all duration-300 flex items-center justify-center group"
                     aria-label="Next"
                   >

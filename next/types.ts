@@ -33,6 +33,9 @@ export interface HeroData {
   profileImage: Image;
   ctaButtonText: string;
   ctaButtonLink: string;
+  // Optional secondary CTA button
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
   stats: Stat[];
 }
 
@@ -43,6 +46,9 @@ export interface RawHeroData {
   profileImage: Image;
   ctaButtonText: string;
   ctaButtonLink: string;
+  // Optional secondary CTA button
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
   stats: Stat[];
 }
 

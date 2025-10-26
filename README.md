@@ -13,7 +13,7 @@ cp next/.env.example next/.env.local
 # Pick one provider and set its keys in next/.env.local:
 #   - OpenAI:        OPENAI_API_KEY=...  [optional OPENAI_MODEL=gpt-4o-mini]
 #   - Azure OpenAI:  AZURE_OPENAI_ENDPOINT=..., AZURE_OPENAI_API_KEY=..., AZURE_OPENAI_DEPLOYMENT=..., AZURE_OPENAI_API_VERSION=2024-02-15-preview
-#   - Google Gemini: GEMINI_API_KEY=...  [optional GEMINI_MODEL=gemini-1.5-flash-latest]
+#   - Google Gemini: GEMINI_API_KEY=...  [optional GEMINI_MODEL=gemini-1.5-flash]
 ```
 
 2) (Optional) Set `MONGODB_URI` in `next/.env.local` to persist Admin edits to MongoDB; otherwise the app uses a client fallback store.
@@ -30,7 +30,7 @@ curl -sS -X POST http://localhost:3011/api/chat \
 ```
 
 Notes:
-- Gemini models: prefer `gemini-1.5-flash-latest` or `gemini-1.5-pro-latest`. Older names like `gemini-pro` may 404 on newer APIs.
+- Gemini models: prefer `gemini-1.5-flash` or `gemini-1.5-pro`. Older names like `gemini-pro` may 404 on newer APIs.
 - The chat API automatically builds context from MongoDB when configured, or from a client-provided snapshot otherwise. This ensures answers reflect your latest Admin updates even in local/offline mode.
 
 This repository now uses npm workspaces to manage multiple projects side‑by‑side. You can develop the legacy Vite app, the unified Next.js app, and the Express backend independently.

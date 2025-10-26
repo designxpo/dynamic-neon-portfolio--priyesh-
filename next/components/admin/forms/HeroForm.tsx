@@ -5,6 +5,7 @@ import { RawHeroData } from '@/types';
 import { getRawHeroData, updateHeroData, convertFileToBase64 } from '@/lib/api';
 import { v4 as uuidv4 } from 'uuid';
 import { Upload, X, Plus, Trash2, User, Briefcase, Link, AlertCircle, CheckCircle } from 'lucide-react';
+import Loader from '@/components/Loader';
 
 const HeroForm: React.FC = () => {
     const [formData, setFormData] = useState<RawHeroData | null>(null);
@@ -90,8 +91,8 @@ const HeroForm: React.FC = () => {
     };
 
     if (loading) return (
-        <div className="flex items-center justify-center py-12">
-            <div className="text-gray-400">Loading hero data...</div>
+        <div className="flex items-center justify-center py-16">
+            <Loader label="Loading hero data…" />
         </div>
     );
     
@@ -227,6 +228,33 @@ const HeroForm: React.FC = () => {
                             onChange={handleChange} 
                             className="admin-input"
                             placeholder="e.g., #contact"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="secondaryCtaText" className="admin-label">Secondary Button Text</label>
+                        <input
+                            type="text"
+                            name="secondaryCtaText"
+                            id="secondaryCtaText"
+                            value={formData.secondaryCtaText || ''}
+                            onChange={handleChange}
+                            className="admin-input"
+                            placeholder="e.g., View My Work"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="secondaryCtaLink" className="admin-label flex items-center gap-2">
+                            <Link size={14} />
+                            Secondary Button Link
+                        </label>
+                        <input 
+                            type="text" 
+                            name="secondaryCtaLink" 
+                            id="secondaryCtaLink" 
+                            value={formData.secondaryCtaLink || ''} 
+                            onChange={handleChange} 
+                            className="admin-input"
+                            placeholder="e.g., #works"
                         />
                     </div>
                 </div>

@@ -24,7 +24,8 @@ export async function GET() {
     details.deployment = process.env.AZURE_OPENAI_DEPLOYMENT || null;
     details.apiVersion = process.env.AZURE_OPENAI_API_VERSION || '2024-02-15-preview';
   } else if (provider === 'gemini') {
-    details.model = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+    // Prefer stable model name without the "-latest" alias
+    details.model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
   }
 
   return NextResponse.json({ provider, configured, details });

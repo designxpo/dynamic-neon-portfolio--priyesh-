@@ -4,9 +4,74 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
 import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog } from '../types';
-import { Bot, Send, X } from 'lucide-react';
+import { Bot, Send, X, Trash2, Calendar } from 'lucide-react';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
+
+const initialAssistantMessage: Msg = {
+  role: 'assistant',
+  content:
+    'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
+};
+
+const BOOKING_URL = 'https://calendar.app.google/bTfdiZGjeXZGqbeu9';
+const BOOKING_DESC = 'A collaborative 30-minute call to understand each other’s work and creative process. We’ll talk about your design goals, review your portfolio or brand, and identify how my expertise can help you craft experiences that truly connect.';
+
+// Cookie helpers for persisting chat history
+const CHAT_COOKIE = 'chatbot-history';
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+const COOKIE_SIZE_BUDGET = 3500; // bytes budget target for cookie value
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  try {
+    const cookies = document.cookie?.split('; ') || [];
+    for (const c of cookies) {
+      const [k, v] = c.split('=');
+      if (k === name) return decodeURIComponent(v || '');
+    }
+  } catch { /* noop */ }
+  return null;
+}
+
+function writeCookie(name: string, value: string, maxAgeSeconds = COOKIE_MAX_AGE_SECONDS) {
+  if (typeof document === 'undefined') return;
+  try {
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}`;
+  } catch { /* noop */ }
+}
+
+function clearCookie(name: string) {
+  if (typeof document === 'undefined') return;
+  try {
+    document.cookie = `${name}=; path=/; max-age=0`;
+  } catch { /* noop */ }
+}
+
+function getCookieMessages(): Msg[] {
+  try {
+    const raw = readCookie(CHAT_COOKIE);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((m: any) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string');
+    }
+  } catch { /* noop */ }
+  return [];
+}
+
+function saveCookieMessages(msgs: Msg[]) {
+  // Keep last N messages and ensure cookie size stays under budget
+  const maxKeep = 20;
+  let slice = msgs.slice(-maxKeep);
+  let json = JSON.stringify(slice);
+  // If too big, trim further until under budget
+  while (json.length > COOKIE_SIZE_BUDGET && slice.length > 1) {
+    slice = slice.slice(1); // drop oldest
+    json = JSON.stringify(slice);
+  }
+  writeCookie(CHAT_COOKIE, json);
+}
 
 function summarize(db: Database) {
   const name = db.hero?.name || 'Me';
@@ -29,14 +94,15 @@ function list<T>(items: T[], pick: (t: T) => string, max = 5): string {
   return items.slice(0, max).map(pick).filter(Boolean).map(s => `• ${s}`).join('\n');
 }
 
-function answerQuestion(q: string, db: Database): string {
+function answerQuestion(q: string, db: Database, visitorName?: string): string {
   const query = q.toLowerCase();
   const s = summarize(db);
 
   const includesAny = (words: string[]) => words.some(w => query.includes(w));
 
   if (includesAny(['who are you', 'who is', 'your name', 'introduce', 'about you'])) {
-    return `Hi! I'm ${s.name}${s.title ? `, ${s.title}` : ''}. ${s.shortBio || 'I build delightful, performant web experiences.'}`;
+    const greet = visitorName ? `Hi ${visitorName}! ` : 'Hi! ';
+    return `${greet}I'm ${s.name}${s.title ? `, ${s.title}` : ''}. ${s.shortBio || 'I build delightful, performant web experiences.'}`;
   }
 
   if (includesAny(['skill', 'stack', 'technology', 'tools'])) {
@@ -77,12 +143,16 @@ function answerQuestion(q: string, db: Database): string {
     const phone = db.contact?.phone || '';
     const socials = (db.contact?.socialLinks || []).slice(0, 5).map(s => `${s.platform}: ${s.url}`).join('\n');
     const lines = [
-      'You can reach me via:',
+      visitorName ? `Happy to connect${visitorName ? `, ${visitorName}` : ''}!` : 'You can reach me via:',
       email ? `• Email: ${email}` : '',
       phone ? `• Phone: ${phone}` : '',
       socials ? `• Socials:\n${socials}` : '',
     ].filter(Boolean);
     return lines.join('\n') || `Use the contact form and I’ll get back to you soon!`;
+  }
+
+  if (includesAny(['book', 'schedule', 'meeting', 'call', 'calendar', '30-minute', '30 minute', '30min', 'appointment'])) {
+    return `${BOOKING_DESC}\n\nBook here: ${BOOKING_URL}`;
   }
 
   if (includesAny(['testimonial', 'client', 'feedback'])) {
@@ -96,9 +166,10 @@ function answerQuestion(q: string, db: Database): string {
   }
 
   // Default friendly intro
+  const salutation = visitorName ? `Hi ${visitorName}! ` : 'Hi! ';
   const skillsLine = s.topSkills.length ? ` I often work with ${s.topSkills.slice(0, 4).join(', ')}.` : '';
   const projectLine = s.featuredTitles.length ? ` Recent projects include ${s.featuredTitles.slice(0, 2).join(', ')}.` : '';
-  return `Hi! I'm ${s.name}${s.title ? `, ${s.title}` : ''}. ${s.shortBio || ''}${skillsLine}${projectLine} Ask me about my projects, skills, or how I can help you.`.trim();
+  return `${salutation}I'm ${s.name}${s.title ? `, ${s.title}` : ''}. ${s.shortBio || ''}${skillsLine}${projectLine} Ask me about my projects, skills, or how I can help you.`.trim();
 }
 
 export default function Chatbot() {
@@ -106,17 +177,26 @@ export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [db, setDb] = useState<Database | null>(null);
   const [input, setInput] = useState('');
+  const [visitorName, setVisitorName] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try { return sessionStorage.getItem('chat-visitor-name') || ''; } catch { return ''; }
+  });
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [animatedReply, setAnimatedReply] = useState<string | null>(null);
   const [animatedIndex, setAnimatedIndex] = useState(0);
   const [messages, setMessages] = useState<Msg[]>(() => {
     if (typeof window === 'undefined') return [];
+    // Prefer cookie; fallback to existing localStorage if any
+    const fromCookie = getCookieMessages();
+    if (fromCookie.length) return fromCookie;
     try {
       const raw = localStorage.getItem('chatbot-history');
       return raw ? (JSON.parse(raw) as Msg[]) : [];
     } catch { return []; }
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sendingRef = useRef(false);
+  const lastSendAtRef = useRef(0);
   const [opening, setOpening] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
@@ -125,13 +205,27 @@ export default function Chatbot() {
     try { initDb(); setDb(getDb()); } catch { /* ignore */ }
   }, []);
 
+  // Seed an initial assistant greeting if there is no prior history
   useEffect(() => {
+    if (messages.length === 0) {
+      const seed = [initialAssistantMessage];
+      setMessages(seed);
+      // persist to cookie and localStorage as a fallback
+      saveCookieMessages(seed);
+      try { localStorage.setItem('chatbot-history', JSON.stringify(seed)); } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // persist to cookie (primary) and localStorage (fallback) on changes
+    saveCookieMessages(messages);
     try { localStorage.setItem('chatbot-history', JSON.stringify(messages.slice(-50))); } catch {}
     // scroll to bottom on new message
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  const disabled = useMemo(() => !db || !input.trim(), [db, input]);
+  const disabled = useMemo(() => !db || !input.trim() || isBotTyping || sendingRef.current, [db, input, isBotTyping]);
 
   const openChat = () => {
     setOpening(true);
@@ -147,13 +241,53 @@ export default function Chatbot() {
     setOpen(false);
   };
 
+  const clearChat = () => {
+    // reset chat history and visitor state
+    const seed = [initialAssistantMessage];
+    setMessages(seed);
+    setAnimatedReply(null);
+    setAnimatedIndex(0);
+    try { sessionStorage.removeItem('chat-visitor-name'); } catch {}
+    setVisitorName('');
+    clearCookie(CHAT_COOKIE);
+    try { localStorage.removeItem('chatbot-history'); } catch {}
+    // Save seed back to cookie so greeting persists
+    saveCookieMessages(seed);
+  };
+
+  const extractName = (text: string): string | null => {
+    // Simple patterns: "my name is <name>", "i am <name>", "i'm <name>"
+    const t = text.trim();
+    const patterns = [
+      /\bmy\s+name\s+is\s+([a-zA-Z][a-zA-Z\-\s]{1,40})/i,
+      /\bi\s*am\s+([a-zA-Z][a-zA-Z\-\s]{1,40})/i,
+      /\bi\s*'\s*m\s+([a-zA-Z][a-zA-Z\-\s]{1,40})/i,
+    ];
+    for (const re of patterns) {
+      const m = t.match(re);
+      if (m && m[1]) return m[1].trim();
+    }
+    return null;
+  };
+
   const send = async () => {
     const q = input.trim();
     if (!db || !q) return;
+    const now = Date.now();
+    if (now - lastSendAtRef.current < 500) return; // debounce rapid triggers
+    lastSendAtRef.current = now;
+    if (sendingRef.current) return; // prevent duplicate sends
+    // Capture visitor name if they provided one in this turn
+    const maybeName = extractName(q);
+    if (maybeName) {
+      setVisitorName(maybeName);
+      try { sessionStorage.setItem('chat-visitor-name', maybeName); } catch {}
+    }
     const userMsg: Msg = { role: 'user', content: q };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsBotTyping(true);
+    sendingRef.current = true;
     // Try LLM first via server route; fallback to local rule-based answer
     try {
       const snapshot = db ? {
@@ -167,29 +301,38 @@ export default function Chatbot() {
         contact: db.contact,
         blogs: db.blogs,
       } : undefined;
+      // Provide short recent chat history so the assistant can respond contextually
+      const recent = [...messages, userMsg].slice(-16);
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, snapshot }),
+        body: JSON.stringify({
+          question: q,
+          messages: recent,
+          snapshot,
+          visitor: { name: visitorName || maybeName || '', path: pathname || '/' }
+        }),
       });
       if (res.ok) {
         const data = await res.json();
         const reply = (data?.answer as string) || '';
         if (reply) {
-          // start typewriter animation
+          // If server returned its graceful fallback, prefer our local rule-based reply (includes booking intent handling)
+          const isServerFallback = /couldn[’'`]?t reach the AI service/i.test(reply);
+          const finalReply = isServerFallback ? answerQuestion(q, db, visitorName || maybeName || '') : reply;
           setIsBotTyping(false);
-          setAnimatedReply(reply);
+          setAnimatedReply(finalReply);
           setAnimatedIndex(0);
           return;
         }
       }
       // Non-ok or empty answer => fallback
-      const reply = answerQuestion(q, db);
+      const reply = answerQuestion(q, db, visitorName || maybeName || '');
       setIsBotTyping(false);
       setAnimatedReply(reply);
       setAnimatedIndex(0);
     } catch {
-      const reply = answerQuestion(q, db);
+      const reply = answerQuestion(q, db, visitorName || maybeName || '');
       setIsBotTyping(false);
       setAnimatedReply(reply);
       setAnimatedIndex(0);
@@ -209,8 +352,15 @@ export default function Chatbot() {
         if (next >= animatedReply.length) {
           window.clearInterval(id);
           // finalize message
-          setMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: animatedReply }]);
+          setMessages(prevMsgs => {
+            const last = prevMsgs[prevMsgs.length - 1];
+            if (last && last.role === 'assistant' && last.content.trim() === animatedReply.trim()) {
+              return prevMsgs; // avoid duplicate assistant bubbles
+            }
+            return [...prevMsgs, { role: 'assistant', content: animatedReply }];
+          });
           setAnimatedReply(null);
+          sendingRef.current = false; // allow next send
           return animatedReply.length;
         }
         return next;
@@ -307,34 +457,39 @@ export default function Chatbot() {
                   <Bot size={18} className="opacity-90" />
                 </div>
                 <div className="text-sm">
-                  <div className="font-semibold text-white">Virtual Assistant</div>
+                  <div className="font-semibold text-white">Prism</div>
                   <div className="text-white/60">Ask about projects, skills, and more</div>
                 </div>
               </div>
-              <motion.button
-                onClick={closeChat}
-                className="text-white/60 hover:text-white p-1 rounded-md"
-                aria-label="Close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              >
-                <X size={18} />
-              </motion.button>
+              <div className="flex items-center gap-1.5">
+                <motion.button
+                  onClick={clearChat}
+                  className="text-white/60 hover:text-white p-1 rounded-md"
+                  aria-label="Clear chat"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  title="Clear chat"
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <Trash2 size={18} />
+                </motion.button>
+                <motion.button
+                  onClick={closeChat}
+                  className="text-white/60 hover:text-white p-1 rounded-md"
+                  aria-label="Close"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <X size={18} />
+                </motion.button>
+              </div>
             </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.length === 0 && (
-              <div className="flex items-start gap-2 text-sm">
-                <div className="mt-0.5 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0">
-                  <Bot size={14} className="opacity-90" />
-                </div>
-                <div className="inline-block rounded-2xl rounded-tl-sm px-3 py-2 bg-white/5 text-white shadow-sm border border-brand-purple/10">
-                  Hey there 👋 I’m your virtual assistant! Want to know more about my projects, skills, or background?
-                </div>
-              </div>
-            )}
+            {/* Initial assistant message is injected into history on first load */}
 
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
@@ -381,6 +536,9 @@ export default function Chatbot() {
             <button onClick={() => { try { window.open('/images/Priyesh%20Mishra%20UIUX.pdf', '_blank'); } catch {} quickSend('Can I download your resume?'); }} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Download Resume</button>
             <button onClick={() => quickSend('How can I contact you?', 'contact')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Contact Me</button>
             <button onClick={() => quickSend('Tell me about yourself', 'home')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">About Me</button>
+            <button onClick={() => { try { window.open(BOOKING_URL, '_blank'); } catch {} quickSend('I want to book a 30-minute session.'); }} className="px-3 py-1.5 rounded-full text-xs bg-green-500/15 text-green-300 hover:bg-green-500/25 transition inline-flex items-center gap-1">
+              <Calendar size={14} /> Book 30‑min Session
+            </button>
           </div>
 
             <div className="p-3 border-t border-brand-purple/10 flex gap-2">
@@ -403,7 +561,7 @@ export default function Chatbot() {
           <motion.button
             key="chat-toggle"
             onClick={openChat}
-            aria-label="Open chat"
+            aria-label="Open Prism"
             initial={{ opacity: 0, scale: 0.9, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useRef, useState } from 'react';
-import { getAdminPassword, setAdminPassword, resetDbToDefaults, exportDb, importDb, setBaselineFromCurrent } from '@/lib/db';
+// Local offline DB utils as fallback when server API (Mongo) isn't available
+import { getAdminPassword as getAdminPasswordLocal, setAdminPassword as setAdminPasswordLocal, resetDbToDefaults, exportDb, importDb, setBaselineFromCurrent } from '@/lib/db';
 import { Shield, Save, RotateCcw, Database, Upload as UploadIcon, Flag as FlagIcon } from 'lucide-react';
 
 const SettingsForm: React.FC = () => {
@@ -11,59 +12,101 @@ const SettingsForm: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
         setLoading(true);
 
-        const storedPassword = getAdminPassword();
+        try {
+            // 1) Get current password from server if available, else local fallback
+            let storedPassword = 'admin';
+            try {
+                const res = await fetch('/api/admin/adminPassword', { cache: 'no-store' });
+                if (res.ok) {
+                    const val = await res.json();
+                    storedPassword = typeof val === 'string' ? val : (val?.adminPassword ?? 'admin');
+                } else {
+                    storedPassword = getAdminPasswordLocal();
+                }
+            } catch {
+                storedPassword = getAdminPasswordLocal();
+            }
 
-        if (currentPassword !== storedPassword) {
-            setMessage({ type: 'error', text: 'Current password is incorrect.' });
+            if (currentPassword !== storedPassword) {
+                setMessage({ type: 'error', text: 'Current password is incorrect.' });
+                setLoading(false);
+                return;
+            }
+
+            if (newPassword.length < 4) {
+                setMessage({ type: 'error', text: 'New password must be at least 4 characters long.' });
+                setLoading(false);
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                setMessage({ type: 'error', text: 'New passwords do not match.' });
+                setLoading(false);
+                return;
+            }
+
+            // 2) Update password on server first; fallback to local
+            let success = false;
+            try {
+                const res = await fetch('/api/admin/adminPassword', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPassword) });
+                success = res.ok;
+            } catch {
+                success = false;
+            }
+            if (!success) {
+                success = setAdminPasswordLocal(newPassword);
+            }
+
+            if (success) {
+                setMessage({ type: 'success', text: 'Password updated successfully!' });
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                setMessage({ type: 'error', text: 'Failed to update password.' });
+            }
+        } finally {
             setLoading(false);
-            return;
         }
-
-        if (newPassword.length < 4) {
-            setMessage({ type: 'error', text: 'New password must be at least 4 characters long.' });
-            setLoading(false);
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setMessage({ type: 'error', text: 'New passwords do not match.' });
-            setLoading(false);
-            return;
-        }
-
-        const success = setAdminPassword(newPassword);
-
-        if (success) {
-            setMessage({ type: 'success', text: 'Password updated successfully!' });
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        } else {
-            setMessage({ type: 'error', text: 'Failed to update password.' });
-        }
-        setLoading(false);
     };
 
-    const handleResetData = () => {
-        if (!confirm('This will reset the portfolio data to defaults (local changes will be lost). Continue?')) return;
+    const handleResetData = async () => {
+        if (!confirm('This will reset the portfolio data to defaults/baseline. Continue?')) return;
+        // Try server reset first
+        try {
+            const res = await fetch('/api/admin/config?mode=reset', { method: 'PUT' });
+            if (res.ok) {
+                location.reload();
+                return;
+            }
+        } catch {}
+        // Fallback to local reset
         const ok = resetDbToDefaults();
-        if (ok) {
-            // force reload so app reads the new DB
-            location.reload();
-        } else {
-            setMessage({ type: 'error', text: 'Failed to reset data. Check console for details.' });
-        }
+        if (ok) location.reload();
+        else setMessage({ type: 'error', text: 'Failed to reset data. Check console for details.' });
     };
 
     // Export current DB as JSON download
-    const handleExport = () => {
+    const handleExport = async () => {
         try {
-            const json = exportDb();
+            // Try server snapshot first
+            let json = '';
+            try {
+                const res = await fetch('/api/admin/config', { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    json = JSON.stringify(data, null, 2);
+                }
+            } catch {}
+            if (!json) {
+                // Fallback to local
+                json = exportDb();
+            }
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -92,7 +135,17 @@ const SettingsForm: React.FC = () => {
         if (!file) return;
         try {
             const text = await file.text();
-            const ok = importDb(text, 'replace'); // default to replace for reliability
+            // Try server import first
+            let ok = false;
+            try {
+                const res = await fetch('/api/admin/config?mode=replace', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: text });
+                ok = res.ok;
+            } catch {
+                ok = false;
+            }
+            // Fallback to local import
+            if (!ok) ok = importDb(text, 'replace');
+
             if (ok) {
                 setMessage({ type: 'success', text: 'Backup imported successfully. Reloading…' });
                 setTimeout(() => location.reload(), 600);
@@ -108,9 +161,18 @@ const SettingsForm: React.FC = () => {
         }
     };
 
-    const handleSetBaseline = () => {
+    const handleSetBaseline = async () => {
         try {
-            const ok = setBaselineFromCurrent();
+            // Try server-side baseline first
+            let ok = false;
+            try {
+                const res = await fetch('/api/admin/config?mode=setBaseline', { method: 'PUT' });
+                ok = res.ok;
+            } catch {
+                ok = false;
+            }
+            if (!ok) ok = setBaselineFromCurrent();
+
             if (ok) {
                 setMessage({ type: 'success', text: 'Current content set as the default baseline. Future resets will restore to this snapshot.' });
             } else {

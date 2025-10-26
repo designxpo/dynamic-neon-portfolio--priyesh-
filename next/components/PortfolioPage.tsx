@@ -13,6 +13,10 @@ import Blogs from './Blogs';
 import Contact from './Contact';
 import Footer from './Footer';
 import AnimatedSection from './AnimatedSection';
+import Loader from './Loader';
+import HeroSkeleton from './skeletons/HeroSkeleton';
+import ServicesSkeleton from './skeletons/ServicesSkeleton';
+import ProjectsSkeleton from './skeletons/ProjectsSkeleton';
 
 import { 
     getHeroData, 
@@ -123,6 +127,10 @@ const PortfolioPage = () => {
                 console.error("Failed to fetch portfolio data:", error);
             } finally {
                 setLoading(false);
+                try {
+                    // Notify preloader that portfolio data is ready
+                    window.dispatchEvent(new Event('portfolio:ready'));
+                } catch {}
             }
         };
 
@@ -131,8 +139,14 @@ const PortfolioPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-dark-bg flex items-center justify-center text-white">
-                Loading Portfolio...
+            <div className="bg-gradient-to-br from-dark-bg to-purple-900/20 text-white font-sans leading-relaxed selection:bg-brand-purple selection:text-white">
+                <Header heroData={null} />
+                <main>
+                    <HeroSkeleton />
+                    <ProjectsSkeleton />
+                    <ServicesSkeleton />
+                </main>
+                <Footer heroData={null} />
             </div>
         );
     }

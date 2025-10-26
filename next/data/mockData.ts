@@ -8,7 +8,10 @@ export const mockHeroData: Omit<RawHeroData, 'profileImage'> = {
     title: 'UI/UX Designer & SMM Strategist',
     shortBio: "Priyesh Mishra is a passionate UI/UX Designer with 3+ years of experience crafting impactful digital experiences for SaaS, Fintech, eCommerce, and Spiritual brands. He blends creativity with strategy to build visually engaging, high-performing products and helps brands grow through smart storytelling.",
     ctaButtonText: "View My Work",
-    ctaButtonLink: "#projects",
+    ctaButtonLink: "#works",
+    // New optional secondary CTA defaults
+    secondaryCtaText: "Get In Touch",
+    secondaryCtaLink: "#contact",
     stats: [
         { id: uuidv4(), label: "Experience", value: "3+ Years" },
         { id: uuidv4(), label: "Projects", value: "10+" },
