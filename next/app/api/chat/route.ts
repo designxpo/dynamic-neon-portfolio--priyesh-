@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
 import { connectDB } from '../../../lib/db/mongoose';
 import SiteConfig from '../../../models/SiteConfig';
 import { mockContactData, mockEducationsData, mockExperiencesData, mockHeroData, mockProjectsData, mockServicesData, mockSkillsData, mockTestimonialsData } from '../../../data/mockData';
