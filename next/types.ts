@@ -219,4 +219,60 @@ export interface Database {
   blogs: Blog[];
   seo?: SEOConfig; // optional for backward compatibility
   adminPassword?: string;
+  // Optional chatbot settings for admin-managed assistant config
+  chatbot?: ChatbotSettings;
+  // Optional site metadata for admin-managed SEO/OG/Twitter
+  siteMeta?: SiteMetadata;
+}
+
+// --- Chatbot / Assistant settings ---
+export interface ChatbotSettings {
+  enabled: boolean;
+  name: string; // Display name in header
+  greeting: string; // Initial assistant greeting to seed conversation
+  bookingUrl?: string;
+  bookingDescription?: string;
+  showBookingQuickReply?: boolean;
+  // Admin-defined placeholders available in rule replies, e.g. {company}, {cta}
+  placeholders?: Record<string, string>;
+  rules?: ChatbotRule[]; // Custom Q&A triggers
+}
+
+export interface ChatbotRule {
+  id: string;
+  question?: string; // optional phrase to match
+  keywords?: string[]; // any keyword triggers a match
+  reply: string; // assistant reply when matched
+  enabled?: boolean; // default true
+  match?: 'any' | 'all'; // keyword match mode (default: any)
+  caseSensitive?: boolean; // default false
+  regex?: string; // optional regex pattern
+}
+
+// --- Site Metadata (subset of Next Metadata) ---
+export interface SiteMetadata {
+  title?: string;
+  description?: string;
+  keywords?: string; // comma-separated
+  authors?: { name: string; url?: string }[];
+  robots?: string;
+  icons?: {
+    icon?: string;
+    shortcut?: string;
+    apple?: string;
+  };
+  openGraph?: {
+    title?: string;
+    description?: string;
+    siteName?: string;
+    type?: 'website' | 'article' | 'profile' | string;
+    url?: string;
+    images?: Array<{ url: string; width?: number; height?: number; alt?: string }>
+  };
+  twitter?: {
+    card?: 'summary' | 'summary_large_image' | string;
+    title?: string;
+    description?: string;
+    images?: string[];
+  };
 }

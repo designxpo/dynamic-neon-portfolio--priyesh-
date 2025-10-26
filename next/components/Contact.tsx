@@ -128,31 +128,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
              <h3 className="text-xl md:text-2xl xl:text-3xl font-bold mb-4">{data.heading}</h3>
              <p className="text-base md:text-lg text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto">{data.description}</p>
 
-             {/* Booking CTA */}
-             <div className="max-w-2xl mx-auto mb-8 md:mb-12 text-left bg-green-500/10 border border-green-400/20 rounded-xl p-5 md:p-6">
-               <div className="flex items-start gap-3">
-                 <div className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-md bg-green-500/20 text-green-300">
-                   {/* Simple calendar glyph */}
-                   <span className="text-sm">🗓️</span>
-                 </div>
-                 <div className="flex-1">
-                   <h4 className="text-white font-semibold mb-1">Book a 30‑minute session</h4>
-                   <p className="text-gray-300 text-sm leading-relaxed">
-                     A collaborative 30-minute call to understand each other’s work and creative process. We’ll talk about your design goals, review your portfolio or brand, and identify how my expertise can help you craft experiences that truly connect.
-                   </p>
-                   <div className="mt-3">
-                     <a
-                       href="https://calendar.app.google/bTfdiZGjeXZGqbeu9"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="inline-flex items-center gap-2 bg-green-500/20 hover:bg-green-500/30 text-green-200 font-medium px-4 py-2 rounded-lg transition"
-                     >
-                       <span>Book 30‑min Session</span>
-                     </a>
-                   </div>
-                 </div>
-               </div>
-             </div>
+             {/* Booking CTA removed as requested */}
 
              {/* Backend status banner */}
        {backendReachable === 'down' && (

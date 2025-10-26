@@ -15,6 +15,8 @@ import BlogsForm from './forms/BlogsForm';
 import SettingsForm from './forms/SettingsForm';
 import ContactSubmissions from './ContactSubmissions';
 import SEOForm from './forms/SEOForm';
+import ChatbotForm from './forms/ChatbotForm';
+import MetadataForm from './forms/MetadataForm';
 
 export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -41,6 +43,10 @@ export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
         return <BlogsForm />;
       case 'seo':
         return <SEOForm />;
+      case 'metadata':
+        return <MetadataForm />;
+      case 'chatbot':
+        return <ChatbotForm />;
       case 'contact':
         return <ContactForm />;
       case 'contact-submissions':

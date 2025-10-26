@@ -3,19 +3,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
-import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog } from '../types';
+import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog, ChatbotSettings, ChatbotRule } from '../types';
+import { getChatbotSettings } from '@/lib/api';
 import { Bot, Send, X, Trash2, Calendar } from 'lucide-react';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
-
-const initialAssistantMessage: Msg = {
-  role: 'assistant',
-  content:
-    'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
-};
-
-const BOOKING_URL = 'https://calendar.app.google/bTfdiZGjeXZGqbeu9';
-const BOOKING_DESC = 'A collaborative 30-minute call to understand each other’s work and creative process. We’ll talk about your design goals, review your portfolio or brand, and identify how my expertise can help you craft experiences that truly connect.';
 
 // Cookie helpers for persisting chat history
 const CHAT_COOKIE = 'chatbot-history';
@@ -94,11 +86,62 @@ function list<T>(items: T[], pick: (t: T) => string, max = 5): string {
   return items.slice(0, max).map(pick).filter(Boolean).map(s => `• ${s}`).join('\n');
 }
 
-function answerQuestion(q: string, db: Database, visitorName?: string): string {
+function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null | undefined, visitorName?: string): string {
   const query = q.toLowerCase();
   const s = summarize(db);
 
   const includesAny = (words: string[]) => words.some(w => query.includes(w));
+
+  // 0) Custom rules: first match wins
+  const rules = (chatbot?.rules || []).filter(r => r && (r.enabled !== false) && r.reply?.trim());
+  const formatReply = (tpl: string) => {
+    // simple placeholder replacement
+    const base = (tpl || '')
+      .replace(/\{\s*name\s*\}/gi, visitorName || 'there')
+      .replace(/\{\s*date\s*\}/gi, new Date().toLocaleDateString())
+      .replace(/\{\s*email\s*\}/gi, (db.contact?.email || ''))
+      .replace(/\{\s*phone\s*\}/gi, (db.contact?.phone || ''))
+      .replace(/\{\s*path\s*\}/gi, (typeof window !== 'undefined' ? window.location.pathname : ''))
+      .replace(/\{\s*bookingUrl\s*\}/gi, (chatbot?.bookingUrl || ''))
+      .replace(/\{\s*contactLink\s*\}/gi, '#contact');
+    // apply admin-defined placeholders
+    const ph = chatbot?.placeholders || {};
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let out = base;
+    for (const [k, v] of Object.entries(ph)) {
+      if (!k) continue;
+      try {
+        const re = new RegExp(`\\{\\s*${escapeRegExp(k)}\\s*\\}`, 'g');
+        out = out.replace(re, v ?? '');
+      } catch { /* ignore bad keys */ }
+    }
+    return out;
+  };
+  for (const r of rules) {
+    const hasQuestion = !!(r.question && r.question.trim());
+    const hasKeywords = Array.isArray(r.keywords) && r.keywords.length > 0;
+    const caseSens = !!r.caseSensitive;
+    let matched = false;
+    if (r.regex && r.regex.trim()) {
+      try {
+        const re = new RegExp(r.regex, caseSens ? '' : 'i');
+        matched = re.test(q);
+      } catch { /* ignore invalid regex */ }
+    }
+    const qc = caseSens ? q : query;
+    if (!matched && hasQuestion) {
+      const needle = (r.question || '').trim();
+      matched = caseSens ? q.includes(needle) : qc.includes(needle.toLowerCase());
+    }
+    if (!matched && hasKeywords) {
+      const kws = (r.keywords || []).map(k => (k || '').trim()).filter(Boolean);
+      if ((r.match || 'any') === 'all') matched = kws.length > 0 && kws.every(k => (caseSens ? q.includes(k) : qc.includes(k.toLowerCase())));
+      else matched = kws.some(k => (caseSens ? q.includes(k) : qc.includes(k.toLowerCase())));
+    }
+    if (matched) {
+      return formatReply(r.reply.trim());
+    }
+  }
 
   if (includesAny(['who are you', 'who is', 'your name', 'introduce', 'about you'])) {
     const greet = visitorName ? `Hi ${visitorName}! ` : 'Hi! ';
@@ -152,7 +195,12 @@ function answerQuestion(q: string, db: Database, visitorName?: string): string {
   }
 
   if (includesAny(['book', 'schedule', 'meeting', 'call', 'calendar', '30-minute', '30 minute', '30min', 'appointment'])) {
-    return `${BOOKING_DESC}\n\nBook here: ${BOOKING_URL}`;
+    const desc = (chatbot?.bookingDescription || '').trim();
+    const url = (chatbot?.bookingUrl || '').trim();
+    const fallbackDesc = 'Let’s schedule a 30‑minute call to align on your goals and how I can help.';
+    const fallbackUrl = '#contact';
+    const lines = [desc || fallbackDesc, '', `Book here: ${url || fallbackUrl}`];
+    return lines.join('\n');
   }
 
   if (includesAny(['testimonial', 'client', 'feedback'])) {
@@ -199,23 +247,38 @@ export default function Chatbot() {
   const lastSendAtRef = useRef(0);
   const [opening, setOpening] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+  const [chatbot, setChatbot] = useState<ChatbotSettings | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try { initDb(); setDb(getDb()); } catch { /* ignore */ }
   }, []);
 
-  // Seed an initial assistant greeting if there is no prior history
+  // Load chatbot settings
   useEffect(() => {
+    (async () => {
+      try {
+        const s = await getChatbotSettings();
+        setChatbot(s);
+      } catch {
+        setChatbot({ enabled: true, name: 'Prism', greeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.', bookingUrl: undefined, bookingDescription: undefined, showBookingQuickReply: true });
+      }
+    })();
+  }, []);
+
+  // Seed an initial assistant greeting if there is no prior history (wait for chatbot settings)
+  useEffect(() => {
+    if (!chatbot) return;
     if (messages.length === 0) {
-      const seed = [initialAssistantMessage];
+      const greeting = chatbot.greeting?.trim() || `Hi! I’m ${chatbot.name || 'Prism'} — ask me about projects, skills, or how I work.`;
+      const seed = [{ role: 'assistant', content: greeting } as Msg];
       setMessages(seed);
       // persist to cookie and localStorage as a fallback
       saveCookieMessages(seed);
       try { localStorage.setItem('chatbot-history', JSON.stringify(seed)); } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [chatbot]);
 
   useEffect(() => {
     // persist to cookie (primary) and localStorage (fallback) on changes
@@ -243,7 +306,8 @@ export default function Chatbot() {
 
   const clearChat = () => {
     // reset chat history and visitor state
-    const seed = [initialAssistantMessage];
+    const greeting = (chatbot?.greeting?.trim()) || `Hi! I’m ${(chatbot?.name || 'Prism')} — ask me about projects, skills, or how I work.`;
+    const seed = [{ role: 'assistant', content: greeting } as Msg];
     setMessages(seed);
     setAnimatedReply(null);
     setAnimatedIndex(0);
@@ -286,6 +350,37 @@ export default function Chatbot() {
     const userMsg: Msg = { role: 'user', content: q };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
+    // Check custom rules before invoking server or fallback
+  const ruleReply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
+    // If a rule matched (and not just generic fallback), we can tell by comparing
+    // whether it came from rules path: we applied rules first in answerQuestion.
+    // To avoid ambiguity, explicitly match again but only through rules:
+    const rules = (chatbot?.rules || []).filter(r => r && (r.enabled !== false) && r.reply?.trim());
+    const query = q.toLowerCase();
+    const ruleMatched = rules.some(r => {
+      const hasQ = !!(r.question && r.question.trim());
+      const hasKw = Array.isArray(r.keywords) && r.keywords.length > 0;
+      // consider regex and case-sensitive too for quick check
+      if (r.regex && r.regex.trim()) {
+        try { const re = new RegExp(r.regex, r.caseSensitive ? '' : 'i'); if (re.test(q)) return true; } catch { /* ignore */ }
+      }
+      const hitQ = hasQ && (r.caseSensitive ? q.includes((r.question || '').trim()) : query.includes((r.question || '').toLowerCase().trim()));
+      let hitKw = false;
+      if (hasKw) {
+        const kws = (r.keywords || []).map(k => (k || '').trim()).filter(Boolean);
+        hitKw = (r.match || 'any') === 'all'
+          ? (kws.length > 0 && kws.every(k => (r.caseSensitive ? q.includes(k) : query.includes(k.toLowerCase()))))
+          : kws.some(k => (r.caseSensitive ? q.includes(k) : query.includes(k.toLowerCase())));
+      }
+      return (hitQ || hitKw);
+    });
+    if (ruleMatched) {
+      sendingRef.current = true;
+      setIsBotTyping(false);
+      setAnimatedReply(ruleReply);
+      setAnimatedIndex(0);
+      return;
+    }
     setIsBotTyping(true);
     sendingRef.current = true;
     // Try LLM first via server route; fallback to local rule-based answer
@@ -319,7 +414,7 @@ export default function Chatbot() {
         if (reply) {
           // If server returned its graceful fallback, prefer our local rule-based reply (includes booking intent handling)
           const isServerFallback = /couldn[’'`]?t reach the AI service/i.test(reply);
-          const finalReply = isServerFallback ? answerQuestion(q, db, visitorName || maybeName || '') : reply;
+          const finalReply = isServerFallback ? answerQuestion(q, db, chatbot, visitorName || maybeName || '') : reply;
           setIsBotTyping(false);
           setAnimatedReply(finalReply);
           setAnimatedIndex(0);
@@ -327,12 +422,12 @@ export default function Chatbot() {
         }
       }
       // Non-ok or empty answer => fallback
-      const reply = answerQuestion(q, db, visitorName || maybeName || '');
+  const reply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
       setIsBotTyping(false);
       setAnimatedReply(reply);
       setAnimatedIndex(0);
     } catch {
-      const reply = answerQuestion(q, db, visitorName || maybeName || '');
+      const reply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
       setIsBotTyping(false);
       setAnimatedReply(reply);
       setAnimatedIndex(0);
@@ -457,7 +552,7 @@ export default function Chatbot() {
                   <Bot size={18} className="opacity-90" />
                 </div>
                 <div className="text-sm">
-                  <div className="font-semibold text-white">Prism</div>
+                  <div className="font-semibold text-white">{chatbot?.name || 'Prism'}</div>
                   <div className="text-white/60">Ask about projects, skills, and more</div>
                 </div>
               </div>
@@ -536,9 +631,11 @@ export default function Chatbot() {
             <button onClick={() => { try { window.open('/images/Priyesh%20Mishra%20UIUX.pdf', '_blank'); } catch {} quickSend('Can I download your resume?'); }} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Download Resume</button>
             <button onClick={() => quickSend('How can I contact you?', 'contact')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Contact Me</button>
             <button onClick={() => quickSend('Tell me about yourself', 'home')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">About Me</button>
-            <button onClick={() => { try { window.open(BOOKING_URL, '_blank'); } catch {} quickSend('I want to book a 30-minute session.'); }} className="px-3 py-1.5 rounded-full text-xs bg-green-500/15 text-green-300 hover:bg-green-500/25 transition inline-flex items-center gap-1">
-              <Calendar size={14} /> Book 30‑min Session
-            </button>
+            {chatbot?.showBookingQuickReply && chatbot?.bookingUrl && (
+              <button onClick={() => { try { window.open(chatbot.bookingUrl as string, '_blank'); } catch {} quickSend('I want to book a 30-minute session.'); }} className="px-3 py-1.5 rounded-full text-xs bg-green-500/15 text-green-300 hover:bg-green-500/25 transition inline-flex items-center gap-1">
+                <Calendar size={14} /> Book 30‑min Session
+              </button>
+            )}
           </div>
 
             <div className="p-3 border-t border-brand-purple/10 flex gap-2">
@@ -557,11 +654,11 @@ export default function Chatbot() {
             </div>
             </motion.div>
           </motion.div>
-        ) : (
+        ) : ((chatbot?.enabled ?? true) ? (
           <motion.button
             key="chat-toggle"
             onClick={openChat}
-            aria-label="Open Prism"
+            aria-label={`Open ${chatbot?.name || 'Prism'}`}
             initial={{ opacity: 0, scale: 0.9, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
@@ -620,7 +717,7 @@ export default function Chatbot() {
               <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[22px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.span>
           </motion.button>
-        )}
+        ) : null)}
       </AnimatePresence>
     </div>
   );

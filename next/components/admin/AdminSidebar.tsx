@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import { LayoutDashboard, Target, Zap, Rocket, Briefcase, GraduationCap, Award, Star, FileText, Mail, Inbox, Settings, LogOut, Search } from 'lucide-react';
+import { LayoutDashboard, Target, Zap, Rocket, Briefcase, GraduationCap, Award, Star, FileText, Mail, Inbox, Settings, LogOut, Search, MessageCircle, FileCog } from 'lucide-react';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -65,6 +65,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
 
   const bottomNavItems = [
     { tab: 'seo', label: 'SEO', icon: <Search size={18} /> },
+    { tab: 'metadata', label: 'Metadata', icon: <FileCog size={18} /> },
+    { tab: 'chatbot', label: 'Chatbot', icon: <MessageCircle size={18} /> },
     { tab: 'settings', label: 'Settings', icon: <Settings size={18} /> },
   ];
 

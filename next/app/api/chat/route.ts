@@ -253,6 +253,74 @@ Use the following portfolio context as ground truth for answers:
 ${context}
 `;
 
+    // Server-side rule parity: if DB is configured, try to load chatbot rules and apply them before calling the LLM
+    try {
+      if (process.env.MONGODB_URI) {
+        await connectDB();
+        const cfg = await SiteConfig.getSingleton();
+        const bot = (cfg as any)?.chatbot || {};
+        const rules: any[] = Array.isArray(bot?.rules) ? bot.rules : [];
+        if (Array.isArray(rules) && rules.length > 0) {
+          const caseText = (s: string, caseSensitive?: boolean) => caseSensitive ? s : s.toLowerCase();
+          const safeStr = (v: any) => (typeof v === 'string' ? v : '');
+          const vNameSafe = safeStr(vName);
+          const email = snapshot?.contact?.email || (cfg as any)?.contact?.email || '';
+          const phone = snapshot?.contact?.phone || (cfg as any)?.contact?.phone || '';
+          const bookingUrl = safeStr(bot?.bookingUrl);
+          const contactLink = '#contact';
+          const formatReply = (tpl: string) => {
+            const base = (tpl || '')
+              .replace(/\{\s*name\s*\}/gi, vNameSafe || 'there')
+              .replace(/\{\s*date\s*\}/gi, new Date().toLocaleDateString())
+              .replace(/\{\s*email\s*\}/gi, email)
+              .replace(/\{\s*phone\s*\}/gi, phone)
+              .replace(/\{\s*path\s*\}/gi, pagePath || '')
+              .replace(/\{\s*bookingUrl\s*\}/gi, bookingUrl)
+              .replace(/\{\s*contactLink\s*\}/gi, contactLink);
+            const ph: Record<string,string> = (bot?.placeholders && typeof bot.placeholders === 'object') ? bot.placeholders : {};
+            const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            let out = base;
+            for (const k of Object.keys(ph)) {
+              if (!k) continue;
+              try {
+                const re = new RegExp(`\\{\\s*${escapeRegExp(k)}\\s*\\}`, 'g');
+                out = out.replace(re, safeStr(ph[k]));
+              } catch {}
+            }
+            return out;
+          };
+          for (const r of rules) {
+            if (!r || r.enabled === false || !safeStr(r.reply).trim()) continue;
+            const caseSens = !!r.caseSensitive;
+            const inQ = caseText(q, caseSens);
+            let matched = false;
+            if (r.regex && safeStr(r.regex).trim()) {
+              try {
+                const re = new RegExp(safeStr(r.regex), caseSens ? '' : 'i');
+                matched = re.test(q);
+              } catch {}
+            }
+            if (!matched && r.question && safeStr(r.question).trim()) {
+              const needle = safeStr(r.question).trim();
+              matched = caseSens ? q.includes(needle) : inQ.includes(needle.toLowerCase());
+            }
+            if (!matched && Array.isArray(r.keywords) && r.keywords.length > 0) {
+              const kws = r.keywords.map((k: any) => safeStr(k).trim()).filter(Boolean);
+              if ((r.match || 'any') === 'all') {
+                matched = kws.length > 0 && kws.every((k: string) => (caseSens ? q.includes(k) : inQ.includes(k.toLowerCase())));
+              } else {
+                matched = kws.some((k: string) => (caseSens ? q.includes(k) : inQ.includes(k.toLowerCase())));
+              }
+            }
+            if (matched) {
+              const reply = formatReply(safeStr(r.reply).trim());
+              return NextResponse.json({ answer: reply });
+            }
+          }
+        }
+      }
+    } catch {}
+
     let answer = '';
     const provider: LLMProvider | null = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? 'gemini'
       : (process.env.AZURE_OPENAI_ENDPOINT ? 'azure-openai' : (process.env.OPENAI_API_KEY ? 'openai' : null));
