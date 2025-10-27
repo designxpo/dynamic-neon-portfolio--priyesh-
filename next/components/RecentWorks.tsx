@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Project } from '../types';
 import Section from './Section';
 import { ExternalLinkIcon, GitHubIcon } from './icons/Icons';
+import { getCategories } from '@/lib/api';
 
 interface RecentWorksProps {
   data: Project[];
@@ -26,9 +27,13 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
 
     <div className="p-4 md:p-6">
       <div className="flex items-start justify-between mb-3">
-        <span className="text-xs bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full border border-brand-purple/30 font-medium">
-          {project.category}
-        </span>
+        <div className="flex flex-wrap gap-1">
+          {((project.categories && project.categories.length ? project.categories : (project.category ? [project.category] : []))).slice(0, 2).map((cat, idx) => (
+            <span key={idx} className="text-xs bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full border border-brand-purple/30 font-medium">
+              {cat}
+            </span>
+          ))}
+        </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           {hasAnyLink(project.sourceUrl) && (
             <a
@@ -81,9 +86,31 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
 
 const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
+  const [orderedCats, setOrderedCats] = useState<string[] | null>(null);
 
-  const categories = ['All', 'Apps', 'Branding', 'UI/UX', 'Web'];
-  const filteredProjects = filter === 'All' ? data : data.filter(p => p.category === filter);
+  // Load saved categories order from Admin; if unavailable, fall back to derived
+  useEffect(() => {
+    (async () => {
+      try { const cats = await getCategories(); setOrderedCats(cats || []); } catch { setOrderedCats([]); }
+    })();
+  }, []);
+
+  const derivedCats = Array.from(new Set(
+    data.flatMap(p => (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : [])))
+      .map(c => (c || '').trim())
+      .filter(Boolean)
+  ));
+  const categoriesSet = new Set(orderedCats && orderedCats.length ? orderedCats : derivedCats);
+  // Append any categories present in data but not in saved order
+  const fullCats = (orderedCats && orderedCats.length ? [...orderedCats] : [...derivedCats]);
+  for (const c of derivedCats) if (!categoriesSet.has(c)) fullCats.push(c);
+  const categories = ['All', ...Array.from(new Set(fullCats))];
+  const filteredProjects = filter === 'All'
+    ? data
+    : data.filter(p => {
+        const cats = (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : []));
+        return cats.includes(filter);
+      });
 
   return (
     <Section title="My Recent Works" id="works">

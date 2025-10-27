@@ -25,7 +25,11 @@ const ProjectsForm: React.FC = () => {
     };
 
     const handleEdit = (project: RawProject) => {
-        setCurrentItem({ ...project });
+        // Normalize categories for editing
+        const categories = Array.isArray(project.categories)
+            ? project.categories
+            : (project.category ? [project.category] : []);
+        setCurrentItem({ ...project, categories });
         setIsModalOpen(true);
     };
 
@@ -34,6 +38,7 @@ const ProjectsForm: React.FC = () => {
             id: uuidv4(),
             title: '',
             category: '',
+            categories: [],
             descriptionShort: '',
             descriptionLong: '',
             technologies: [],
@@ -77,9 +82,12 @@ const ProjectsForm: React.FC = () => {
         setMessage(null);
         try {
             const isNew = !projects.some(p => p.id === currentItem.id);
+            // keep primary category in sync for compatibility
+            const primary = (currentItem.categories && currentItem.categories[0]) || (currentItem.category || '');
+            const toSave: RawProject = { ...currentItem, category: primary } as RawProject;
             const updatedProjects = isNew
-                ? [...projects, currentItem]
-                : projects.map(p => (p.id === currentItem.id ? currentItem : p));
+                ? [...projects, toSave]
+                : projects.map(p => (p.id === currentItem.id ? toSave : p));
             await updateProjects(updatedProjects);
             setProjects(updatedProjects);
             setIsModalOpen(false);
@@ -122,7 +130,7 @@ const ProjectsForm: React.FC = () => {
                     <thead>
                         <tr>
                             <th>Project</th>
-                            <th>Category</th>
+                            <th>Categories</th>
                             <th>Technologies</th>
                             <th>Status</th>
                             <th className="text-right">Actions</th>
@@ -141,7 +149,11 @@ const ProjectsForm: React.FC = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20">{project.category}</span>
+                                    <div className="flex flex-wrap gap-1">
+                                        {((project.categories && project.categories.length ? project.categories : (project.category ? [project.category] : []))).map((cat, idx) => (
+                                            <span key={idx} className="px-2 py-1 rounded-full text-xs font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20">{cat}</span>
+                                        ))}
+                                    </div>
                                 </td>
                                 <td>
                                     <div className="flex flex-wrap gap-1">
@@ -184,8 +196,18 @@ const ProjectsForm: React.FC = () => {
                             <input type="text" value={currentItem.title} onChange={e => setCurrentItem(p => p ? { ...p, title: e.target.value } : null)} className="admin-input" placeholder="Enter project title" />
                         </div>
                         <div>
-                            <label className="admin-label">Category</label>
-                            <input type="text" value={currentItem.category} onChange={e => setCurrentItem(p => p ? { ...p, category: e.target.value } : null)} className="admin-input" placeholder="e.g., Web Development, Mobile App" />
+                            <label className="admin-label">Categories (comma-separated)</label>
+                            <input
+                                type="text"
+                                value={(currentItem.categories || []).join(', ')}
+                                onChange={e => {
+                                    const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                    setCurrentItem(p => p ? { ...p, categories: arr } : null);
+                                }}
+                                className="admin-input"
+                                placeholder="e.g., Web, UI/UX, Apps"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">First value will be treated as the primary category for display in older sections.</p>
                         </div>
                         <div>
                             <label className="admin-label">Short Description</label>

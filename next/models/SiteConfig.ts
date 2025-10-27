@@ -25,6 +25,7 @@ const siteConfigSchema = new Schema(
     seo: Schema.Types.Mixed,
     chatbot: Schema.Types.Mixed,
     siteMeta: Schema.Types.Mixed,
+  categories: [String],
     adminPassword: { type: String, default: 'admin' },
     baseline: { type: Schema.Types.Mixed, required: false },
   },
@@ -44,6 +45,7 @@ export interface SiteConfigDoc extends mongoose.Document {
   seo?: any;
   chatbot?: any;
   siteMeta?: any;
+  categories?: string[];
   adminPassword?: string;
 }
 
@@ -69,6 +71,7 @@ function buildDefaults() {
         publishedAt: new Date().toISOString(),
       },
     ],
+  categories: ['Apps', 'Branding', 'UI/UX', 'Web'],
     chatbot: {
       enabled: true,
       name: 'Prism',

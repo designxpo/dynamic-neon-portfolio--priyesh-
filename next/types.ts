@@ -72,7 +72,8 @@ export interface RawService {
 export interface Project {
   id: string;
   title: string;
-  category: string;
+  category: string; // primary category (back-compat)
+  categories?: string[]; // multiple categories supported
   descriptionShort: string;
   descriptionLong?: string;
   coverImage: Image;
@@ -85,7 +86,8 @@ export interface Project {
 export interface RawProject {
     id: string;
     title: string;
-    category: string;
+  category: string; // primary category (back-compat)
+  categories?: string[]; // multiple categories supported
     descriptionShort: string;
     descriptionLong?: string;
     coverImage: Image;
@@ -150,6 +152,10 @@ export interface ContactData {
     email: string;
     phone: string;
     socialLinks: SocialLink[];
+  // Email notifications (optional)
+  notifyUserOnSubmit?: boolean; // send confirmation to the submitter
+  notifyAdminOnSubmit?: boolean; // send notification to admin/owner
+  notifyEmail?: string; // optional override for admin notification recipient; defaults to `email`
 }
 
 export interface RawContactData {
@@ -157,7 +163,11 @@ export interface RawContactData {
     description: string;
     email: string;
     phone: string;
-    socialLinks: RawSocialLink[];
+  socialLinks: RawSocialLink[];
+  // Email notifications (optional)
+  notifyUserOnSubmit?: boolean;
+  notifyAdminOnSubmit?: boolean;
+  notifyEmail?: string;
 }
 
 export interface BlogData {
@@ -223,6 +233,8 @@ export interface Database {
   chatbot?: ChatbotSettings;
   // Optional site metadata for admin-managed SEO/OG/Twitter
   siteMeta?: SiteMetadata;
+  // Optional global category list for ordering and admin management
+  categories?: string[];
 }
 
 // --- Chatbot / Assistant settings ---

@@ -86,6 +86,7 @@ const getDefaultDb = (): Database => {
             },
         ],
         adminPassword: 'admin',
+    categories: ['Apps', 'Branding', 'UI/UX', 'Web'],
         chatbot: {
             enabled: true,
             name: 'Prism',

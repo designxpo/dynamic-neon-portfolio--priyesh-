@@ -25,9 +25,16 @@ POST /api/contacts
     "message": "Hello!"
   }
 - Responses
-  - 201 { message: "Contact form submitted successfully", contact: { ...savedDoc } }
+  - 201 { message: "Contact form submitted successfully", contact: { ...savedDoc }, emailSent: true }
   - 400 { error: "All fields are required" }
   - 500 { error: "Internal server error" }
+
+Notes
+- If SMTP env vars are not configured, the server skips sending the confirmation email (logs only) but still returns 201.
+ - Admin notification emails are controlled from the Admin -> Contact form:
+   - notifyUserOnSubmit (default: true)
+   - notifyAdminOnSubmit (default: true)
+   - notifyEmail (optional recipient; falls back to contact.email or CONTACT_NOTIFY_TO)
 
 GET /api/contacts
 - Responses

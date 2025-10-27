@@ -19,6 +19,7 @@ const allowedKeys = new Set([
   'seo',
   'chatbot',
   'siteMeta',
+  'categories',
   'adminPassword'
 ]);
 

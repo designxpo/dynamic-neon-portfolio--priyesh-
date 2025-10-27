@@ -173,6 +173,28 @@ MONGODB_URI=your_mongodb_atlas_connection_string
 ```
 If unset, API routes requiring DB will fail until you provide the URI.
 
+Contact email confirmations (optional):
+
+To automatically email people who submit the contact form, configure SMTP in `next/.env.local`:
+
+```
+# SMTP for contact confirmations
+SMTP_HOST=smtp.yourprovider.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=postmaster@yourdomain.com
+SMTP_PASS=your_password
+SMTP_FROM="Priyesh Mishra <no-reply@yourdomain.com>"
+```
+
+If these variables are not set, the app will log a message and skip sending in development, but the contact submission will still be saved.
+
+Admin notification emails (optional):
+
+- Toggle in Admin → Contact → Email Notifications.
+- By default, both “send confirmation to user” and “send notification to me” are enabled.
+- You can set an optional Notification recipient; if empty, it falls back to the Contact email, or CONTACT_NOTIFY_TO in env.
+
 7. **Access the applications**
    - Vite Frontend: http://localhost:3000 (proxy to backend on /api)
    - Express Backend API: http://localhost:5000

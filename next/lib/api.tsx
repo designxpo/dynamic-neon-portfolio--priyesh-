@@ -523,3 +523,26 @@ export const updateSiteMeta = async (meta: Partial<SiteMetadata>): Promise<void>
         }
     );
 };
+
+// --- Categories ---
+export const getCategories = async (): Promise<string[]> => withFallback(async () => {
+    const res = await fetch('/api/admin/categories', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed categories');
+    const json = await res.json();
+    return Array.isArray(json) ? json as string[] : [];
+}, () => {
+    const db = getDb();
+    return Array.isArray(db?.categories) ? (db.categories as string[]) : ['Apps', 'Branding', 'UI/UX', 'Web'];
+});
+
+export const updateCategories = async (categories: string[]): Promise<void> => {
+    const cleaned = Array.from(new Set((categories || []).map(c => (c || '').trim()).filter(Boolean)));
+    await serverOrLocal(
+        () => fetch('/api/admin/categories', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleaned) }),
+        () => {
+            const db = getDb();
+            (db as any).categories = cleaned;
+            saveDb(db);
+        }
+    );
+};

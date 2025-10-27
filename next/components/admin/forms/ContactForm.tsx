@@ -98,6 +98,45 @@ const ContactForm: React.FC = () => {
                 </h4>
                 <div className="space-y-6">
                     <div>
+            {/* Email Notifications */}
+            <div className="admin-card">
+                <h4 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Mail size={20} className="text-electric-blue" />
+                    Email Notifications
+                </h4>
+                <div className="space-y-4">
+                    <label className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            className="accent-electric-blue"
+                            checked={formData.notifyUserOnSubmit ?? true}
+                            onChange={(e) => setFormData({ ...formData, notifyUserOnSubmit: e.target.checked })}
+                        />
+                        <span className="text-sm text-gray-300">Send confirmation email to the person who submits the form</span>
+                    </label>
+                    <label className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            className="accent-electric-blue"
+                            checked={formData.notifyAdminOnSubmit ?? true}
+                            onChange={(e) => setFormData({ ...formData, notifyAdminOnSubmit: e.target.checked })}
+                        />
+                        <span className="text-sm text-gray-300">Send a notification email to me when someone submits</span>
+                    </label>
+                    <div>
+                        <label className="admin-label">Notification recipient (optional)</label>
+                        <input
+                            type="email"
+                            className="admin-input"
+                            value={formData.notifyEmail || ''}
+                            onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.value })}
+                            placeholder={`Defaults to ${formData.email || 'your contact email'}`}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Set SMTP in next/.env.local to enable sending. If not set, the server skips sending in development.</p>
+                    </div>
+                </div>
+            </div>
+
                         <label htmlFor="heading" className="admin-label">Heading</label>
                         <input type="text" name="heading" id="heading" value={formData.heading || ''} onChange={handleChange} className="admin-input" placeholder="Get In Touch" />
                     </div>
