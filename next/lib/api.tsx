@@ -26,8 +26,8 @@ import {
 } from '@/data/mockData';
 import type { ChatbotSettings, SiteMetadata } from '@/types';
 
-// Timeout wrapper to ensure API calls fail fast instead of hanging for 90+ seconds
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 5000): Promise<T> => {
+// Timeout wrapper with increased timeout for MongoDB Atlas operations
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
     return Promise.race([
         promise,
         new Promise<never>((_, reject) => 
@@ -302,17 +302,57 @@ export const getBlogs = async (): Promise<Blog[]> => withFallback(async () => {
 }, () => {
     const db = getDb();
     if (db?.blogs && db.blogs.length > 0) return db.blogs as Blog[];
-    // Seed with a minimal example if nothing exists in local DB
+    // Seed with provided entries using local images so UI remains consistent offline/without DB
     return [
         {
             id: uuidv4(),
-            title: 'Designing with Purpose: Practical UI/UX Guidelines',
+            title: 'YouTube Studio App Redesign — UI Case Study',
             author: 'Priyesh Mishra',
-            content: 'A quick field guide of heuristics and patterns I use to ship clean, accessible UIs that convert.',
-            excerpt: 'Simple, proven UI/UX heuristics you can apply today to make products clearer and faster to use.',
-            url: 'https://medium.com/',
-            thumbnail: { url: 'https://picsum.photos/id/1015/800/450', alternativeText: 'Blog cover' },
-            publishedAt: new Date().toISOString(),
+            content: 'A creator-centric UI case study where I redesigned the YouTube Studio mobile app to make analytics and channel management more intuitive and visually appealing.',
+            excerpt: 'Redesigning YouTube Studio for clearer analytics and faster on-the-go tasks.',
+            url: 'https://priyeshmishra1602.medium.com/youtube-studio-app-redesign-ui-case-study-by-priyesh-mishra-d4a7158563eb',
+            thumbnail: { url: '/images/Youtube_Studio_App_redesign_UI%20Case_Study.webp', alternativeText: 'YouTube Studio App redesign UI case study' },
+            publishedAt: new Date('2025-10-28').toISOString(),
+        },
+        {
+            id: uuidv4(),
+            title: 'The Graphic Advantage: How Visual Storytelling Boosts ROI in Today’s Market',
+            author: 'Priyesh Mishra',
+            content: 'In today’s hyper-competitive landscape, businesses need more than just a good product or service to succeed. They need a strong visual identity that resonates with their target audience and drives significant return on investment (ROI). This is where graphic design becomes an essential weapon in the arsenal of any modern business, be it a fledgling startup or an established corporation.',
+            excerpt: 'Why visual storytelling is a growth lever — and how design compounds ROI.',
+            url: 'https://priyeshmishra1602.medium.com/the-graphic-advantage-how-visual-storytelling-boosts-roi-in-todays-market-8b3b1dfaedfb',
+            thumbnail: { url: '/images/Graphic_Advantage.webp', alternativeText: 'The Graphic Advantage' },
+            publishedAt: new Date('2023-12-09').toISOString(),
+        },
+        {
+            id: uuidv4(),
+            title: 'Case Study: Growing an Instagram Following from 0 to 100,000 in 6 Months',
+            author: 'Priyesh Mishra',
+            content: 'To gain 100,000 followers on Instagram in 6 months by consistently posting videos and engaging with the audience.',
+            excerpt: 'The system behind scaling an Instagram audience to 100k in half a year.',
+            url: 'https://priyeshmishra1602.medium.com/case-study-growing-an-instagram-following-from-0-to-100-000-in-6-months-f18763ea8ef8',
+            thumbnail: { url: '/images/Spiritualtalksofficial.png', alternativeText: 'Instagram growth case study' },
+            publishedAt: new Date('2023-12-03').toISOString(),
+        },
+        {
+            id: uuidv4(),
+            title: 'Case Study: Forensic Library App UI Design by DesignXpo',
+            author: 'Priyesh Mishra',
+            content: 'To design a user interface for a forensic library app that is easy to use and navigate, and that provides users with quick and easy access to the forensic materials and ebooks they need.',
+            excerpt: 'Designing a dense library UI that stays simple, scannable, and fast.',
+            url: 'https://priyeshmishra1602.medium.com/case-study-forensic-library-app-ui-design-by-designxpo-719fe96acb11',
+            thumbnail: { url: '/images/Forensic_Library_App.webp', alternativeText: 'Forensic Library App UI' },
+            publishedAt: new Date('2023-10-30').toISOString(),
+        },
+        {
+            id: uuidv4(),
+            title: 'Application Where Skill Got Admired: Digital Video Sharing Platform',
+            author: 'Priyesh Mishra',
+            content: 'In this modern era, where almost everything is digitalized our project gives a platform to many people who wants to compete/ grow in their fields. It’s a people based entertainment service in which competitions will be held and one who got highest vote in a given interval wins the battle and will be greeted by a cash prize.',
+            excerpt: 'Building a video platform where creators compete and audiences decide.',
+            url: 'https://priyeshmishra1602.medium.com/application-where-skill-got-admired-digital-video-sharing-platform-395f469edd7f',
+            thumbnail: { url: '/images/Digital_App.webp', alternativeText: 'Digital video sharing platform' },
+            publishedAt: new Date('2021-12-30').toISOString(),
         },
     ] as Blog[];
 });
@@ -358,54 +398,64 @@ export const deleteBlog = async (blogId: string): Promise<void> => {
 // --- SEO ---
 const defaultSEO = (): SEOConfig => ({
     home: {
-        metaTitle: 'Priyesh Mishra — Portfolio',
-        metaKeywords: 'designer, ui, ux, product design, portfolio',
-        metaDescription: 'Portfolio site showcasing projects, services, and experience of Priyesh Mishra.'
+        metaTitle: 'Priyesh Mishra — UI/UX Designer & Product Designer Portfolio',
+        metaDescription: 'Explore the professional portfolio of Priyesh Mishra, a UI/UX and product designer crafting digital experiences that combine creativity, usability, and strategy.',
+        metaKeywords: 'Priyesh Mishra, UI designer, UX designer, product designer, portfolio, web design, creative design, user experience'
     },
     hero: {
-        metaTitle: 'Home — Hero',
-        metaKeywords: 'hero, introduction, headline',
-        metaDescription: 'Top section introducing the designer and value proposition.'
+        metaTitle: 'Home — Hero | UI/UX Designer Priyesh Mishra',
+        metaDescription: 'Welcome to the portfolio of Priyesh Mishra — UI/UX designer with a passion for building human-centered, visually engaging digital products.',
+        metaKeywords: 'hero, introduction, designer headline, creative intro, design portfolio intro'
+    },
+    about: {
+        metaTitle: 'About Priyesh Mishra — UI/UX Designer & Developer',
+        metaDescription: 'Learn about Priyesh Mishra, a UI/UX designer and front-end developer dedicated to turning complex ideas into intuitive, user-focused designs.',
+        metaKeywords: 'about Priyesh Mishra, designer bio, UX process, UI designer, developer, design approach'
     },
     services: {
-        metaTitle: 'Services',
-        metaKeywords: 'services, ui design, ux design, product strategy',
-        metaDescription: 'Professional services including UI/UX design, strategy, and more.'
+        metaTitle: 'Design Services — UI/UX, Product Strategy & Branding by Priyesh Mishra',
+        metaDescription: 'Priyesh Mishra offers design services including UI/UX design, product strategy, design systems, and branding — focused on creating usable, scalable, and visually refined experiences.',
+        metaKeywords: 'UI UX services, product strategy, branding design, design systems, user experience, web design, app design, creative services'
     },
     projects: {
-        metaTitle: 'Projects',
-        metaKeywords: 'projects, case studies, portfolio work',
-        metaDescription: 'Selected recent work and case studies.'
+        metaTitle: 'Design Projects — Priyesh Mishra Portfolio',
+        metaDescription: 'A showcase of design projects by Priyesh Mishra, featuring UI/UX case studies, product strategies, and visually refined web & mobile experiences.',
+        metaKeywords: 'design projects, UX case studies, portfolio work, creative projects, UI design examples'
     },
     experience: {
-        metaTitle: 'Experience',
-        metaKeywords: 'experience, work history, roles',
-        metaDescription: 'Professional experience and roles held.'
+        metaTitle: 'Professional Experience — UI/UX Design & Product Development',
+        metaDescription: 'Explore Priyesh Mishra’s professional experience in UI/UX design and product development, contributing to impactful projects for global clients.',
+        metaKeywords: 'UI UX experience, product design, professional journey, work history, design projects'
+    },
+    process: {
+        metaTitle: 'My Design Process — How I Approach UI/UX Projects',
+        metaDescription: 'Discover Priyesh Mishra’s complete design process — from research and ideation to visual design, prototyping, and delivery. A structured workflow for efficient product design.',
+        metaKeywords: 'design process, workflow, UI UX methodology, design thinking, user research, wireframing, prototyping, product design steps'
     },
     education: {
         metaTitle: 'Education',
-        metaKeywords: 'education, certifications, degrees',
-        metaDescription: 'Academic background and certifications.'
+        metaDescription: 'Academic background and certifications.',
+        metaKeywords: 'education, certifications, degrees'
     },
     skills: {
-        metaTitle: 'Skills',
-        metaKeywords: 'skills, tools, technologies',
-        metaDescription: 'Skills and tools used across design and development.'
+        metaTitle: 'Design Skills — UI/UX, Product Design, Frontend Development',
+        metaDescription: 'Priyesh Mishra’s core skills include UI/UX design, design systems, product strategy, prototyping, and front-end development with Figma & modern frameworks.',
+        metaKeywords: 'UI design, UX design, design systems, product strategy, prototyping, Figma, frontend, creative skills'
     },
     testimonials: {
-        metaTitle: 'Testimonials',
-        metaKeywords: 'testimonials, reviews, feedback',
-        metaDescription: 'Client testimonials and feedback.'
+        metaTitle: 'Client Feedback — What People Say About Priyesh Mishra',
+        metaDescription: 'Read testimonials and client feedback for UI/UX designer Priyesh Mishra, trusted for creative direction, attention to detail, and user-focused design.',
+        metaKeywords: 'testimonials, client feedback, design reviews, UI UX trust, designer testimonials'
     },
     blogs: {
-        metaTitle: 'Blog',
-        metaKeywords: 'blog, articles, writing',
-        metaDescription: 'Articles and writing on design and product.'
+        metaTitle: 'Design Insights — Articles by Priyesh Mishra',
+        metaDescription: 'Explore design insights, case studies, and practical tips on UI/UX, creativity, and product design written by Priyesh Mishra.',
+        metaKeywords: 'UI UX blog, design insights, UX articles, case studies, creative thinking, product design blog'
     },
     contact: {
-        metaTitle: 'Contact',
-        metaKeywords: 'contact, email, connect',
-        metaDescription: 'Contact information and ways to get in touch.'
+        metaTitle: 'Contact Priyesh Mishra — Let’s Work Together',
+        metaDescription: 'Get in touch with UI/UX designer and developer Priyesh Mishra to discuss projects, collaborations, or freelance opportunities.',
+        metaKeywords: 'contact designer, hire UI UX designer, freelance designer, connect with Priyesh, project inquiry'
     },
 });
 
@@ -472,16 +522,16 @@ const defaultChatbotSettings = (): ChatbotSettings => ({
     showBookingQuickReply: true,
     placeholders: {},
     rules: [
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What services do you offer?', keywords: ['services','service','ui','ux','design','branding','strategy'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. You can browse a quick overview here: /#services' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can we book a call?', keywords: ['book','call','meeting','schedule','calendar','chat'], reply: 'Absolutely — you can book a 30‑min intro here: {bookingUrl}.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How can I contact you?', keywords: ['contact','email','reach','connect','message'], reply: 'You can email me at {email} or use the contact form: {contactLink}.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What are your rates?', keywords: ['price','pricing','rates','cost','budget','quote'], reply: 'I scope per‑project based on goals and complexity. Share a bit about your needs or book a quick call and I’ll tailor a quote: {bookingUrl}.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What’s your experience?', keywords: ['experience','background','years','worked','clients','brands'], reply: 'I’ve designed for startups and brands across industries. You can skim highlights here: /#experience' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can I see your work?', keywords: ['portfolio','projects','case study','work','examples'], reply: 'Sure — recent projects and case studies are here: /#projects' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Do you have testimonials?', keywords: ['testimonials','reviews','feedback','clients say'], reply: 'Yes — client feedback is here: /#testimonials' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What tools do you use?', keywords: ['skills','tools','stack','figma','framer','react','next','tailwind','design system'], reply: 'I work with Figma, Framer, React/Next.js, Tailwind, and design systems. See more here: /#skills' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Where are you based?', keywords: ['location','based','timezone','country','time zone'], reply: 'I’m based in India (IST, UTC+5:30) and work async with global teams.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available?', keywords: ['availability','available','taking projects','capacity','start date'], reply: 'I’m currently accepting new projects. Want to compare calendars? {bookingUrl}' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What services do you offer?', keywords: ['services','service','ui','ux','design','branding','strategy','website','app'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. I also help teams align business goals with user needs through user-centric digital design. You can browse my full list here: /#services' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What’s your design process?", keywords: ['process','workflow','approach','steps','how you work','method','design journey'], reply: 'My design process typically includes:\n1️⃣ Discovery & Research – Understanding user needs and business goals.\n2️⃣ Wireframing – Structuring the core experience.\n3️⃣ Visual Design – Building brand-aligned interfaces.\n4️⃣ Prototyping & Testing – Validating usability and flow.\n5️⃣ Delivery – Preparing developer-ready assets.\nYou can explore my detailed process here: /#process' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can I see your work?', keywords: ['work','portfolio','examples','projects','case studies','showcase'], reply: 'Absolutely! You can view my recent projects showcasing UI/UX design, web design, and branding here: /#work. Each case study highlights my approach, tools used, and design outcomes.' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What are your rates?', keywords: ['pricing','rates','cost','charge','budget','packages','how much'], reply: 'My pricing depends on the project scope, complexity, and timeline. For smaller UI/UX design projects, I offer fixed packages. For ongoing work, I work on a retainer or hourly basis. Let\'s discuss your needs here: /#pricing' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How can we work together?', keywords: ['collaborate','start','hire','contact','get started','work with you','onboarding'], reply: 'I\'d love to collaborate! The best way to start is by sharing a few details about your project. You can schedule a quick intro call or fill out my inquiry form here: /#contact' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What tools do you use?', keywords: ['tools','stack','software','design tools','programs','apps'], reply: 'I mainly work with Figma, Adobe XD, Photoshop, and Illustrator for design — plus Notion, FigJam, and Miro for strategy and collaboration.' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What's your experience?", keywords: ['experience','background','skills','career','years','education'], reply: 'I\'m a UI/UX designer with 8+ years of experience working across startups and enterprise products. My background combines design systems, user research, and brand storytelling to deliver seamless digital experiences.' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How long will it take?', keywords: ['time','duration','timeline','delivery','how long','deadline'], reply: 'Most projects take between 2–6 weeks, depending on scope and complexity. I usually start with a discovery phase to define the exact timeline and milestones.' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Do you allow revisions?', keywords: ['revision','edit','feedback','changes','update'], reply: 'Yes, of course! Every project includes 2–3 rounds of revisions to make sure the final result aligns perfectly with your vision and feedback.' },
+        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available for new projects?', keywords: ['available','open','accepting','new projects','booking','schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
     ],
 });
 

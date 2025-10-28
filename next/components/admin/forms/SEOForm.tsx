@@ -8,9 +8,11 @@ import { FileText, Save, Info } from 'lucide-react';
 const sectionLabels: Record<SectionKey, string> = {
   home: 'Home',
   hero: 'Hero',
+  about: 'About',
   services: 'Services',
   projects: 'Projects',
   experience: 'Experience',
+  process: 'Process',
   education: 'Education',
   skills: 'Skills',
   testimonials: 'Testimonials',

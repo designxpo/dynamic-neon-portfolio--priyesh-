@@ -14,17 +14,33 @@ declare global {
 export async function connectDB() {
   if (!MONGODB_URI) throw new Error('MONGODB_URI not configured');
   
+  // Check if connection exists and is ready
+  if (global._mongooseConn) {
+    try {
+      const connection = await global._mongooseConn;
+      if (connection.connection.readyState === 1) {
+        return connection; // Already connected
+      }
+    } catch (error) {
+      console.log('Existing connection failed, creating new one');
+      global._mongooseConn = undefined;
+    }
+  }
+  
   if (!global._mongooseConn) {
-    // Configure connection with aggressive timeouts for fast fallback
+    // Configure connection optimized for MongoDB Atlas with reasonable timeouts
     const options = {
-      maxPoolSize: 3, // Reduced connection pool for faster failure
-      serverSelectionTimeoutMS: 2000, // Fail fast - only 2 seconds to select server
-      socketTimeoutMS: 3000, // Close connections after 3 seconds of inactivity
-      connectTimeoutMS: 3000, // Only 3 seconds to establish initial connection
+      maxPoolSize: 5, // Atlas connection pool
+      serverSelectionTimeoutMS: 15000, // 15 seconds for Atlas server selection
+      socketTimeoutMS: 30000, // 30 seconds for operations (admin needs more time)
+      connectTimeoutMS: 10000, // 10 seconds for initial Atlas connection
       family: 4, // Use IPv4, skip trying IPv6
-      retryWrites: false, // Disable retries for faster failure
+      retryWrites: true, // Enable retries for Atlas reliability
       bufferCommands: false, // Don't buffer commands if not connected
-      w: 'majority' as const
+      w: 'majority' as const,
+      // Atlas specific optimizations
+      maxIdleTimeMS: 30000, // Close idle connections after 30 seconds
+      heartbeatFrequencyMS: 10000, // Check connection health every 10 seconds
     };
 
     global._mongooseConn = mongoose.connect(MONGODB_URI, options).then((mongoose) => {
@@ -52,4 +68,20 @@ export async function connectDB() {
   }
   
   return global._mongooseConn;
+}
+
+// Check if MongoDB connection is healthy and ready
+export async function isDBHealthy(): Promise<boolean> {
+  try {
+    if (!MONGODB_URI) return false;
+    const connection = await connectDB();
+    return connection.connection.readyState === 1;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Force reconnection by clearing the cached connection
+export function resetDBConnection() {
+  global._mongooseConn = undefined;
 }

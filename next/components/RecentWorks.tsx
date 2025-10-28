@@ -95,16 +95,20 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
     })();
   }, []);
 
+  // Only show categories that have at least one project
   const derivedCats = Array.from(new Set(
     data.flatMap(p => (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : [])))
       .map(c => (c || '').trim())
       .filter(Boolean)
   ));
-  const categoriesSet = new Set(orderedCats && orderedCats.length ? orderedCats : derivedCats);
-  // Append any categories present in data but not in saved order
-  const fullCats = (orderedCats && orderedCats.length ? [...orderedCats] : [...derivedCats]);
-  for (const c of derivedCats) if (!categoriesSet.has(c)) fullCats.push(c);
-  const categories = ['All', ...Array.from(new Set(fullCats))];
+  // Filter out categories with no projects
+  const categoriesWithProjects = derivedCats.filter(cat =>
+    data.some(p => {
+      const cats = (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : []));
+      return cats.includes(cat);
+    })
+  );
+  const categories = ['All', ...categoriesWithProjects];
   const filteredProjects = filter === 'All'
     ? data
     : data.filter(p => {

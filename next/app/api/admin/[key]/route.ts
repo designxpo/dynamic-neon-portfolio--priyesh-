@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const runtime = 'nodejs';
-import { connectDB } from '../../../../lib/db/mongoose';
+import { connectDB, isDBHealthy } from '../../../../lib/db/mongoose';
 import SiteConfig from '../../../../models/SiteConfig';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,6 +21,11 @@ export async function GET(_req: NextRequest, { params }: { params: { key: string
   }
   
   try {
+    // First check if connection is healthy
+    if (!(await isDBHealthy())) {
+      console.log(`${key}: DB not healthy, attempting reconnection`);
+    }
+    
     await connectDB();
     const cfg = await SiteConfig.getOrCreate();
     let value = (cfg as any)[key as keyof typeof cfg];
@@ -55,6 +60,11 @@ export async function PUT(req: NextRequest, { params }: { params: { key: string 
   }
   
   try {
+    // First check if connection is healthy
+    if (!(await isDBHealthy())) {
+      console.log(`${key}: DB not healthy, attempting reconnection`);
+    }
+    
     await connectDB();
     const payload = await req.json();
     const cfg = await SiteConfig.getOrCreate();

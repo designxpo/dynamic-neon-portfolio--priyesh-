@@ -189,9 +189,11 @@ export interface Blog extends BlogData {
 export type SectionKey =
   | 'home'
   | 'hero'
+  | 'about'
   | 'services'
   | 'projects'
   | 'experience'
+  | 'process'
   | 'education'
   | 'skills'
   | 'testimonials'
