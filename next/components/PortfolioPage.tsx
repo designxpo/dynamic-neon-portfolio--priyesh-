@@ -46,96 +46,129 @@ import {
 
 const PortfolioPage = () => {
     const [loading, setLoading] = useState(true);
+    const [heroLoaded, setHeroLoaded] = useState(false);
     const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
     const [blogs, setBlogs] = useState<Blog[] | null>(null);
+    const [sectionsLoaded, setSectionsLoaded] = useState({
+        hero: false,
+        services: false,
+        projects: false,
+        experiences: false,
+        educations: false,
+        skills: false,
+        testimonials: false,
+        contact: false,
+    });
 
+    // Load hero data first (critical above-the-fold content)
     useEffect(() => {
-        const fetchAllData = async () => {
+        const loadHeroData = async () => {
             try {
-                console.log('PortfolioPage: Fetching all data...');
-                const [
-                    hero, 
-                    services, 
-                    projects,
-                    experiences,
-                    educations,
-                    skills,
-                    testimonials,
-                    contact,
-                    blogItems
-                ] = await Promise.all([
-                    getHeroData(),
-                    getServicesData(),
-                    getProjectsData(),
-                    getExperiencesData(),
-                    getEducationsData(),
-                    getSkillsData(),
-                    getTestimonialsData(),
-                    getContactData(),
-                    getBlogs(),
-                ]);
-                
-                console.log('PortfolioPage: Hero data loaded:', hero);
+                console.log('PortfolioPage: Loading hero data...');
+                const hero = await getHeroData();
                 
                 setPortfolioData({
                     hero,
-                    services,
-                    projects,
-                    experiences,
-                    educations,
-                    skills,
-                    testimonials,
-                    contact,
+                    services: [],
+                    projects: [],
+                    experiences: [],
+                    educations: [],
+                    skills: [],
+                    testimonials: [],
+                    contact: null,
                 });
-                // Fallback: if no blogs in DB/localStorage, seed with temporary dummy posts for testing
-                const fallbackBlogs: Blog[] = [
-                    {
-                        id: 'dummy-1',
-                        title: 'How I Design Fast Without Breaking UX',
-                        author: 'Priyesh Mishra',
-                        content: 'Rapid design doesn’t mean careless. Here’s my tight loop that balances speed with quality.',
-                        excerpt: 'A short system for moving from idea to validated UI quickly.',
-                        url: 'https://example.com/blog/design-fast',
-                        thumbnail: { url: 'https://picsum.photos/id/1005/800/450', alternativeText: 'Design fast' },
-                        publishedAt: new Date().toISOString(),
-                    },
-                    {
-                        id: 'dummy-2',
-                        title: '3 Portfolio Case Study Patterns That Work',
-                        author: 'Priyesh Mishra',
-                        content: 'Patterns that make case studies readable and persuasive—without fluff.',
-                        excerpt: 'Make your work easy to understand and remember with these simple sections.',
-                        url: 'https://example.com/blog/case-studies',
-                        thumbnail: { url: 'https://picsum.photos/id/1011/800/450', alternativeText: 'Case studies' },
-                        publishedAt: new Date(Date.now() - 86400000).toISOString(),
-                    },
-                    {
-                        id: 'dummy-3',
-                        title: 'Visual Consistency: Small Rules, Big Impact',
-                        author: 'Priyesh Mishra',
-                        content: 'A few consistent choices compound into trust and clarity across your product.',
-                        excerpt: 'A checklist I use for spacing, type, color and motion to keep products coherent.',
-                        url: 'https://example.com/blog/visual-consistency',
-                        thumbnail: { url: 'https://picsum.photos/id/1016/800/450', alternativeText: 'Consistency' },
-                        publishedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-                    },
-                ];
-
-                setBlogs((blogItems && blogItems.length > 0) ? blogItems : fallbackBlogs);
-
-            } catch (error) {
-                console.error("Failed to fetch portfolio data:", error);
-            } finally {
+                
+                setSectionsLoaded(prev => ({ ...prev, hero: true }));
+                setHeroLoaded(true);
                 setLoading(false);
-                try {
-                    // Notify preloader that portfolio data is ready
+                
+                // Emit event for preloader
+                if (typeof window !== 'undefined') {
                     window.dispatchEvent(new Event('portfolio:ready'));
-                } catch {}
+                }
+                
+                console.log('PortfolioPage: Hero data loaded');
+            } catch (error) {
+                console.error('Error loading hero data:', error);
+                setLoading(false);
             }
         };
 
-        fetchAllData();
+        loadHeroData();
     }, []);
+
+    // Load remaining sections progressively
+    useEffect(() => {
+        if (!heroLoaded) return;
+
+        const loadSection = async (
+            sectionName: keyof typeof sectionsLoaded,
+            loadFn: () => Promise<any>,
+            dataKey: keyof PortfolioData
+        ) => {
+            try {
+                console.log(`Loading ${sectionName}...`);
+                const data = await loadFn();
+                
+                setPortfolioData(prev => prev ? { ...prev, [dataKey]: data } : null);
+                setSectionsLoaded(prev => ({ ...prev, [sectionName]: true }));
+                
+                console.log(`${sectionName} loaded`);
+            } catch (error) {
+                console.error(`Error loading ${sectionName}:`, error);
+                setSectionsLoaded(prev => ({ ...prev, [sectionName]: true })); // Mark as "loaded" to hide skeleton
+            }
+        };
+
+        // Load sections in priority order with small delays
+        const loadSections = async () => {
+            // High priority sections (visible above fold)
+            await loadSection('services', getServicesData, 'services');
+            
+            setTimeout(() => loadSection('projects', getProjectsData, 'projects'), 100);
+            setTimeout(() => loadSection('experiences', getExperiencesData, 'experiences'), 200);
+            setTimeout(() => loadSection('contact', getContactData, 'contact'), 300);
+            
+            // Lower priority sections
+            setTimeout(() => loadSection('educations', getEducationsData, 'educations'), 400);
+            setTimeout(() => loadSection('skills', getSkillsData, 'skills'), 500);
+            setTimeout(() => loadSection('testimonials', getTestimonialsData, 'testimonials'), 600);
+            
+            // Load blogs separately
+            setTimeout(async () => {
+                try {
+                    const blogItems = await getBlogs();
+                    const fallbackBlogs: Blog[] = [
+                        {
+                            id: 'dummy-1',
+                            title: 'How I Design Fast Without Breaking UX',
+                            author: 'Priyesh Mishra',
+                            content: 'Rapid design doesn\'t mean careless. Here\'s my tight loop that balances speed with quality.',
+                            excerpt: 'A short system for moving from idea to validated UI quickly.',
+                            url: 'https://example.com/blog/design-fast',
+                            thumbnail: { url: 'https://picsum.photos/id/1005/800/450', alternativeText: 'Design fast' },
+                            publishedAt: new Date().toISOString(),
+                        },
+                        {
+                            id: 'dummy-2',
+                            title: 'The Future of Design Systems',
+                            author: 'Priyesh Mishra',
+                            content: 'Design systems are evolving. Here\'s what\'s coming next.',
+                            excerpt: 'Exploring the next generation of design systems and component libraries.',
+                            url: 'https://example.com/blog/future-design-systems',
+                            thumbnail: { url: 'https://picsum.photos/id/1006/800/450', alternativeText: 'Design systems' },
+                            publishedAt: new Date().toISOString(),
+                        }
+                    ];
+                    setBlogs(blogItems?.length ? blogItems : fallbackBlogs);
+                } catch (error) {
+                    console.error('Error loading blogs:', error);
+                }
+            }, 700);
+        };
+
+        loadSections();
+    }, [heroLoaded]);
 
     if (loading) {
         return (
@@ -155,55 +188,77 @@ const PortfolioPage = () => {
         <div className="bg-gradient-to-br from-dark-bg to-purple-900/20 text-white font-sans leading-relaxed selection:bg-brand-purple selection:text-white">
             <Header heroData={portfolioData?.hero || null} />
             <main>
-                {portfolioData?.hero && <Hero data={portfolioData.hero} />}
-                
-                {portfolioData?.projects?.length > 0 && (
-                     <AnimatedSection>
-                        <RecentWorks data={portfolioData.projects} />
+                {/* Hero section - always show once loaded */}
+                {portfolioData?.hero && (
+                    <AnimatedSection>
+                        <Hero data={portfolioData.hero} />
                     </AnimatedSection>
                 )}
 
+                {/* Services section - show skeleton until loaded */}
+                {sectionsLoaded.services ? (
+                    portfolioData.services?.length > 0 && (
+                        <AnimatedSection>
+                            <Services data={portfolioData.services} />
+                        </AnimatedSection>
+                    )
+                ) : (
+                    <ServicesSkeleton />
+                )}
+
+                {/* Projects section - show skeleton until loaded */}
+                {sectionsLoaded.projects ? (
+                    portfolioData.projects?.length > 0 && (
+                        <AnimatedSection>
+                            <RecentWorks data={portfolioData.projects} />
+                        </AnimatedSection>
+                    )
+                ) : (
+                    <ProjectsSkeleton />
+                )}
+
+                {/* Roadmap - no data dependency */}
                 <AnimatedSection id="process">
                     <Roadmap />
                 </AnimatedSection>
 
-                {portfolioData?.services?.length > 0 && (
-                    <AnimatedSection>
-                        <Services data={portfolioData.services} />
-                    </AnimatedSection>
-                )}
-
-                {portfolioData?.experiences?.length > 0 && (
+                {/* Experience section */}
+                {sectionsLoaded.experiences && portfolioData.experiences?.length > 0 && (
                     <AnimatedSection>
                         <Experience data={portfolioData.experiences} />
                     </AnimatedSection>
                 )}
                 
-                {portfolioData?.educations?.length > 0 && (
-                     <AnimatedSection>
+                {/* Education section */}
+                {sectionsLoaded.educations && portfolioData.educations?.length > 0 && (
+                    <AnimatedSection>
                         <Education data={portfolioData.educations} />
                     </AnimatedSection>
                 )}
 
-                {portfolioData?.skills?.length > 0 && (
+                {/* Skills section */}
+                {sectionsLoaded.skills && portfolioData.skills?.length > 0 && (
                     <AnimatedSection>
                         <Skills data={portfolioData.skills} />
                     </AnimatedSection>
                 )}
 
-                {portfolioData?.testimonials?.length > 0 && (
+                {/* Testimonials section */}
+                {sectionsLoaded.testimonials && portfolioData.testimonials?.length > 0 && (
                     <AnimatedSection>
                         <Testimonials data={portfolioData.testimonials} />
                     </AnimatedSection>
                 )}
 
-                {(blogs && blogs.length > 0) && (
+                {/* Blogs section */}
+                {blogs && blogs.length > 0 && (
                     <AnimatedSection>
                         <Blogs data={blogs} />
                     </AnimatedSection>
                 )}
 
-                {portfolioData?.contact && (
+                {/* Contact section */}
+                {sectionsLoaded.contact && portfolioData.contact && (
                     <AnimatedSection>
                         <Contact data={portfolioData.contact} />
                     </AnimatedSection>

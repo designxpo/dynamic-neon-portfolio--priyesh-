@@ -30,7 +30,7 @@ const BlogsForm: React.FC = () => {
         setCurrentItem({
             title: '',
             content: '',
-            author: 'Alex Doe',
+            author: 'Priyesh Mishra',
             publishedAt: new Date().toISOString().split('T')[0],
             url: '',
             excerpt: '',

@@ -25,9 +25,11 @@ const siteConfigSchema = new Schema(
     seo: Schema.Types.Mixed,
     chatbot: Schema.Types.Mixed,
     siteMeta: Schema.Types.Mixed,
-  categories: [String],
+    categories: [String],
     adminPassword: { type: String, default: 'admin' },
     baseline: { type: Schema.Types.Mixed, required: false },
+    lastUpdated: { type: Date, default: Date.now },
+    dataVersion: { type: Number, default: 1 }
   },
   { timestamps: true }
 );
@@ -47,6 +49,8 @@ export interface SiteConfigDoc extends mongoose.Document {
   siteMeta?: any;
   categories?: string[];
   adminPassword?: string;
+  lastUpdated?: Date;
+  dataVersion?: number;
 }
 
 function buildDefaults() {
@@ -121,14 +125,62 @@ function buildDefaults() {
 siteConfigSchema.statics.getSingleton = async function (): Promise<SiteConfigDoc> {
   const Model = this as mongoose.Model<SiteConfigDoc> & { getSingleton: () => Promise<SiteConfigDoc> };
   let doc = await Model.findOne();
+  
   if (!doc) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const forceSeeding = process.env.FORCE_DB_SEEDING === 'true';
+    
+    if (isProduction && !forceSeeding) {
+      // In production, never auto-seed unless explicitly forced
+      console.log('Production mode: Skipping automatic data seeding. Use FORCE_DB_SEEDING=true if needed.');
+      throw new Error('No site configuration found. Please initialize data manually in production.');
+    }
+    
+    // Development mode or explicitly forced seeding
+    console.log('Creating initial SiteConfig document...');
     doc = await Model.create(buildDefaults());
+    console.log('SiteConfig initialized successfully');
   }
+  
+  return doc;
+};
+
+// Safe method to get or create config without auto-seeding
+siteConfigSchema.statics.getOrCreate = async function (): Promise<SiteConfigDoc> {
+  const Model = this as mongoose.Model<SiteConfigDoc> & { getOrCreate: () => Promise<SiteConfigDoc> };
+  let doc = await Model.findOne();
+  
+  if (!doc) {
+    // Create minimal document in production without defaults
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      doc = await Model.create({
+        hero: { name: 'Portfolio Owner', role: 'Professional' },
+        services: [],
+        projects: [],
+        experiences: [],
+        educations: [],
+        skills: [],
+        testimonials: [],
+        contact: { email: 'contact@example.com' },
+        blogs: [],
+        categories: ['General'],
+        adminPassword: 'admin',
+        lastUpdated: new Date()
+      });
+      console.log('Created minimal production SiteConfig');
+    } else {
+      doc = await Model.create(buildDefaults());
+      console.log('Created development SiteConfig with defaults');
+    }
+  }
+  
   return doc;
 };
 
 export interface SiteConfigModel extends mongoose.Model<SiteConfigDoc> {
   getSingleton(): Promise<SiteConfigDoc>;
+  getOrCreate(): Promise<SiteConfigDoc>;
 }
 
 export default (models.SiteConfig as SiteConfigModel) || model<SiteConfigDoc, SiteConfigModel>('SiteConfig', siteConfigSchema);

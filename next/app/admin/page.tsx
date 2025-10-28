@@ -16,10 +16,19 @@ export default function AdminPage() {
     try {
       setIsAdmin(sessionStorage.getItem('isAdmin') === 'true');
     } catch {}
-    // load current password from API (Mongo)
+    // load current password from API with timeout protection
     (async () => {
       try {
-        const res = await fetch('/api/admin/adminPassword', { cache: 'no-store' });
+        // Use a shorter timeout for the admin page to fail fast
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const res = await fetch('/api/admin/adminPassword', { 
+          cache: 'no-store',
+          signal: controller.signal 
+        });
+        clearTimeout(timeoutId);
+        
         // If API errors (e.g., DB down), keep default 'admin'
         if (!res.ok) {
           setPassword('admin');
@@ -28,7 +37,9 @@ export default function AdminPage() {
           const pwd = typeof val === 'string' ? val : (val?.adminPassword ?? 'admin');
           setPassword(pwd || 'admin');
         }
-      } catch {
+      } catch (error) {
+        // Handle both timeout and other errors gracefully
+        console.warn('Failed to load admin password from API, using default:', error);
         setPassword('admin');
       }
       setReady(true);

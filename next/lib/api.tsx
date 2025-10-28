@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Local offline DB helpers (used as fallback when API is unavailable)
 import { getDb, saveDb, setAdminPassword as setAdminPasswordLocal } from '@/lib/db';
 import { setOfflineMode, isOfflineMode } from '@/lib/offline';
+import { convertFileToOptimizedBase64, storeImageSafely } from '@/lib/imageStorage';
 
 // Fallback mock data for when API is unavailable (e.g., Mongo not configured in dev)
 import {
@@ -24,6 +25,16 @@ import {
     mockContactData,
 } from '@/data/mockData';
 import type { ChatbotSettings, SiteMetadata } from '@/types';
+
+// Timeout wrapper to ensure API calls fail fast instead of hanging for 90+ seconds
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 5000): Promise<T> => {
+    return Promise.race([
+        promise,
+        new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error(`Request timeout after ${timeoutMs}ms`)), timeoutMs)
+        )
+    ]);
+};
 
 const withFallback = async <T,>(fn: () => Promise<T>, fallback: () => T): Promise<T> => {
     // If we've already detected offline mode, skip server attempts to avoid log spam
@@ -72,14 +83,31 @@ const serverOrLocal = async (doServer: () => Promise<Response>, doLocal: () => v
     }
 };
 
-// Helper to convert a file to a base64 string
-export const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
+// Helper to convert a file to a base64 string with compression and storage optimization
+export const convertFileToBase64 = async (file: File): Promise<string> => {
+    try {
+        // Use the optimized version that compresses large images
+        const compressedDataUrl = await convertFileToOptimizedBase64(file);
+        
+        // Try to store in localStorage with error handling
+        const storageKey = `temp_image_${Date.now()}`;
+        const stored = storeImageSafely(storageKey, compressedDataUrl);
+        
+        if (!stored) {
+            console.warn('Image could not be stored in localStorage due to size limits, but will work for current session');
+        }
+        
+        return compressedDataUrl;
+    } catch (error) {
+        console.error('Error processing image:', error);
+        // Fallback to original method if compression fails
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+        });
+    }
 };
 
 // Helper function to get an icon component by its string name
@@ -118,7 +146,7 @@ const getIconName = (iconNode: React.ReactNode): string => {
 
 // Hero
 export const getRawHeroData = async (): Promise<RawHeroData> => withFallback(async () => {
-    const res = await fetch('/api/admin/hero', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/hero', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed hero');
     return res.json();
 }, () => ({
@@ -128,7 +156,7 @@ export const getRawHeroData = async (): Promise<RawHeroData> => withFallback(asy
 export const getHeroData = async (): Promise<HeroData> => toHeroData(await getRawHeroData());
 export const updateHeroData = async (data: RawHeroData): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/hero', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+        () => withTimeout(fetch('/api/admin/hero', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })),
         () => {
             const db = getDb();
             db.hero = data;
@@ -139,7 +167,7 @@ export const updateHeroData = async (data: RawHeroData): Promise<void> => {
 
 // Services
 export const getServicesData = async (): Promise<Service[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/services', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/services', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed services');
     const raw = await res.json();
     return (raw || []).map(toService).sort((a,b)=>a.order-b.order);
@@ -147,7 +175,7 @@ export const getServicesData = async (): Promise<Service[]> => withFallback(asyn
 export const updateServices = async (services: (Service | RawService)[]): Promise<void> => {
     const payload = services.map(s => ({ ...s, icon: getIconName((s as any).icon) }));
     await serverOrLocal(
-        () => fetch('/api/admin/services', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+        () => withTimeout(fetch('/api/admin/services', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })),
         () => {
             const db = getDb();
             db.services = payload as any;
@@ -158,7 +186,7 @@ export const updateServices = async (services: (Service | RawService)[]): Promis
 
 // Projects
 export const getProjectsData = async (): Promise<Project[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/projects', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/projects', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed projects');
     const raw = await res.json();
     return (raw || []).map(toProject);
@@ -169,7 +197,7 @@ export const getProjectById = async (id: string): Promise<Project | undefined> =
 };
 export const updateProjects = async (projects: RawProject[]): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(projects) }),
+        () => withTimeout(fetch('/api/admin/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(projects) })),
         () => {
             const db = getDb();
             db.projects = projects as any;
@@ -180,13 +208,13 @@ export const updateProjects = async (projects: RawProject[]): Promise<void> => {
 
 // Experiences
 export const getExperiencesData = async (): Promise<Experience[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/experiences', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/experiences', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed experiences');
     return res.json();
-}, () => (getDb()?.experiences || mockExperiencesData));
+}, () => getDb()?.experiences || mockExperiencesData);
 export const updateExperiences = async (experiences: Experience[]): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/experiences', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(experiences) }),
+        () => withTimeout(fetch('/api/admin/experiences', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(experiences) })),
         () => {
             const db = getDb();
             db.experiences = experiences as any;
@@ -195,15 +223,15 @@ export const updateExperiences = async (experiences: Experience[]): Promise<void
     );
 };
 
-// Educations
+// Education
 export const getEducationsData = async (): Promise<Education[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/educations', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/educations', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed educations');
     return res.json();
-}, () => (getDb()?.educations || mockEducationsData));
+}, () => getDb()?.educations || mockEducationsData);
 export const updateEducations = async (educations: Education[]): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/educations', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(educations) }),
+        () => withTimeout(fetch('/api/admin/educations', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(educations) })),
         () => {
             const db = getDb();
             db.educations = educations as any;
@@ -214,14 +242,14 @@ export const updateEducations = async (educations: Education[]): Promise<void> =
 
 // Skills
 export const getSkillsData = async (): Promise<Skill[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/skills', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/skills', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed skills');
     const raw = await res.json();
     return (raw || []).map(toSkill);
 }, () => ((getDb()?.skills || mockSkillsData) || []).map(toSkill));
 export const updateSkills = async (skills: RawSkill[]): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/skills', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(skills) }),
+        () => withTimeout(fetch('/api/admin/skills', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(skills) })),
         () => {
             const db = getDb();
             db.skills = skills as any;
@@ -232,14 +260,14 @@ export const updateSkills = async (skills: RawSkill[]): Promise<void> => {
 
 // Testimonials
 export const getTestimonialsData = async (): Promise<Testimonial[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/testimonials', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/testimonials', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed testimonials');
     const raw = await res.json();
     return (raw || []).map(toTestimonial);
-}, () => ((getDb()?.testimonials || mockTestimonialsData) || []).map((t:any) => toTestimonial(t as RawTestimonial)));
-export const updateTestimonials = async (testimonials: RawTestimonial[]): Promise<void> => {
+}, () => ((getDb()?.testimonials || mockTestimonialsData) || []).map(toTestimonial));
+export const updateTestimonials = async (testimonials: Testimonial[]): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/testimonials', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(testimonials) }),
+        () => withTimeout(fetch('/api/admin/testimonials', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(testimonials) })),
         () => {
             const db = getDb();
             db.testimonials = testimonials as any;
@@ -383,7 +411,7 @@ const defaultSEO = (): SEOConfig => ({
 
 export const getSEO = async (): Promise<SEOConfig> => {
     return withFallback(async () => {
-        const res = await fetch('/api/admin/seo', { cache: 'no-store' });
+        const res = await withTimeout(fetch('/api/admin/seo', { cache: 'no-store' }));
         if (!res.ok) throw new Error('Failed seo');
         const seo = await res.json();
         return (seo && Object.keys(seo).length > 0) ? seo : defaultSEO();
@@ -402,7 +430,7 @@ export const updateSectionSEO = async (section: SectionKey, meta: SeoMeta): Prom
 export const updateSEO = async (seo: Partial<SEOConfig>): Promise<SEOConfig> => {
     const merged = { ...defaultSEO(), ...(await getSEO()), ...(seo as SEOConfig) } as SEOConfig;
     await serverOrLocal(
-        () => fetch('/api/admin/seo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) }),
+        () => withTimeout(fetch('/api/admin/seo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) })),
         () => {
             const db = getDb();
             db.seo = merged as any;
@@ -415,7 +443,7 @@ export const updateSEO = async (seo: Partial<SEOConfig>): Promise<SEOConfig> => 
 // --- Admin password ---
 export const getAdminPassword = async (): Promise<string> => {
     return withFallback(async () => {
-        const res = await fetch('/api/admin/adminPassword', { cache: 'no-store' });
+        const res = await withTimeout(fetch('/api/admin/adminPassword', { cache: 'no-store' }));
         if (!res.ok) throw new Error('Failed adminPassword');
         const val = await res.json();
         return typeof val === 'string' ? val : (val?.adminPassword ?? 'admin');
@@ -426,7 +454,7 @@ export const getAdminPassword = async (): Promise<string> => {
 };
 export const setAdminPassword = async (pwd: string): Promise<void> => {
     await serverOrLocal(
-        () => fetch('/api/admin/adminPassword', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pwd) }),
+        () => withTimeout(fetch('/api/admin/adminPassword', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pwd) })),
         () => {
             // use local fallback setter to ensure any ancillary logic stays consistent
             setAdminPasswordLocal(pwd);
@@ -458,7 +486,7 @@ const defaultChatbotSettings = (): ChatbotSettings => ({
 });
 
 export const getChatbotSettings = async (): Promise<ChatbotSettings> => withFallback(async () => {
-    const res = await fetch('/api/admin/chatbot', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/chatbot', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed chatbot');
     const json = await res.json();
     return { ...defaultChatbotSettings(), ...(json || {}) } as ChatbotSettings;
@@ -470,7 +498,7 @@ export const getChatbotSettings = async (): Promise<ChatbotSettings> => withFall
 export const updateChatbotSettings = async (settings: Partial<ChatbotSettings>): Promise<void> => {
     const merged = { ...defaultChatbotSettings(), ...(await getChatbotSettings()), ...(settings || {}) } as ChatbotSettings;
     await serverOrLocal(
-        () => fetch('/api/admin/chatbot', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) }),
+        () => withTimeout(fetch('/api/admin/chatbot', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) })),
         () => {
             const db = getDb();
             db.chatbot = merged as any;
@@ -503,7 +531,7 @@ const defaultSiteMeta = (): SiteMetadata => ({
 });
 
 export const getSiteMeta = async (): Promise<SiteMetadata> => withFallback(async () => {
-    const res = await fetch('/api/admin/siteMeta', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/siteMeta', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed siteMeta');
     const json = await res.json();
     return { ...defaultSiteMeta(), ...(json || {}) } as SiteMetadata;
@@ -515,7 +543,7 @@ export const getSiteMeta = async (): Promise<SiteMetadata> => withFallback(async
 export const updateSiteMeta = async (meta: Partial<SiteMetadata>): Promise<void> => {
     const merged = { ...defaultSiteMeta(), ...(await getSiteMeta()), ...(meta || {}) } as SiteMetadata;
     await serverOrLocal(
-        () => fetch('/api/admin/siteMeta', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) }),
+        () => withTimeout(fetch('/api/admin/siteMeta', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) })),
         () => {
             const db = getDb();
             db.siteMeta = merged as any;
@@ -526,7 +554,7 @@ export const updateSiteMeta = async (meta: Partial<SiteMetadata>): Promise<void>
 
 // --- Categories ---
 export const getCategories = async (): Promise<string[]> => withFallback(async () => {
-    const res = await fetch('/api/admin/categories', { cache: 'no-store' });
+    const res = await withTimeout(fetch('/api/admin/categories', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed categories');
     const json = await res.json();
     return Array.isArray(json) ? json as string[] : [];
@@ -538,7 +566,7 @@ export const getCategories = async (): Promise<string[]> => withFallback(async (
 export const updateCategories = async (categories: string[]): Promise<void> => {
     const cleaned = Array.from(new Set((categories || []).map(c => (c || '').trim()).filter(Boolean)));
     await serverOrLocal(
-        () => fetch('/api/admin/categories', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleaned) }),
+        () => withTimeout(fetch('/api/admin/categories', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleaned) })),
         () => {
             const db = getDb();
             (db as any).categories = cleaned;

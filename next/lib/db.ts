@@ -192,15 +192,79 @@ export const saveDb = (db: Database) => {
         console.log('Saving database to localStorage...', DB_KEY);
         const dbString = JSON.stringify(db);
         console.log('Database size:', dbString.length, 'characters');
+        
+        // Check if database is getting too large
+        if (dbString.length > 4 * 1024 * 1024) { // 4MB warning threshold
+            console.warn('Database is getting large (>4MB). Consider optimizing image storage.');
+        }
+        
         localStorage.setItem(DB_KEY, dbString);
         console.log('Database saved successfully');
+        
+        // Create backup baseline snapshot if this save was successful
+        if (!localStorage.getItem(BASELINE_KEY)) {
+            localStorage.setItem(BASELINE_KEY, dbString);
+        }
+        
     } catch (error) {
         console.error('Error saving database:', error);
         if (error instanceof Error && error.name === 'QuotaExceededError') {
-            alert('LocalStorage quota exceeded! Please clear some data or use a different browser.');
+            // Try to save a minimal version without large images
+            console.log('Attempting to save database without large images...');
+            try {
+                const minimalDb = compressDbForStorage(db);
+                const minimalString = JSON.stringify(minimalDb);
+                localStorage.setItem(DB_KEY, minimalString);
+                console.log('Database saved with compressed images');
+                
+                // Alert user about the compression
+                if (typeof window !== 'undefined') {
+                    alert('Storage space is limited. Images have been compressed to fit. Consider using smaller image files.');
+                }
+            } catch (secondError) {
+                console.error('Failed to save even compressed database:', secondError);
+                if (typeof window !== 'undefined') {
+                    alert('Unable to save changes due to storage limits. Please clear browser data or use smaller images.');
+                }
+                throw secondError;
+            }
+        } else {
+            throw error;
         }
-        throw error;
     }
+};
+
+// Helper function to compress database for storage
+const compressDbForStorage = (db: Database): Database => {
+    const compressed = JSON.parse(JSON.stringify(db)); // Deep clone
+    
+    // Replace large base64 images with placeholders or smaller versions
+    if (compressed.hero?.profileImage?.url?.length > 100000) { // >100KB
+        console.log('Compressing hero profile image for storage');
+        compressed.hero.profileImage.url = '/images/profile.png'; // Fallback to default
+    }
+    
+    // Compress project images
+    if (compressed.projects) {
+        compressed.projects.forEach((project: any) => {
+            if (project.coverImage?.url?.length > 100000) {
+                console.log(`Compressing project image for ${project.title}`);
+                project.coverImage.url = `/images/${project.title.replace(/\s/g, '')}.png`;
+            }
+        });
+    }
+    
+    // Compress testimonial avatars
+    if (compressed.testimonials) {
+        compressed.testimonials.forEach((testimonial: any) => {
+            if (testimonial.avatar?.url?.length > 50000) { // Smaller threshold for avatars
+                console.log(`Compressing avatar for ${testimonial.clientName}`);
+                testimonial.avatar.url = `https://i.pravatar.cc/150?u=${testimonial.clientName.replace(/\s/g, '')}`;
+            }
+        });
+    }
+    
+    return compressed;
 };
 
 export const getAdminPassword = (): string => {

@@ -60,13 +60,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const Chatbot = dynamic(() => import('../components/Chatbot'), { ssr: false });
+  const Chatbot = dynamic(() => import('../components/Chatbot'), { 
+    ssr: false,
+    loading: () => null 
+  });
+  
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans`}>
         {/* Dev helper to auto-recover from transient chunk load errors */}
         <ChunkRecovery />
-        <PremiumPreloader waitForEventName="portfolio:ready" durationMs={3800}>
+        <PremiumPreloader waitForEventName="portfolio:ready" durationMs={2000}>
           {children}
           {/* Floating chatbot - client-side only */}
           <Chatbot />

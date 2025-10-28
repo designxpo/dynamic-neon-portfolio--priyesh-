@@ -15,67 +15,81 @@ function pickContentSnapshot(obj: any) {
 }
 
 export async function GET() {
-  await connectDB();
-  const cfg = await SiteConfig.getSingleton();
-  const snapshot = pickContentSnapshot(cfg.toObject());
-  return NextResponse.json(snapshot);
+  try {
+    await connectDB();
+    const cfg = await SiteConfig.getOrCreate();
+    const snapshot = pickContentSnapshot(cfg.toObject());
+    return NextResponse.json(snapshot);
+  } catch (error) {
+    console.error('Config GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch configuration' }, { status: 500 });
+  }
 }
 
 export async function PUT(req: NextRequest) {
-  await connectDB();
-  const url = new URL(req.url);
-  const mode = url.searchParams.get('mode') || 'replace';
-  const payload = await req.json().catch(() => ({}));
+  try {
+    await connectDB();
+    const url = new URL(req.url);
+    const mode = url.searchParams.get('mode') || 'replace';
+    const payload = await req.json().catch(() => ({}));
 
-  const cfg = await SiteConfig.getSingleton();
-  const current = pickContentSnapshot(cfg.toObject());
+    const cfg = await SiteConfig.getOrCreate();
+    const current = pickContentSnapshot(cfg.toObject());
 
-  // helper to assign content keys
-  const assignContent = (src: any) => {
-    Object.keys(current).forEach(k => {
-      // @ts-ignore
-      (cfg as any)[k] = src[k];
-    });
-  };
+    // helper to assign content keys
+    const assignContent = (src: any) => {
+      Object.keys(current).forEach(k => {
+        // @ts-ignore
+        (cfg as any)[k] = src[k];
+      });
+      // Update timestamp and version
+      cfg.lastUpdated = new Date();
+      cfg.dataVersion = (cfg.dataVersion || 1) + 1;
+    };
 
-  if (mode === 'merge') {
-    const merged = { ...current, ...(payload || {}) };
-    assignContent(merged);
-    await cfg.save();
-    return NextResponse.json({ ok: true, mode });
-  }
-
-  if (mode === 'replace') {
-    assignContent(payload || {});
-    await cfg.save();
-    return NextResponse.json({ ok: true, mode });
-  }
-
-  if (mode === 'setBaseline') {
-    // @ts-ignore
-    (cfg as any).baseline = current;
-    await cfg.save();
-    return NextResponse.json({ ok: true, mode });
-  }
-
-  if (mode === 'reset') {
-    // Prefer restoring from baseline; fallback to defaults via new doc
-    // @ts-ignore
-    const baseline = (cfg as any).baseline;
-    if (baseline && typeof baseline === 'object') {
-      assignContent(baseline);
+    if (mode === 'merge') {
+      const merged = { ...current, ...(payload || {}) };
+      assignContent(merged);
       await cfg.save();
-      return NextResponse.json({ ok: true, mode, source: 'baseline' });
+      return NextResponse.json({ ok: true, mode, lastUpdated: cfg.lastUpdated });
     }
-    // Fallback: rebuild defaults by creating a temp doc from model defaults
-    // We call getSingleton only once; to get defaults, construct a new model instance
-    const DefaultModel = (cfg.constructor as any);
-    const temp = new DefaultModel();
-    const defaults = pickContentSnapshot(temp.toObject());
-    assignContent(defaults);
-    await cfg.save();
-    return NextResponse.json({ ok: true, mode, source: 'defaults' });
-  }
 
-  return NextResponse.json({ error: 'Unsupported mode' }, { status: 400 });
+    if (mode === 'replace') {
+      assignContent(payload || {});
+      await cfg.save();
+      return NextResponse.json({ ok: true, mode, lastUpdated: cfg.lastUpdated });
+    }
+
+    if (mode === 'setBaseline') {
+      // @ts-ignore
+      (cfg as any).baseline = current;
+      cfg.lastUpdated = new Date();
+      await cfg.save();
+      return NextResponse.json({ ok: true, mode, message: 'Baseline set successfully' });
+    }
+
+    if (mode === 'reset') {
+      // Prefer restoring from baseline; fallback to defaults via new doc
+      // @ts-ignore
+      const baseline = (cfg as any).baseline;
+      if (baseline && typeof baseline === 'object') {
+        assignContent(baseline);
+        await cfg.save();
+        return NextResponse.json({ ok: true, mode, source: 'baseline' });
+      }
+      // Fallback: rebuild defaults by creating a temp doc from model defaults
+      // We call getSingleton only once; to get defaults, construct a new model instance
+      const DefaultModel = (cfg.constructor as any);
+      const temp = new DefaultModel();
+      const defaults = pickContentSnapshot(temp.toObject());
+      assignContent(defaults);
+      await cfg.save();
+      return NextResponse.json({ ok: true, mode, source: 'defaults' });
+    }
+
+    return NextResponse.json({ error: 'Unsupported mode' }, { status: 400 });
+  } catch (error) {
+    console.error('Config PUT error:', error);
+    return NextResponse.json({ error: 'Failed to update configuration' }, { status: 500 });
+  }
 }

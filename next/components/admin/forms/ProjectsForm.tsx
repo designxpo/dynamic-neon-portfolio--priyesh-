@@ -2,13 +2,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { RawProject } from '@/types';
-import { getProjectsData, updateProjects, convertFileToBase64 } from '@/lib/api';
+import { getProjectsData, updateProjects, convertFileToBase64, getCategories } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, ExternalLink, Github } from 'lucide-react';
 
 const ProjectsForm: React.FC = () => {
     const [projects, setProjects] = useState<RawProject[]>([]);
+    const [availableCategories, setAvailableCategories] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<RawProject | null>(null);
@@ -19,8 +20,12 @@ const ProjectsForm: React.FC = () => {
 
     const fetchData = async () => {
         setIsLoading(true);
-        const data = await getProjectsData();
-        setProjects(data);
+        const [projectsData, categoriesData] = await Promise.all([
+            getProjectsData(),
+            getCategories()
+        ]);
+        setProjects(projectsData);
+        setAvailableCategories(categoriesData);
         setIsLoading(false);
     };
 
@@ -196,18 +201,84 @@ const ProjectsForm: React.FC = () => {
                             <input type="text" value={currentItem.title} onChange={e => setCurrentItem(p => p ? { ...p, title: e.target.value } : null)} className="admin-input" placeholder="Enter project title" />
                         </div>
                         <div>
-                            <label className="admin-label">Categories (comma-separated)</label>
-                            <input
-                                type="text"
-                                value={(currentItem.categories || []).join(', ')}
-                                onChange={e => {
-                                    const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                                    setCurrentItem(p => p ? { ...p, categories: arr } : null);
-                                }}
-                                className="admin-input"
-                                placeholder="e.g., Web, UI/UX, Apps"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">First value will be treated as the primary category for display in older sections.</p>
+                            <label className="admin-label">Categories</label>
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    value={(currentItem.categories || []).join(', ')}
+                                    onChange={e => {
+                                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                        setCurrentItem(p => p ? { ...p, categories: arr } : null);
+                                    }}
+                                    className="admin-input"
+                                    placeholder="e.g., Web, UI/UX, Apps"
+                                />
+                                
+                                {/* Quick-add existing categories */}
+                                {availableCategories.length > 0 && (
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-2">Quick add from existing:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availableCategories.map((cat) => {
+                                                const isSelected = (currentItem.categories || []).includes(cat);
+                                                return (
+                                                    <button
+                                                        key={cat}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (!isSelected) {
+                                                                const newCategories = [...(currentItem.categories || []), cat];
+                                                                setCurrentItem(p => p ? { ...p, categories: newCategories } : null);
+                                                            }
+                                                        }}
+                                                        disabled={isSelected}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                                            isSelected
+                                                                ? 'backdrop-blur-xl bg-green-500/20 text-green-400 border border-green-500/30 cursor-not-allowed'
+                                                                : 'backdrop-blur-xl bg-white/5 text-gray-300 border border-white/10 hover:bg-electric-blue/10 hover:text-electric-blue hover:border-electric-blue/20'
+                                                        }`}
+                                                    >
+                                                        {isSelected ? '✓ ' : '+ '}{cat}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Selected categories with remove functionality */}
+                                {(currentItem.categories || []).length > 0 && (
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-2">Selected categories:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(currentItem.categories || []).map((cat, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20"
+                                                >
+                                                    {idx === 0 && <span className="text-xs">📌</span>}
+                                                    {cat}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newCategories = [...(currentItem.categories || [])];
+                                                            newCategories.splice(idx, 1);
+                                                            setCurrentItem(p => p ? { ...p, categories: newCategories } : null);
+                                                        }}
+                                                        className="ml-1 text-electric-blue/70 hover:text-electric-blue"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Add multiple categories separated by commas or use the quick-add buttons above. The first category (📌) will be used as the primary category for backward compatibility.
+                                </p>
+                            </div>
                         </div>
                         <div>
                             <label className="admin-label">Short Description</label>

@@ -2,6 +2,7 @@
 import React, { useRef, useState } from 'react';
 // Local offline DB utils as fallback when server API (Mongo) isn't available
 import { getAdminPassword as getAdminPasswordLocal, setAdminPassword as setAdminPasswordLocal, resetDbToDefaults, exportDb, importDb, setBaselineFromCurrent } from '@/lib/db';
+import { getAdminPassword as getAdminPasswordAPI, setAdminPassword as setAdminPasswordAPI } from '@/lib/api';
 import { Shield, Save, RotateCcw, Database, Upload as UploadIcon, Flag as FlagIcon } from 'lucide-react';
 
 const SettingsForm: React.FC = () => {
@@ -18,17 +19,12 @@ const SettingsForm: React.FC = () => {
         setLoading(true);
 
         try {
-            // 1) Get current password from server if available, else local fallback
+            // 1) Get current password from server with timeout protection
             let storedPassword = 'admin';
             try {
-                const res = await fetch('/api/admin/adminPassword', { cache: 'no-store' });
-                if (res.ok) {
-                    const val = await res.json();
-                    storedPassword = typeof val === 'string' ? val : (val?.adminPassword ?? 'admin');
-                } else {
-                    storedPassword = getAdminPasswordLocal();
-                }
+                storedPassword = await getAdminPasswordAPI();
             } catch {
+                // Fallback to local if API fails
                 storedPassword = getAdminPasswordLocal();
             }
 
@@ -50,15 +46,13 @@ const SettingsForm: React.FC = () => {
                 return;
             }
 
-            // 2) Update password on server first; fallback to local
+                        // 3) Save new password with timeout protection
             let success = false;
             try {
-                const res = await fetch('/api/admin/adminPassword', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPassword) });
-                success = res.ok;
+                await setAdminPasswordAPI(newPassword);
+                success = true;
             } catch {
-                success = false;
-            }
-            if (!success) {
+                // Fallback to local storage if API fails
                 success = setAdminPasswordLocal(newPassword);
             }
 

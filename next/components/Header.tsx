@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
     { href: '#contact', label: 'Contact' },
   ];
   
-  const nameParts = (heroData?.name || 'Alex Doe').split(' ');
+  const nameParts = (heroData?.name || 'Priyesh Mishra').split(' ');
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ');
 

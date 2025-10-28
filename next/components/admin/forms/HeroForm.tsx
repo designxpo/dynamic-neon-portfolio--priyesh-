@@ -11,7 +11,8 @@ const HeroForm: React.FC = () => {
     const [formData, setFormData] = useState<RawHeroData | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error' | 'warning', text: string } | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,14 +61,40 @@ const HeroForm: React.FC = () => {
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && formData) {
             const file = e.target.files[0];
+            setUploading(true);
+            setMessage(null);
+            
             try {
+                // Show file size info
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                console.log(`Uploading image: ${file.name} (${fileSizeMB}MB)`);
+                
+                if (file.size > 5 * 1024 * 1024) { // 5MB warning
+                    setMessage({ 
+                        type: 'warning', 
+                        text: `Large image detected (${fileSizeMB}MB). Compressing for optimal storage...` 
+                    });
+                }
+                
                 const base64 = await convertFileToBase64(file);
+                
                 setFormData({
                     ...formData,
                     profileImage: { ...formData.profileImage, url: base64 }
                 });
+                
+                // Show success message with compression info
+                const compressedSizeMB = ((base64.length * 0.75) / (1024 * 1024)).toFixed(2);
+                setMessage({ 
+                    type: 'success', 
+                    text: `Image uploaded successfully! ${file.size > 1024 * 1024 ? `Compressed to ${compressedSizeMB}MB for storage.` : ''}` 
+                });
+                
             } catch (error) {
-                setMessage({ type: 'error', text: "Failed to process image file." });
+                console.error('Image upload error:', error);
+                setMessage({ type: 'error', text: "Failed to process image file. Try a smaller image or different format." });
+            } finally {
+                setUploading(false);
             }
         }
     };
@@ -111,6 +138,8 @@ const HeroForm: React.FC = () => {
                 <div className={`admin-card flex items-center gap-3 ${
                     message.type === 'success' 
                         ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                        : message.type === 'warning'
+                        ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
                         : 'bg-red-500/10 border-red-500/30 text-red-400'
                 }`}>
                     {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
@@ -136,22 +165,26 @@ const HeroForm: React.FC = () => {
                     </div>
                     <div className="flex-1">
                         <label className="admin-label">Upload New Image</label>
-                        <label className="admin-button-secondary flex items-center gap-2 cursor-pointer w-fit">
+                        <label className={`admin-button-secondary flex items-center gap-2 cursor-pointer w-fit ${uploading || saving ? 'opacity-50 cursor-not-allowed' : ''}`}>
                             <input 
                                 type="file" 
                                 accept="image/*" 
                                 onChange={handleImageUpload} 
                                 className="hidden"
+                                disabled={uploading || saving}
                             />
                             <Upload size={18} />
-                            Choose Image
+                            {uploading ? 'Processing...' : 'Choose Image'}
                         </label>
-                        <p className="text-xs text-gray-500 mt-2">Recommended size: 400x400 pixels</p>
+                        <p className="text-xs text-gray-500 mt-2">
+                            Recommended size: 400x400 pixels. Large images will be compressed automatically.
+                        </p>
                         {formData.profileImage.url && (
                             <button 
                                 type="button" 
                                 onClick={removeProfileImage} 
                                 className="admin-button-danger mt-3 flex items-center gap-2"
+                                disabled={uploading || saving}
                             >
                                 <Trash2 size={16} />
                                 Remove Image

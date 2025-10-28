@@ -8,7 +8,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ heroData }) => {
     const currentYear = new Date().getFullYear();
-    const name = heroData?.name || 'Alex Doe';
+    const name = heroData?.name || 'Priyesh Mishra';
 
     return (
                         <footer className="bg-dark-bg/50 border-t border-gray-800 py-4 md:py-6">
