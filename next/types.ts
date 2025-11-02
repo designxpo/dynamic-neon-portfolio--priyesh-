@@ -113,6 +113,7 @@ export interface Experience {
   companyName: string;
   startYear: string;
   endYear: string;
+  current?: boolean;
   description: string;
 }
 

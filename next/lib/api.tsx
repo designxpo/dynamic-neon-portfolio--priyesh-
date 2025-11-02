@@ -38,41 +38,95 @@ export const updateExperience = async (data) => {
     const payload: any = { ...data };
     if (!payload._id && payload.id) payload._id = payload.id;
     delete payload.id;
-    const res = await fetch('/api/experience', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Failed to update experience');
-    return res.json();
+    return serverOrLocal(
+        async () => {
+            // Prefer path-based when id present
+            const url = payload._id ? `/api/experience/${encodeURIComponent(payload._id)}` : '/api/experience';
+            const method = payload._id ? 'PUT' : 'PUT';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to update experience');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.experiences || []) as any[];
+            const idx = list.findIndex((e: any) => (e._id || e.id) === payload._id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...payload };
+                db.experiences = list as any;
+                saveDb(db);
+                return list[idx];
+            }
+            return payload;
+        }
+    );
 };
 
 export const deleteExperience = async (_id) => {
-    // Try path-based route first, then fallback to query param shape
-    let resp = await fetch(`/api/experience/${encodeURIComponent(_id)}`, { method: 'DELETE' });
-    if (!resp.ok) {
-        resp = await fetch(`/api/experience?_id=${encodeURIComponent(_id)}`, { method: 'DELETE' });
-    }
-    if (!resp.ok) throw new Error('Failed to delete experience');
-    return resp.json();
+    return serverOrLocal(
+        async () => {
+            // Try path-based route first, then fallback to query param shape
+            let resp = await fetch(`/api/experience/${encodeURIComponent(_id)}`, { method: 'DELETE' });
+            if (!resp.ok) {
+                resp = await fetch(`/api/experience?_id=${encodeURIComponent(_id)}`, { method: 'DELETE' });
+            }
+            if (!resp.ok) throw new Error('Failed to delete experience');
+            return resp.json();
+        },
+        () => {
+            const db = getDb();
+            const before = (db.experiences || []) as any[];
+            const after = before.filter((e: any) => (e._id || e.id) !== _id);
+            db.experiences = after as any;
+            saveDb(db);
+            return { success: true } as any;
+        }
+    );
 };
 // Additional Experience helpers used by Admin forms
 export const getExperiencesData = async (): Promise<Experience[]> => {
-    const res = await fetch('/api/experience', { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed experiences');
-    const items = await res.json();
-    return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id, ...doc }));
+    return withFallback<Experience[]>(
+        async () => {
+            const res = await fetch('/api/experience', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Failed experiences');
+            const items = await res.json();
+            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id, ...doc }));
+        },
+        () => {
+            const db = getDb();
+            const items = (db.experiences || []) as any[];
+            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id || doc.id, ...doc }));
+        }
+    );
 };
 
 export const createExperience = async (exp: Experience): Promise<Experience> => {
     const { id: _clientId, ...rest } = exp as any;
-    const res = await fetch('/api/experience', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rest)
-    });
-    if (!res.ok) throw new Error('Failed to create experience');
-    return res.json();
+    return serverOrLocal(
+        async () => {
+            const res = await fetch('/api/experience', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rest)
+            });
+            if (!res.ok) throw new Error('Failed to create experience');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.experiences || []) as any[];
+            const localId = rest._id || _clientId || uuidv4();
+            const localDoc = { _id: localId, id: localId, order: 0, ...rest };
+            list.push(localDoc);
+            db.experiences = list as any;
+            saveDb(db);
+            return localDoc as any;
+        }
+    );
 };
 export async function getTestimonialsData() {
     try {
@@ -329,10 +383,19 @@ export const getExperienceById = async (id: string): Promise<Experience> => {
 
 // Education
 export const getEducationsData = async (): Promise<Education[]> => {
-    const res = await withTimeout(fetch('/api/education', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed educations');
-    const items = await res.json();
-    return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id, ...doc }));
+    return withFallback<Education[]>(
+        async () => {
+            const res = await withTimeout(fetch('/api/education', { cache: 'no-store' }));
+            if (!res.ok) throw new Error('Failed educations');
+            const items = await res.json();
+            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id, ...doc }));
+        },
+        () => {
+            const db = getDb();
+            const items = (db.educations || []) as any[];
+            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id || doc.id, ...doc }));
+        }
+    );
 };
 
 export const updateEducations = async (educations: Education[]): Promise<void> => {
@@ -349,32 +412,78 @@ export const updateEducations = async (educations: Education[]): Promise<void> =
 // Granular Education CRUD
 export const createEducation = async (edu: Education): Promise<Education> => {
     const { id: _clientId, ...rest } = edu as any;
-    const res = await fetch('/api/education', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rest)
-    });
-    if (!res.ok) throw new Error('Failed to create education');
-    return res.json();
+    return serverOrLocal(
+        async () => {
+            const res = await fetch('/api/education', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rest)
+            });
+            if (!res.ok) throw new Error('Failed to create education');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.educations || []) as any[];
+            const localId = rest._id || _clientId || uuidv4();
+            const localDoc = { _id: localId, id: localId, order: 0, ...rest };
+            list.push(localDoc);
+            db.educations = list as any;
+            saveDb(db);
+            return localDoc as any;
+        }
+    );
 };
 
 export const updateEducation = async (edu: Education): Promise<Education> => {
     const payload: any = { ...edu };
     if (!payload._id && payload.id) payload._id = payload.id;
     delete payload.id;
-    const res = await fetch('/api/education', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Failed to update education');
-    return res.json();
+    return serverOrLocal(
+        async () => {
+            const url = payload._id ? `/api/education/${encodeURIComponent(payload._id)}` : '/api/education';
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to update education');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.educations || []) as any[];
+            const idx = list.findIndex((e: any) => (e._id || e.id) === payload._id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...payload };
+                db.educations = list as any;
+                saveDb(db);
+                return list[idx];
+            }
+            return payload;
+        }
+    );
 };
 
 
 export const deleteEducation = async (id: string): Promise<void> => {
-    const res = await fetch(`/api/education?_id=${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete education');
+    return serverOrLocal(
+        async () => {
+            // Prefer path-based route, fallback to query param
+            let resp = await fetch(`/api/education/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!resp.ok) {
+                resp = await fetch(`/api/education?_id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+            }
+            if (!resp.ok) throw new Error('Failed to delete education');
+        },
+        () => {
+            const db = getDb();
+            const before = (db.educations || []) as any[];
+            const after = before.filter((e: any) => (e._id || e.id) !== id);
+            db.educations = after as any;
+            saveDb(db);
+        }
+    );
 };
 export const getEducationById = async (id: string): Promise<Education> => {
     const res = await fetch(`/api/education?id=${id}`);
@@ -673,19 +782,21 @@ const defaultChatbotSettings = (): ChatbotSettings => ({
         ]
 });
 
-export const getChatbotSettings = async (): Promise<ChatbotSettings> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/chatbot', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed chatbot');
-    const json = await res.json();
-    return json as ChatbotSettings;
-}, () => {
-    const db = getDb();
-    if (db?.chatbot) {
-      // Use db.chatbot directly if present, do not merge with defaults
-      return db.chatbot as ChatbotSettings;
+// Important: Always attempt server for Chatbot to avoid stale offline cache hiding latest rules
+export const getChatbotSettings = async (): Promise<ChatbotSettings> => {
+    try {
+        const res = await withTimeout(fetch('/api/chatbot', { cache: 'no-store' }));
+        if (!res.ok) throw new Error('Failed chatbot');
+        const json = await res.json();
+        return json as ChatbotSettings;
+    } catch (e) {
+        const db = getDb();
+        if (db?.chatbot) {
+          return db.chatbot as ChatbotSettings;
+        }
+        return defaultChatbotSettings();
     }
-    return defaultChatbotSettings();
-});
+};
 
 export const updateChatbotSettings = async (settings: Partial<ChatbotSettings>): Promise<void> => {
     await serverOrLocal(
