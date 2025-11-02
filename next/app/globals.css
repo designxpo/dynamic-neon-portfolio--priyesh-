@@ -385,20 +385,24 @@ section[id] {
 
 /* --- Infinite marquee utilities for testimonials --- */
 @keyframes testimonials-marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
 }
 
 .testimonials-track {
   display: flex;
   width: max-content; /* allow content to exceed container width for smooth loop */
-  animation: testimonials-marquee 35s linear infinite;
+  will-change: transform; /* smoother GPU-accelerated animation */
+  animation-name: testimonials-marquee;
+  animation-duration: var(--testimonial-speed, 65s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 /* Adjust speed for small screens */
 @media (max-width: 768px) {
   .testimonials-track {
-    animation-duration: 45s;
+    --testimonial-speed: 85s;
   }
 }
 

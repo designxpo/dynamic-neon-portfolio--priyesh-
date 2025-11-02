@@ -313,6 +313,7 @@ const PortfolioPage = () => {
                                                 <div className={`testimonials-track ${selectedTestimonial ? 'paused' : ''} gap-10`}
                                                      onMouseEnter={(e)=>{ /* hover pause handled by CSS */ }}
                                                      onMouseLeave={(e)=>{}}
+                                                     style={{ ['--testimonial-speed' as any]: '70s' }}
                                                 >
                                                     <div className="flex gap-10 pr-10">
                                                         {list.map((t) => (
