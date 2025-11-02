@@ -260,9 +260,27 @@ export const convertFileToBase64 = async (file: File): Promise<string> => {
 export const getIcon = (iconName: string): React.ReactNode => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const iconsAny = Icons as any;
-    const name = (iconName || '').trim();
-    const IconComponent = iconsAny[name];
-    if (IconComponent) return <IconComponent />;
+    const raw = (iconName || '').trim();
+    const tryNames: string[] = [];
+
+    if (raw) {
+        const cleaned = raw.replace(/\s|-/g, '');
+        const cap = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+        const withIcon = /icon$/i.test(cleaned) ? cleaned : `${cleaned}Icon`;
+        const withIconCap = /Icon$/.test(cap) ? cap : `${cap}Icon`;
+
+        tryNames.push(raw);            // exact
+        tryNames.push(cleaned);        // remove spaces/dashes
+        tryNames.push(cap);            // PascalCase
+        tryNames.push(withIcon);       // add Icon suffix (lower)
+        tryNames.push(withIconCap);    // add Icon suffix (PascalCase)
+        tryNames.push(raw.toLowerCase()); // lowercase exact
+    }
+
+    for (const name of tryNames) {
+        const IconComponent = iconsAny[name];
+        if (IconComponent) return <IconComponent />;
+    }
     // Fallback to a safe default so UI doesn't look empty in production
     if (process.env.NODE_ENV !== 'production') {
         console.warn(`[getIcon] Unknown icon name: "${iconName}". Falling back to BrandingIcon.`);

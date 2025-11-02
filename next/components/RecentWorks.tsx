@@ -99,6 +99,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
   const [orderedCats, setOrderedCats] = useState<string[] | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
+  const [visibleCount, setVisibleCount] = useState(4);
 
   // Load saved categories order from Admin; if unavailable, fall back to derived
   useEffect(() => {
@@ -127,6 +128,9 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
         const cats = (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : []));
         return cats.includes(filter);
       });
+
+  // Reset visible count when filter changes
+  useEffect(() => { setVisibleCount(4); }, [filter]);
 
   return (
     <Section title="My Recent Works" id="works">
@@ -160,7 +164,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 md:gap-6 lg:gap-8 xl:gap-10">
-          {filteredProjects.map((project, index) => (
+          {filteredProjects.slice(0, visibleCount).map((project, index) => (
             <motion.div
               key={project.id}
               className="animate-fade-in"
@@ -173,6 +177,20 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
             </motion.div>
           ))}
         </div>
+
+        {/* Load more button */}
+        {filteredProjects.length > visibleCount && (
+          <div className="flex justify-center mt-8">
+            <button
+              type="button"
+              onClick={() => setVisibleCount(v => v + 4)}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-purple to-brand-purple/70 text-white border border-white/10 shadow-lg hover:shadow-brand-purple/30 hover:scale-[1.02] transition-all"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Load more
+            </button>
+          </div>
+        )}
 
         {/* Premium accent elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
