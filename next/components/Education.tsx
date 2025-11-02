@@ -21,10 +21,10 @@ const Education: React.FC<EducationProps> = ({ data }) => {
               </span>
               <div className="p-4 md:p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
-                    <h3 className="text-lg md:text-xl font-semibold text-white">{edu.courseTitle}</h3>
+                    <h3 className="text-lg md:text-xl font-semibold text-white">{edu.degree}</h3>
                     <span className="bg-brand-purple/20 text-brand-purple-light text-xs md:text-sm font-medium px-2.5 py-0.5 rounded-full self-start sm:self-auto">{edu.startYear} - {edu.endYear}</span>
                 </div>
-                <p className="text-sm md:text-base font-normal text-gray-400 mb-2">{edu.instituteName}</p>
+                <p className="text-sm md:text-base font-normal text-gray-400 mb-2">{edu.institution}</p>
                  <p className="text-xs md:text-sm text-gray-400">{edu.description}</p>
               </div>
             </div>

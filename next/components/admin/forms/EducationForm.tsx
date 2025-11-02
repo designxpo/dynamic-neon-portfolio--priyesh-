@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Education } from '@/types';
-import { getEducationsData, updateEducations } from '@/lib/api';
+import { getEducationsData, createEducation, updateEducation, deleteEducation } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, GraduationCap, Calendar } from 'lucide-react';
@@ -30,16 +30,15 @@ const EducationForm: React.FC = () => {
     };
 
     const handleAddNew = () => {
-        setCurrentItem({ id: uuidv4(), courseTitle: '', instituteName: '', startYear: '', endYear: '', description: '' });
+    setCurrentItem({ id: uuidv4(), degree: '', institution: '', startYear: '', endYear: '', description: '' });
         setIsModalOpen(true);
     };
     
     const handleDelete = async (eduId: string) => {
         if (window.confirm('Are you sure you want to delete this education entry?')) {
             try {
-                const updatedEducations = educations.filter(edu => edu.id !== eduId);
-                await updateEducations(updatedEducations);
-                setEducations(updatedEducations);
+                await deleteEducation(eduId);
+                await fetchData();
                 setMessage({ type: 'success', text: 'Education deleted.' });
             } catch (e) {
                 console.error(e);
@@ -54,9 +53,12 @@ const EducationForm: React.FC = () => {
         setMessage(null);
         try {
             const isNew = !educations.some(edu => edu.id === currentItem.id);
-            const updatedEducations = isNew ? [...educations, currentItem] : educations.map(edu => (edu.id === currentItem.id ? currentItem : edu));
-            await updateEducations(updatedEducations);
-            setEducations(updatedEducations);
+            if (isNew) {
+                await createEducation(currentItem);
+            } else {
+                await updateEducation(currentItem);
+            }
+            await fetchData();
             setIsModalOpen(false);
             setCurrentItem(null);
             setMessage({ type: 'success', text: 'Education saved.' });
@@ -92,8 +94,8 @@ const EducationForm: React.FC = () => {
                             <div className="flex gap-4 flex-1">
                                 <div className="w-12 h-12 rounded-lg backdrop-blur-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center text-electric-blue flex-shrink-0"><GraduationCap size={24} /></div>
                                 <div className="flex-1">
-                                    <p className="font-semibold text-white text-lg">{edu.courseTitle}</p>
-                                    <p className="text-electric-blue">{edu.instituteName}</p>
+                                    <p className="font-semibold text-white text-lg">{edu.degree}</p>
+                                    <p className="text-electric-blue">{edu.institution}</p>
                                     <div className="flex items-center gap-2 text-sm text-gray-400 mt-2"><Calendar size={14} /><span>{edu.startYear} - {edu.endYear}</span></div>
                                     <p className="text-gray-400 text-sm mt-2 line-clamp-2">{edu.description}</p>
                                 </div>
@@ -110,8 +112,8 @@ const EducationForm: React.FC = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && educations.some(e => e.id === currentItem.id) ? 'Edit Education' : 'Add Education'}>
                 {currentItem && (
                     <div className="space-y-6">
-                        <div><label className="admin-label">Course / Degree Title</label><input type="text" value={currentItem.courseTitle} onChange={e => setCurrentItem(p => p ? {...p, courseTitle: e.target.value} : null)} className="admin-input" placeholder="e.g., Bachelor of Computer Science" /></div>
-                        <div><label className="admin-label">Institute Name</label><input type="text" value={currentItem.instituteName} onChange={e => setCurrentItem(p => p ? {...p, instituteName: e.target.value} : null)} className="admin-input" placeholder="e.g., University of Technology" /></div>
+                        <div><label className="admin-label">Degree</label><input type="text" value={currentItem.degree} onChange={e => setCurrentItem(p => p ? {...p, degree: e.target.value} : null)} className="admin-input" placeholder="e.g., Bachelor of Computer Science" /></div>
+                        <div><label className="admin-label">Institution</label><input type="text" value={currentItem.institution} onChange={e => setCurrentItem(p => p ? {...p, institution: e.target.value} : null)} className="admin-input" placeholder="e.g., University of Technology" /></div>
                         <div className="grid grid-cols-2 gap-6">
                             <div><label className="admin-label">Start Year</label><input type="text" value={currentItem.startYear} onChange={e => setCurrentItem(p => p ? {...p, startYear: e.target.value} : null)} className="admin-input" placeholder="2018" /></div>
                             <div><label className="admin-label">End Year</label><input type="text" value={currentItem.endYear} onChange={e => setCurrentItem(p => p ? {...p, endYear: e.target.value} : null)} className="admin-input" placeholder="2022" /></div>

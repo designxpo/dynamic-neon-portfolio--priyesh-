@@ -4,6 +4,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 export const mockHeroData: Omit<RawHeroData, 'profileImage'> = {
+    subtitle: 'UI/UX Designer',
     name: 'Priyesh Mishra',
     title: 'UI/UX Designer & SMM Strategist',
     shortBio: "Priyesh Mishra is a passionate UI/UX Designer with 3+ years of experience crafting impactful digital experiences for SaaS, Fintech, eCommerce, and Spiritual brands. He blends creativity with strategy to build visually engaging, high-performing products and helps brands grow through smart storytelling.",
@@ -110,8 +111,8 @@ export const mockExperiencesData: Experience[] = [
 export const mockEducationsData: Education[] = [
     {
         id: uuidv4(),
-        courseTitle: 'B.Tech in Computer Science & Engineering',
-        instituteName: 'Galgotias University, Greater Noida',
+        degree: 'B.Tech in Computer Science & Engineering',
+        institution: 'Galgotias University, Greater Noida',
         startYear: '2020',
         endYear: '2024',
         description: 'Specialized in UI/UX product design and usability testing. Completed certifications in Google Analytics, Heap Analytics, and Data Structures & Algorithms.'
@@ -119,11 +120,11 @@ export const mockEducationsData: Education[] = [
 ];
 
 export const mockSkillsData: RawSkill[] = [
-    { id: uuidv4(), skillName: 'Figma', skillIcon: '/images/Figma.png' },
-    { id: uuidv4(), skillName: 'Adobe XD', skillIcon: '/images/AdobeXD.png' },
-    { id: uuidv4(), skillName: 'Canva', skillIcon: '/images/Canva.png' },
-    { id: uuidv4(), skillName: 'User Experience (UX)', skillIcon: '/images/UserExperience.png' },
-    { id: uuidv4(), skillName: 'Heap Analytics', skillIcon: '/images/Heap.png' },
+    { id: uuidv4(), name: 'Figma', icon: '/images/Figma.png' },
+    { id: uuidv4(), name: 'Adobe XD', icon: '/images/AdobeXD.png' },
+    { id: uuidv4(), name: 'Canva', icon: '/images/Canva.png' },
+    { id: uuidv4(), name: 'User Experience (UX)', icon: '/images/UserExperience.png' },
+    { id: uuidv4(), name: 'Heap Analytics', icon: '/images/Heap.png' },
 ];
 
 export const mockTestimonialsData: Omit<RawTestimonial, 'avatar'>[] = [

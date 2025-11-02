@@ -2,12 +2,52 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { HeroData } from '../types';
+import { useEffect, useState } from 'react';
 
 interface HeroProps {
   data: HeroData;
 }
 
 const Hero: React.FC<HeroProps> = ({ data }) => {
+  const [typedText, setTypedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+  const [typingSpeed, setTypingSpeed] = useState(120);
+  // Use admin-configured animation words, fallback to default
+  const words = Array.isArray(data.titleWords) && data.titleWords.length > 0
+    ? data.titleWords
+    : ['Designer', 'Developer'];
+  // Use admin-configured prefix, fallback to first word of title or 'UI/UX'
+  const prefix = data.titlePrefix || (data.title ? data.title.split(' ')[0] : 'UI/UX');
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    const handleType = () => {
+      const i = loopNum % words.length;
+      const fullText = words[i];
+      setTypedText(prev => {
+        if (!isDeleting) {
+          // Typing
+          const updated = fullText.substring(0, prev.length + 1);
+          if (updated === fullText) {
+            setTimeout(() => setIsDeleting(true), 1000);
+          }
+          return updated;
+        } else {
+          // Deleting
+          const updated = fullText.substring(0, prev.length - 1);
+          if (updated === '') {
+            setIsDeleting(false);
+            setLoopNum(loopNum + 1);
+          }
+          return updated;
+        }
+      });
+      setTypingSpeed(isDeleting ? 60 : 120);
+    };
+    timer = setTimeout(handleType, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, loopNum, typingSpeed, words]);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
@@ -44,8 +84,11 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <span className="text-white">UI/UX </span>
-              <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">Designer</span>
+              <span className="text-white">{prefix} </span>
+              <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">
+                {typedText}
+                <span className="animate-blink">|</span>
+              </span>
             </motion.h1>
 
             <motion.p
@@ -94,8 +137,8 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
           >
             <div className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 xl:w-96 xl:h-96 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
               <img
-                src={data.profileImage.url}
-                alt={data.profileImage.alternativeText || 'Profile Picture'}
+                src={data.profileImage?.url || '/images/profile.png'}
+                alt={data.profileImage?.alternativeText || 'Profile Picture'}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -112,7 +155,7 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
         >
           <div className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-lg py-8 md:py-12 px-4 md:px-6 shadow-2xl max-w-5xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 divide-y sm:divide-y md:divide-y-0 md:divide-x divide-white/10">
-              {data.stats.map((stat, index) => (
+              {Array.isArray(data?.stats) && data.stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   className="text-center px-4 py-4"

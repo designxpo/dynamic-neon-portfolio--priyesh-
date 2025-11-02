@@ -32,7 +32,7 @@ function buildContextFromConfig(cfg: any) {
   const expLines = (experiences || []).slice(0, 10).map((e: any) => `- ${e.positionTitle} @ ${e.companyName} (${e.startYear}–${e.endYear})`);
   if (expLines.length) parts.push(`Experience:\n${expLines.join('\n')}`);
 
-  const eduLines = (educations || []).slice(0, 10).map((e: any) => `- ${e.courseTitle} — ${e.instituteName} (${e.startYear}–${e.endYear})`);
+  const eduLines = (educations || []).slice(0, 10).map((e: any) => `- ${e.degree} — ${e.institution} (${e.startYear}–${e.endYear})`);
   if (eduLines.length) parts.push(`Education:\n${eduLines.join('\n')}`);
 
   const serviceLines = (services || []).slice(0, 10).map((s: any) => `- ${s.title}: ${s.description}`);

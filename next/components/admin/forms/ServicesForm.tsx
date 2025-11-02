@@ -6,6 +6,37 @@ import { getServicesData, updateServices } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, Zap } from 'lucide-react';
+const API_URL = '/api/admin/services';
+
+async function createService(service: Partial<Service>) {
+    const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(service),
+    });
+    if (!res.ok) throw new Error('Failed to create service');
+    return await res.json();
+}
+
+async function updateService(id: string, service: Partial<Service>) {
+    const res = await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...service }),
+    });
+    if (!res.ok) throw new Error('Failed to update service');
+    return await res.json();
+}
+
+async function deleteService(id: string) {
+    const res = await fetch(API_URL, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+    });
+    if (!res.ok) throw new Error('Failed to delete service');
+    return await res.json();
+}
 
 const ServicesForm: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
@@ -59,13 +90,14 @@ const ServicesForm: React.FC = () => {
         setSaving(true);
         setMessage(null);
         try {
-            const existingServicesRaw = services.map(s => ({...s, icon: getIconName(s.icon)}));
-            const isNew = !existingServicesRaw.some(s => s.id === currentItem.id);
-            const updatedServices = isNew
-                ? [...existingServicesRaw, currentItem]
-                : existingServicesRaw.map(s => (s.id === currentItem.id ? currentItem : s));
-
-            await updateServices(updatedServices);
+            const exists = services.some(s => s.id === currentItem.id);
+            if (!exists) {
+                // Create new service
+                await createService(currentItem);
+            } else {
+                // Update existing service
+                await updateService(currentItem.id, currentItem);
+            }
             await fetchData();
             setMessage({ type: 'success', text: 'Service saved.' });
             setIsModalOpen(false);
@@ -136,7 +168,7 @@ const ServicesForm: React.FC = () => {
                                         <button onClick={() => handleEdit(service)} className="admin-icon-button" title="Edit">
                                             <Edit2 size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(service.id)} className="admin-button-danger" title="Delete">
+                                        <button onClick={() => handleDeleteService(service.id)} className="admin-button-danger" title="Delete">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -151,21 +183,21 @@ const ServicesForm: React.FC = () => {
                 {currentItem && (
                     <div className="space-y-6">
                         <div>
-                            <label className="admin-label">Title</label>
-                            <input type="text" value={currentItem.title} onChange={e => setCurrentItem(p => p ? {...p, title: e.target.value} : null)} className="admin-input" placeholder="Enter service title" />
+                            <label className="admin-label" htmlFor="service-title">Title</label>
+                            <input type="text" id="service-title" name="title" value={currentItem.title} onChange={e => setCurrentItem(p => p ? {...p, title: e.target.value} : null)} className="admin-input" placeholder="Enter service title" />
                         </div>
                         <div>
-                            <label className="admin-label">Description</label>
-                            <textarea rows={3} value={currentItem.description} onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} className="admin-textarea" placeholder="Describe the service" />
+                            <label className="admin-label" htmlFor="service-description">Description</label>
+                            <textarea rows={3} id="service-description" name="description" value={currentItem.description} onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} className="admin-textarea" placeholder="Describe the service" />
                         </div>
                         <div>
-                            <label className="admin-label">Icon Name</label>
-                            <input type="text" value={currentItem.icon} onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} className="admin-input" placeholder="e.g., BrandingIcon" />
+                            <label className="admin-label" htmlFor="service-icon">Icon Name</label>
+                            <input type="text" id="service-icon" name="icon" value={currentItem.icon} onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} className="admin-input" placeholder="e.g., BrandingIcon" />
                             <p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p>
                         </div>
                         <div>
-                            <label className="admin-label">Display Order</label>
-                            <input type="number" value={currentItem.order || 0} onChange={e => setCurrentItem(p => p ? {...p, order: parseInt(e.target.value)} : null)} className="admin-input" placeholder="1" />
+                            <label className="admin-label" htmlFor="service-order">Display Order</label>
+                            <input type="number" id="service-order" name="order" value={currentItem.order || 0} onChange={e => setCurrentItem(p => p ? {...p, order: parseInt(e.target.value)} : null)} className="admin-input" placeholder="1" />
                         </div>
                         <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                             <button onClick={() => setIsModalOpen(false)} className="admin-button-secondary">Cancel</button>

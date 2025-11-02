@@ -2,9 +2,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { RawProject } from '@/types';
-import { getProjectsData, updateProjects, convertFileToBase64, getCategories } from '@/lib/api';
+import { convertFileToBase64, getCategories } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
-import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, ExternalLink, Github } from 'lucide-react';
 
 const ProjectsForm: React.FC = () => {
@@ -16,31 +15,47 @@ const ProjectsForm: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    useEffect(() => { fetchData(); }, []);
+    const apiBase = '/api/projects';
+
+    const fetchProjects = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(apiBase);
+            const data = await res.json();
+            // Ensure _id is present for all projects
+            setProjects(data.map((p: any) => ({ ...p, _id: p._id || p.id })));
+        } catch (error) {
+            console.error('Error loading projects:', error);
+        }
+        setIsLoading(false);
+    };
+
+    useEffect(() => { fetchProjects(); }, []);
 
     const fetchData = async () => {
         setIsLoading(true);
-        const [projectsData, categoriesData] = await Promise.all([
-            getProjectsData(),
-            getCategories()
-        ]);
-        setProjects(projectsData);
+        const categoriesData = await getCategories();
         setAvailableCategories(categoriesData);
         setIsLoading(false);
     };
 
+    // Callback to refresh categories after Categories modal closes
+    const handleCategoriesModalClose = () => {
+        fetchData();
+    };
+
+    useEffect(() => { fetchData(); }, []);
+
     const handleEdit = (project: RawProject) => {
-        // Normalize categories for editing
         const categories = Array.isArray(project.categories)
             ? project.categories
             : (project.category ? [project.category] : []);
-        setCurrentItem({ ...project, categories });
+        setCurrentItem({ ...project, categories, _id: project._id }); // Ensure _id is set
         setIsModalOpen(true);
     };
 
     const handleAddNew = () => {
         setCurrentItem({
-            id: uuidv4(),
             title: '',
             category: '',
             categories: [],
@@ -57,15 +72,12 @@ const ProjectsForm: React.FC = () => {
 
     const handleDelete = async (projectId: string) => {
         if (window.confirm('Are you sure you want to delete this project?')) {
-            try {
-                const updatedProjects = projects.filter(p => p.id !== projectId);
-                await updateProjects(updatedProjects);
-                setProjects(updatedProjects);
-                setMessage({ type: 'success', text: 'Project deleted.' });
-            } catch (e) {
-                console.error(e);
-                setMessage({ type: 'error', text: 'Failed to delete project.' });
+            if (!projectId) {
+                setMessage({ type: 'error', text: 'Project ID is missing.' });
+                return;
             }
+            await fetch(`${apiBase}/${projectId}`, { method: 'DELETE' });
+            fetchProjects();
         }
     };
     
@@ -85,32 +97,50 @@ const ProjectsForm: React.FC = () => {
         if (!currentItem) return;
         setSaving(true);
         setMessage(null);
-        try {
-            const isNew = !projects.some(p => p.id === currentItem.id);
-            // keep primary category in sync for compatibility
-            const primary = (currentItem.categories && currentItem.categories[0]) || (currentItem.category || '');
-            const toSave: RawProject = { ...currentItem, category: primary } as RawProject;
-            const updatedProjects = isNew
-                ? [...projects, toSave]
-                : projects.map(p => (p.id === currentItem.id ? toSave : p));
-            await updateProjects(updatedProjects);
-            setProjects(updatedProjects);
-            setIsModalOpen(false);
-            setCurrentItem(null);
-            setMessage({ type: 'success', text: 'Project saved.' });
-        } catch (e) {
-            console.error(e);
-            setMessage({ type: 'error', text: 'Failed to save project.' });
-        } finally {
+        // Ensure required fields
+        // Do not include _id in payload for PUT/POST
+        const { _id, ...rest } = currentItem;
+        const payload = {
+            ...rest,
+            category: (currentItem.categories && currentItem.categories.length > 0)
+                ? currentItem.categories[0]
+                : currentItem.category || '',
+            descriptionShort: currentItem.descriptionShort || '',
+            title: currentItem.title || '',
+        };
+        if (!payload.title || !payload.category || !payload.descriptionShort) {
+            setMessage({ type: 'error', text: 'Title, category, and short description are required.' });
             setSaving(false);
+            return;
         }
+        if (currentItem._id) {
+            // Edit/update
+            await fetch(`${apiBase}/${currentItem._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+        } else {
+            // Create
+            await fetch(apiBase, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+        }
+        fetchProjects();
+        setIsModalOpen(false);
+        setCurrentItem(null);
+        setSaving(false);
     };
 
-    if (isLoading) return (
-        <div className="flex items-center justify-center py-12">
-            <div className="text-gray-400">Loading projects...</div>
-        </div>
-    );
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="text-gray-400">Loading projects...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -143,7 +173,7 @@ const ProjectsForm: React.FC = () => {
                     </thead>
                     <tbody>
                         {projects.map((project) => (
-                            <tr key={project.id}>
+                            <tr key={project._id}>
                                 <td>
                                     <div className="flex items-center gap-4">
                                         <img src={project.coverImage.url} alt={project.title} className="w-16 h-12 object-cover rounded-lg border border-white/10" />
@@ -182,7 +212,7 @@ const ProjectsForm: React.FC = () => {
                                         <button onClick={() => handleEdit(project)} className="admin-icon-button" title="Edit">
                                             <Edit2 size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(project.id)} className="admin-button-danger" title="Delete">
+                                        <button onClick={() => handleDelete(project._id)} className="admin-button-danger" title="Delete">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -193,7 +223,7 @@ const ProjectsForm: React.FC = () => {
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && projects.some(p => p.id === currentItem.id) ? 'Edit Project' : 'Add Project'}>
+            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); handleCategoriesModalClose(); }} title={currentItem?._id && projects.some(p => p._id === currentItem._id) ? 'Edit Project' : 'Add Project'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div>
@@ -203,6 +233,23 @@ const ProjectsForm: React.FC = () => {
                         <div>
                             <label className="admin-label">Categories</label>
                             <div className="space-y-3">
+                                <div className="flex flex-wrap gap-2">
+                                    {availableCategories.map((cat) => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            className={`px-3 py-1 rounded-full text-xs font-medium border ${currentItem.categories?.includes(cat) ? 'bg-electric-blue/20 text-electric-blue border-electric-blue/40' : 'bg-white/5 text-gray-400 border-white/10'}`}
+                                            onClick={() => {
+                                                setCurrentItem(p => p ? {
+                                                    ...p,
+                                                    categories: p.categories?.includes(cat)
+                                                        ? p.categories.filter(c => c !== cat)
+                                                        : [...(p.categories || []), cat]
+                                                } : null);
+                                            }}
+                                        >{cat}</button>
+                                    ))}
+                                </div>
                                 <input
                                     type="text"
                                     value={(currentItem.categories || []).join(', ')}
@@ -210,74 +257,9 @@ const ProjectsForm: React.FC = () => {
                                         const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
                                         setCurrentItem(p => p ? { ...p, categories: arr } : null);
                                     }}
-                                    className="admin-input"
+                                    className="admin-input mt-2"
                                     placeholder="e.g., Web, UI/UX, Apps"
                                 />
-                                
-                                {/* Quick-add existing categories */}
-                                {availableCategories.length > 0 && (
-                                    <div>
-                                        <p className="text-xs text-gray-400 mb-2">Quick add from existing:</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {availableCategories.map((cat) => {
-                                                const isSelected = (currentItem.categories || []).includes(cat);
-                                                return (
-                                                    <button
-                                                        key={cat}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            if (!isSelected) {
-                                                                const newCategories = [...(currentItem.categories || []), cat];
-                                                                setCurrentItem(p => p ? { ...p, categories: newCategories } : null);
-                                                            }
-                                                        }}
-                                                        disabled={isSelected}
-                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                                            isSelected
-                                                                ? 'backdrop-blur-xl bg-green-500/20 text-green-400 border border-green-500/30 cursor-not-allowed'
-                                                                : 'backdrop-blur-xl bg-white/5 text-gray-300 border border-white/10 hover:bg-electric-blue/10 hover:text-electric-blue hover:border-electric-blue/20'
-                                                        }`}
-                                                    >
-                                                        {isSelected ? '✓ ' : '+ '}{cat}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                {/* Selected categories with remove functionality */}
-                                {(currentItem.categories || []).length > 0 && (
-                                    <div>
-                                        <p className="text-xs text-gray-400 mb-2">Selected categories:</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {(currentItem.categories || []).map((cat, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20"
-                                                >
-                                                    {idx === 0 && <span className="text-xs">📌</span>}
-                                                    {cat}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newCategories = [...(currentItem.categories || [])];
-                                                            newCategories.splice(idx, 1);
-                                                            setCurrentItem(p => p ? { ...p, categories: newCategories } : null);
-                                                        }}
-                                                        className="ml-1 text-electric-blue/70 hover:text-electric-blue"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Add multiple categories separated by commas or use the quick-add buttons above. The first category (📌) will be used as the primary category for backward compatibility.
-                                </p>
                             </div>
                         </div>
                         <div>
