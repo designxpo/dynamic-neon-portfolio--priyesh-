@@ -8,6 +8,7 @@ export interface IExperience extends Document {
   endYear: string;
   description?: string;
   order: number;
+  current?: boolean;
 }
 
 const ExperienceSchema: Schema = new Schema({
@@ -16,6 +17,7 @@ const ExperienceSchema: Schema = new Schema({
   startYear: { type: String, required: true },
   endYear: { type: String, required: true },
   description: { type: String },
+  current: { type: Boolean, default: false },
   order: { type: Number, default: 0 },
 }, { timestamps: true });
 

@@ -41,7 +41,7 @@ const ChatbotForm: React.FC = () => {
     const payload = {
       enabled: settings.enabled ?? true,
       name: settings.name ?? '',
-      initialGreeting: settings.greeting ?? '',
+      initialGreeting: settings.initialGreeting ?? '',
       bookingUrl: settings.bookingUrl ?? '',
       bookingDescription: settings.bookingDescription ?? '',
       showBookingQuickReply: settings.showBookingQuickReply ?? true,
@@ -108,7 +108,7 @@ const ChatbotForm: React.FC = () => {
             </div>
             <div>
               <label className="admin-label">Initial Greeting</label>
-              <textarea rows={3} className="admin-textarea" value={settings.greeting} onChange={(e) => handleChange({ greeting: e.target.value })} placeholder="Welcome message shown when chat opens..." />
+              <textarea rows={3} className="admin-textarea" value={settings.initialGreeting} onChange={(e) => handleChange({ initialGreeting: e.target.value })} placeholder="Welcome message shown when chat opens..." />
             </div>
           </div>
         </div>
@@ -346,9 +346,9 @@ const ChatbotForm: React.FC = () => {
                 </div>
                 <div>
                   <label className="admin-label">Match mode</label>
-                  <select className="admin-input" value={rule.match || 'any'} onChange={(e) => {
+                  <select className="admin-input" value={rule.matchMode || 'any'} onChange={(e) => {
                     const customQA = [...(settings.customQA || [])];
-                    customQA[idx] = { ...rule, match: (e.target.value as 'any' | 'all') };
+                    customQA[idx] = { ...rule, matchMode: (e.target.value as 'any' | 'all') } as any;
                     handleChange({ customQA });
                   }}>
                     <option value="any">Any keyword</option>

@@ -21,8 +21,18 @@ export const compressImage = (file: File, maxWidth: number = 800, quality: numbe
             canvas.height = img.height * ratio;
             
             // Draw and compress
-            ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            if (ctx) {
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+
+            // Preserve alpha for PNG inputs; use JPEG for others
+            const isPng = (file.type || '').toLowerCase().includes('png');
+            const mime = isPng ? 'image/png' : 'image/jpeg';
+            const compressedDataUrl = isPng
+                ? canvas.toDataURL(mime)
+                : canvas.toDataURL(mime, quality);
             
             console.log(`Image compressed: ${img.width}x${img.height} -> ${canvas.width}x${canvas.height}`);
             console.log(`Size reduction: ${file.size} bytes -> ~${Math.round(compressedDataUrl.length * 0.75)} bytes`);
