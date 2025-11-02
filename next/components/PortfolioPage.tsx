@@ -59,6 +59,8 @@ const PortfolioPage = () => {
         testimonials: false,
         contact: false,
     });
+    // Modal state for testimonials "Read more"
+    const [selectedTestimonial, setSelectedTestimonial] = useState<any | null>(null);
 
     // Load hero data first (critical above-the-fold content)
     useEffect(() => {
@@ -264,10 +266,12 @@ const PortfolioPage = () => {
                                     <span className="text-white">What </span><span className="text-[#7b5fff]">Clients</span><span className="text-white"> Say</span>
                                 </h2>
                                 {portfolioData.testimonials && portfolioData.testimonials.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
-                                        {portfolioData.testimonials.map((t) => (
+                                    (() => {
+                                        const list = portfolioData.testimonials || [];
+                                        const shouldMarquee = list.length > 3;
+                                        const Card = (t: any) => (
                                             <div
-                                                key={t.id}
+                                                key={t.id + (Math.random().toString(36).slice(2))}
                                                 className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 max-w-xs w-full text-center shadow-[0_8px_30px_rgba(123,95,255,0.15)] border border-white/15 transition-all hover:scale-[1.02]"
                                             >
                                                 {t.avatar && (
@@ -277,12 +281,56 @@ const PortfolioPage = () => {
                                                         className="w-20 h-20 rounded-full border border-white/20 mx-auto mb-5 object-cover"
                                                     />
                                                 )}
-                                                <p className="text-gray-200 italic mb-4 leading-relaxed">“{t.message}”</p>
+                                                <p className="text-gray-200 italic mb-4 leading-relaxed clamp-3">“{t.message}”</p>
+                                                {t.message && t.message.length > 160 && (
+                                                    <button
+                                                        type="button"
+                                                        className="text-xs text-gray-400 hover:text-white/90 underline decoration-transparent hover:decoration-white/80"
+                                                        onClick={() => setSelectedTestimonial(t)}
+                                                        aria-label={`Read full testimonial from ${t.name}`}
+                                                    >
+                                                        Read more
+                                                    </button>
+                                                )}
                                                 <h4 className="text-lg font-semibold text-white">{t.name}</h4>
                                                 <span className="text-sm text-gray-400">{t.role}</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                        );
+
+                                        if (!shouldMarquee) {
+                                            return (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
+                                                    {list.map((t) => (
+                                                        <Card key={t.id} {...t} />
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
+
+                                        // Marquee mode for >3 testimonials: duplicate track and scroll
+                                        return (
+                                            <div className="relative overflow-hidden">
+                                                <div className={`testimonials-track ${selectedTestimonial ? 'paused' : ''} gap-10`}
+                                                     onMouseEnter={(e)=>{ /* hover pause handled by CSS */ }}
+                                                     onMouseLeave={(e)=>{}}
+                                                >
+                                                    <div className="flex gap-10 pr-10">
+                                                        {list.map((t) => (
+                                                            <Card key={`a-${t.id}`} {...t} />
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex gap-10">
+                                                        {list.map((t) => (
+                                                            <Card key={`b-${t.id}`} {...t} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                {/* Soft gradient edges */}
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-dark-bg/60 to-transparent" />
+                                                <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-dark-bg/60 to-transparent" />
+                                            </div>
+                                        );
+                                    })()
                                 ) : (
                                                                                                                             <p className="text-center text-gray-400">No testimonials available.</p>
                                                                                                                         )}
@@ -290,6 +338,45 @@ const PortfolioPage = () => {
                                                                                                                 </section>
                                                                                                         </AnimatedSection>
                                                                                                 )}
+
+                {/* Testimonials Modal */}
+                {selectedTestimonial && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        onClick={() => setSelectedTestimonial(null)}
+                    >
+                        <div
+                            className="relative w-full max-w-xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl p-6 text-white"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                aria-label="Close"
+                                className="absolute top-3 right-3 rounded-md bg-white/10 hover:bg-white/20 border border-white/10 px-2 py-1 text-sm"
+                                onClick={() => setSelectedTestimonial(null)}
+                            >
+                                ✕
+                            </button>
+
+                            <div className="flex items-center gap-3 mb-3">
+                                {selectedTestimonial.avatar && (
+                                    <img
+                                        src={selectedTestimonial.avatar}
+                                        alt={selectedTestimonial.name}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                )}
+                                <div>
+                                    <h4 className="font-semibold">{selectedTestimonial.name}</h4>
+                                    <span className="text-xs text-gray-400">{selectedTestimonial.role}</span>
+                                </div>
+                            </div>
+
+                            <p className="text-sm leading-relaxed text-gray-300">“{selectedTestimonial.message}”</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Blogs section */}
                 {blogs && blogs.length > 0 && (

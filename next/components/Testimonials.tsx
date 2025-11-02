@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Section from './Section';
 
 interface Testimonial {
   _id: string;
@@ -13,6 +14,7 @@ interface Testimonial {
 export default function Testimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Testimonial | null>(null);
 
   useEffect(() => {
     async function loadTestimonials() {
@@ -42,15 +44,69 @@ export default function Testimonials() {
   }
 
   return (
-    <section className='space-y-4'>
-      {testimonials.map((t) => (
-        <div key={t._id} className='border rounded-lg p-4 shadow-sm bg-white dark:bg-neutral-900'>
-          {t.avatar && <img src={t.avatar} alt={t.name} className='w-16 h-16 rounded-full mb-3 object-cover' />}
-          <p className='text-gray-700 dark:text-gray-300 italic'>“{t.message}”</p>
-          <h4 className='font-semibold mt-2'>{t.name}</h4>
-          <span className='text-sm text-gray-500'>{t.role}</span>
+    <Section title="What Clients Say" id="testimonials">
+      <div className='max-w-6xl mx-auto px-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {testimonials.map((t) => (
+            <div key={t._id} className='border border-white/10 rounded-2xl p-6 shadow-sm bg-white/5 backdrop-blur-sm text-center'>
+              {t.avatar && (
+                <div className='flex justify-center mb-3'>
+                  <img src={t.avatar} alt={t.name} className='w-16 h-16 rounded-full object-cover border border-white/20' />
+                </div>
+              )}
+              <p className='text-gray-300 italic clamp-3'>
+                “{t.message}”
+              </p>
+              {t.message && t.message.length > 160 && (
+                <button
+                  type='button'
+                  onClick={()=>setSelected(t)}
+                  className='mt-2 text-xs text-gray-400 hover:text-white/90 underline decoration-transparent hover:decoration-white/80'
+                  aria-label={`Read full testimonial from ${t.name}`}
+                >
+                  Read more
+                </button>
+              )}
+              <h4 className='font-semibold mt-3 text-white'>{t.name}</h4>
+              <span className='text-sm text-gray-500'>{t.role}</span>
+            </div>
+          ))}
         </div>
-      ))}
-    </section>
+      </div>
+
+      {selected && (
+        <div
+          className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'
+          role='dialog'
+          aria-modal='true'
+          onClick={()=>setSelected(null)}
+        >
+          <div
+            className='relative w-full max-w-xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl p-6 text-white'
+            onClick={(e)=>e.stopPropagation()}
+          >
+            <button
+              aria-label='Close'
+              className='absolute top-3 right-3 rounded-md bg-white/10 hover:bg-white/20 border border-white/10 px-2 py-1 text-sm'
+              onClick={()=>setSelected(null)}
+            >
+              ✕
+            </button>
+
+            <div className='flex items-center gap-3 mb-3'>
+              {selected.avatar && <img src={selected.avatar} alt={selected.name} className='w-10 h-10 rounded-full object-cover' />}
+              <div>
+                <h4 className='font-semibold'>{selected.name}</h4>
+                <span className='text-xs text-gray-400'>{selected.role}</span>
+              </div>
+            </div>
+
+            <p className='text-sm leading-relaxed text-gray-300'>
+              “{selected.message}”
+            </p>
+          </div>
+        </div>
+      )}
+    </Section>
   );
 }

@@ -14,7 +14,7 @@ interface RecentWorksProps {
 // To hide the icons, leave the field blank in the Admin panel.
 const hasAnyLink = (url?: string) => !!url && url.trim().length > 0;
 
-const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
+const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void }> = ({ project, onReadMore }) => (
   <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full h-full">
     <div className="relative overflow-hidden aspect-video">
       <img
@@ -62,9 +62,20 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
         {project.title}
       </h3>
 
-      <p className="text-gray-300 text-xs md:text-sm mb-4 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <p className="text-gray-300 text-xs md:text-sm mb-2 leading-relaxed clamp-3" style={{ fontFamily: 'Inter, sans-serif' }}>
         {project.descriptionShort}
       </p>
+
+      {(project.descriptionLong || (project.descriptionShort && project.descriptionShort.length > 140)) && (
+        <button
+          type="button"
+          onClick={() => onReadMore(project)}
+          className="text-[11px] md:text-xs text-gray-400 hover:text-white/90 underline decoration-transparent hover:decoration-white/80 transition-colors mb-3"
+          aria-label={`Read more about ${project.title}`}
+        >
+          Read more
+        </button>
+      )}
 
       {project.technologies && (
         <div className="flex flex-wrap gap-2">
@@ -87,6 +98,7 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
 const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
   const [orderedCats, setOrderedCats] = useState<string[] | null>(null);
+  const [selected, setSelected] = useState<Project | null>(null);
 
   // Load saved categories order from Admin; if unavailable, fall back to derived
   useEffect(() => {
@@ -157,7 +169,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <ProjectCard project={project} />
+              <ProjectCard project={project} onReadMore={(p)=>setSelected(p)} />
             </motion.div>
           ))}
         </div>
@@ -168,6 +180,51 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
           <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-brand-purple/3 rounded-full blur-3xl translate-x-1/2"></div>
         </div>
       </div>
+
+      {/* Read More Modal */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl p-0 text-white overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Cover image */}
+            {selected.coverImage?.url && (
+              <div className="relative w-full h-48 md:h-56 overflow-hidden">
+                <img src={selected.coverImage.url} alt={selected.coverImage.alternativeText || selected.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              </div>
+            )}
+            <div className="p-6">
+              <h3 className="text-lg md:text-xl font-semibold mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>{selected.title}</h3>
+              <p className="text-sm leading-relaxed text-gray-300" style={{ fontFamily: 'Inter, sans-serif' }}>
+                {selected.descriptionLong || selected.descriptionShort}
+              </p>
+
+              <div className="mt-5 flex items-center gap-3">
+                {hasAnyLink(selected.liveUrl) && (
+                  <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-brand-purple text-white px-3 py-2 rounded-lg hover:bg-brand-purple-light transition-all text-xs">
+                    Visit live
+                    <ExternalLinkIcon />
+                  </a>
+                )}
+                {hasAnyLink(selected.sourceUrl) && (
+                  <a href={selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/20 px-3 py-2 rounded-lg hover:bg-white/10 transition-all text-xs">
+                    View source
+                    <GitHubIcon />
+                  </a>
+                )}
+                <button onClick={()=>setSelected(null)} className="ml-auto text-xs text-gray-400 hover:text-white">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Section>
   );
 };

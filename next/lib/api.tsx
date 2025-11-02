@@ -259,8 +259,16 @@ export const convertFileToBase64 = async (file: File): Promise<string> => {
 // Helper function to get an icon component by its string name
 export const getIcon = (iconName: string): React.ReactNode => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const IconComponent = (Icons as any)[iconName];
-    return IconComponent ? <IconComponent /> : null;
+    const iconsAny = Icons as any;
+    const name = (iconName || '').trim();
+    const IconComponent = iconsAny[name];
+    if (IconComponent) return <IconComponent />;
+    // Fallback to a safe default so UI doesn't look empty in production
+    if (process.env.NODE_ENV !== 'production') {
+        console.warn(`[getIcon] Unknown icon name: "${iconName}". Falling back to BrandingIcon.`);
+    }
+    const Fallback = iconsAny['BrandingIcon'];
+    return Fallback ? <Fallback /> : null;
 };
 
 // --- Data Transformation Functions ---
@@ -335,10 +343,19 @@ export const updateHeroData = async (data: RawHeroData): Promise<void> => {
 
 // Services
 export const getServicesData = async (): Promise<Service[]> => {
-    const res = await withTimeout(fetch('/api/admin/services', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed services');
-    const raw = await res.json();
-    return (raw || []).map(toService).sort((a,b)=>a.order-b.order);
+    return withFallback<Service[]>(
+        async () => {
+            const res = await withTimeout(fetch('/api/admin/services', { cache: 'no-store' }));
+            if (!res.ok) throw new Error('Failed services');
+            const raw = await res.json();
+            return (raw || []).map(toService).sort((a, b) => a.order - b.order);
+        },
+        () => {
+            const db = getDb();
+            const items = (db.services || []) as RawService[];
+            return (items || []).map(toService).sort((a, b) => a.order - b.order);
+        }
+    );
 }
 export const updateServices = async (services: (Service | RawService)[]): Promise<void> => {
     const payload = services.map(s => ({ ...s, icon: getIconName((s as any).icon) }));
