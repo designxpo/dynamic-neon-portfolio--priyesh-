@@ -37,9 +37,13 @@ export interface HeroData {
   secondaryCtaText?: string;
   secondaryCtaLink?: string;
   stats: Stat[];
+  // Typing animation fields
+  titlePrefix?: string;
+  titleWords?: string[];
 }
 
 export interface RawHeroData {
+  subtitle: string;
   name: string;
   title: string;
   shortBio: string;
@@ -50,10 +54,14 @@ export interface RawHeroData {
   secondaryCtaText?: string;
   secondaryCtaLink?: string;
   stats: Stat[];
+  // Typing animation fields
+  titlePrefix?: string;
+  titleWords?: string[];
 }
 
 export interface Service {
   id: string;
+    _id?: string;
   title: string;
   description: string;
   // Using 'any' to avoid ReactNode type conflicts across environments during migration
@@ -71,6 +79,7 @@ export interface RawService {
 
 export interface Project {
   id: string;
+    _id?: string;
   title: string;
   category: string; // primary category (back-compat)
   categories?: string[]; // multiple categories supported
@@ -99,6 +108,7 @@ export interface RawProject {
 
 export interface Experience {
   id: string;
+    _id?: string;
   positionTitle: string;
   companyName: string;
   startYear: string;
@@ -108,30 +118,34 @@ export interface Experience {
 
 export interface Education {
   id: string;
-  courseTitle: string;
-  instituteName: string;
+  _id?: string;
+  degree: string;
+  institution: string;
   startYear: string;
   endYear: string;
   description: string;
 }
 
+
 export interface Skill {
   id: string;
-  skillName: string;
+  _id?: string;
+  name: string;
   icon: string;
   image?: Image;
 }
 
 export interface RawSkill {
     id: string;
-    skillName: string;
-    skillIcon: string;
+    name: string;
+    icon: string;
     image?: Image;
 }
 
 
 export interface Testimonial {
   id: string;
+    _id?: string;
   clientName: string;
   roleCompany: string;
   quote: string;
@@ -140,6 +154,7 @@ export interface Testimonial {
 
 export interface RawTestimonial {
     id: string;
+      _id?: string;
     clientName: string;
     roleCompany: string;
     quote: string;
@@ -148,6 +163,7 @@ export interface RawTestimonial {
 
 export interface ContactData {
     heading: string;
+      _id?: string;
     description: string;
     email: string;
     phone: string;
@@ -160,14 +176,17 @@ export interface ContactData {
 
 export interface RawContactData {
     heading: string;
-    description: string;
-    email: string;
-    phone: string;
+  description: string;
+  email: string;
+  phone: string;
   socialLinks: RawSocialLink[];
-  // Email notifications (optional)
-  notifyUserOnSubmit?: boolean;
-  notifyAdminOnSubmit?: boolean;
-  notifyEmail?: string;
+  // MongoDB document id (for updates)
+  id?: string;
+  _id?: string;
+    // Email notifications (optional)
+    notifyUserOnSubmit?: boolean;
+    notifyAdminOnSubmit?: boolean;
+    notifyEmail?: string;
 }
 
 export interface BlogData {
@@ -242,25 +261,32 @@ export interface Database {
 // --- Chatbot / Assistant settings ---
 export interface ChatbotSettings {
   enabled: boolean;
-  name: string; // Display name in header
-  greeting: string; // Initial assistant greeting to seed conversation
-  bookingUrl?: string;
-  bookingDescription?: string;
-  showBookingQuickReply?: boolean;
-  // Admin-defined placeholders available in rule replies, e.g. {company}, {cta}
-  placeholders?: Record<string, string>;
-  rules?: ChatbotRule[]; // Custom Q&A triggers
+  name: string;
+  initialGreeting: string;
+  bookingUrl: string;
+  bookingDescription: string;
+  showBookingQuickReply: boolean;
+  placeholders: any[]; // now array, not object
+  customQA: CustomQARule[];
+}
+
+export interface CustomQARule {
+  enabled: boolean;
+  matchMode: string;
+  question: string;
+  keywords: string[];
+  reply: string;
 }
 
 export interface ChatbotRule {
   id: string;
-  question?: string; // optional phrase to match
-  keywords?: string[]; // any keyword triggers a match
-  reply: string; // assistant reply when matched
-  enabled?: boolean; // default true
-  match?: 'any' | 'all'; // keyword match mode (default: any)
-  caseSensitive?: boolean; // default false
-  regex?: string; // optional regex pattern
+  question: string;
+  keywords: string[];
+  reply: string;
+  regex?: string;
+  match: 'any' | 'all';
+  caseSensitive?: boolean;
+  enabled: boolean;
 }
 
 // --- Site Metadata (subset of Next Metadata) ---

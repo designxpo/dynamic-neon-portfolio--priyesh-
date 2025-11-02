@@ -22,11 +22,11 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
         alt={project.coverImage.alternativeText || project.title}
         className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
     </div>
 
-    <div className="p-4 md:p-6">
-      <div className="flex items-start justify-between mb-3">
+  <div className="p-4 md:p-6">
+  <div className="flex items-start justify-between mb-3">
         <div className="flex flex-wrap gap-1">
           {((project.categories && project.categories.length ? project.categories : (project.category ? [project.category] : []))).slice(0, 2).map((cat, idx) => (
             <span key={idx} className="text-xs bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full border border-brand-purple/30 font-medium">
@@ -34,7 +34,7 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
             </span>
           ))}
         </div>
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           {hasAnyLink(project.sourceUrl) && (
             <a
               href={project.sourceUrl}

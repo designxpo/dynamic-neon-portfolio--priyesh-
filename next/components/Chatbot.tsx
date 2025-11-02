@@ -69,7 +69,7 @@ function summarize(db: Database) {
   const name = db.hero?.name || 'Me';
   const title = db.hero?.title || '';
   const shortBio = db.hero?.shortBio || '';
-  const topSkills = (db.skills || []).slice(0, 6).map((s: RawSkill) => s.skillName || s.skillIcon).filter(Boolean) as string[];
+  const topSkills = (db.skills || []).slice(0, 6).map((s: RawSkill) => s.name || s.icon).filter(Boolean) as string[];
   const featured = (db.projects || []).filter(p => p.featured).slice(0, 3);
   const companies = (db.experiences || []).map(e => e.companyName).filter(Boolean);
   return {
@@ -92,8 +92,8 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
 
   const includesAny = (words: string[]) => words.some(w => query.includes(w));
 
-  // 0) Custom rules: first match wins
-  const rules = (chatbot?.rules || []).filter(r => r && (r.enabled !== false) && r.reply?.trim());
+  // 0) Custom Q&A: first match wins
+  const rules = (chatbot?.customQA || []).filter(r => r && (r.enabled !== false) && r.reply?.trim());
   const formatReply = (tpl: string) => {
     // simple placeholder replacement
     const base = (tpl || '')
@@ -104,15 +104,21 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
       .replace(/\{\s*path\s*\}/gi, (typeof window !== 'undefined' ? window.location.pathname : ''))
       .replace(/\{\s*bookingUrl\s*\}/gi, (chatbot?.bookingUrl || ''))
       .replace(/\{\s*contactLink\s*\}/gi, '#contact');
-    // apply admin-defined placeholders
-    const ph = chatbot?.placeholders || {};
-    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // apply admin-defined placeholders
+    let ph: Record<string, string> = {};
+    if (Array.isArray(chatbot?.placeholders)) {
+      for (const p of chatbot.placeholders) {
+        if (p && typeof p.key === 'string' && typeof p.value === 'string') {
+          ph[p.key] = p.value;
+        }
+      }
+    }
     let out = base;
     for (const [k, v] of Object.entries(ph)) {
       if (!k) continue;
       try {
         const re = new RegExp(`\\{\\s*${escapeRegExp(k)}\\s*\\}`, 'g');
-        out = out.replace(re, v ?? '');
+        out = typeof out === 'string' ? out.replace(re, v ?? '') : out;
       } catch { /* ignore bad keys */ }
     }
     return out;
@@ -120,23 +126,16 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
   for (const r of rules) {
     const hasQuestion = !!(r.question && r.question.trim());
     const hasKeywords = Array.isArray(r.keywords) && r.keywords.length > 0;
-    const caseSens = !!r.caseSensitive;
+    const matchMode = r.matchMode || 'any';
     let matched = false;
-    if (r.regex && r.regex.trim()) {
-      try {
-        const re = new RegExp(r.regex, caseSens ? '' : 'i');
-        matched = re.test(q);
-      } catch { /* ignore invalid regex */ }
-    }
-    const qc = caseSens ? q : query;
-    if (!matched && hasQuestion) {
-      const needle = (r.question || '').trim();
-      matched = caseSens ? q.includes(needle) : qc.includes(needle.toLowerCase());
+    if (hasQuestion) {
+      const needle = (r.question || '').trim().toLowerCase();
+      matched = query.includes(needle);
     }
     if (!matched && hasKeywords) {
-      const kws = (r.keywords || []).map(k => (k || '').trim()).filter(Boolean);
-      if ((r.match || 'any') === 'all') matched = kws.length > 0 && kws.every(k => (caseSens ? q.includes(k) : qc.includes(k.toLowerCase())));
-      else matched = kws.some(k => (caseSens ? q.includes(k) : qc.includes(k.toLowerCase())));
+      const kws = (r.keywords || []).map(k => (k || '').trim().toLowerCase()).filter(Boolean);
+      if (matchMode === 'all') matched = kws.length > 0 && kws.every(k => query.includes(k));
+      else matched = kws.some(k => query.includes(k));
     }
     if (matched) {
       return formatReply(r.reply.trim());
@@ -149,7 +148,7 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
   }
 
   if (includesAny(['skill', 'stack', 'technology', 'tools'])) {
-    const skillsText = list(db.skills || [], (sk: RawSkill) => sk.skillName || sk.skillIcon);
+    const skillsText = list(db.skills || [], (sk: RawSkill) => sk.name || sk.icon);
     return skillsText
       ? `Here are some of my skills:\n${skillsText}\n\nI also love learning and adding to this list.`
       : `I focus on clean UI, solid UX, and modern web tooling like Next.js and Tailwind.`;
@@ -170,7 +169,7 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
   }
 
   if (includesAny(['education', 'degree', 'college', 'university', 'study'])) {
-    const edText = list(db.educations || [], (e: Education) => `${e.courseTitle} — ${e.instituteName} (${e.startYear}–${e.endYear})`);
+    const edText = list(db.educations || [], (e: Education) => `${e.degree} — ${e.institution} (${e.startYear}–${e.endYear})`);
     return edText || `I'm self-driven and continuously learning—ask me about courses or certifications!`;
   }
 
@@ -220,6 +219,10 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
   return `${salutation}I'm ${s.name}${s.title ? `, ${s.title}` : ''}. ${s.shortBio || ''}${skillsLine}${projectLine} Ask me about my projects, skills, or how I can help you.`.trim();
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export default function Chatbot() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -261,7 +264,16 @@ export default function Chatbot() {
         const s = await getChatbotSettings();
         setChatbot(s);
       } catch {
-        setChatbot({ enabled: true, name: 'Prism', greeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.', bookingUrl: undefined, bookingDescription: undefined, showBookingQuickReply: true });
+        setChatbot({
+          enabled: true,
+          name: 'Prism',
+          initialGreeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
+          bookingUrl: '',
+          bookingDescription: '',
+          showBookingQuickReply: true,
+          placeholders: [],
+          customQA: []
+        });
       }
     })();
   }, []);
@@ -270,7 +282,7 @@ export default function Chatbot() {
   useEffect(() => {
     if (!chatbot) return;
     if (messages.length === 0) {
-      const greeting = chatbot.greeting?.trim() || `Hi! I’m ${chatbot.name || 'Prism'} — ask me about projects, skills, or how I work.`;
+  const greeting = chatbot.initialGreeting?.trim() || `Hi! I’m ${chatbot.name || 'Prism'} — ask me about projects, skills, or how I work.`;
       const seed = [{ role: 'assistant', content: greeting } as Msg];
       setMessages(seed);
       // persist to cookie and localStorage as a fallback
@@ -293,7 +305,22 @@ export default function Chatbot() {
   const openChat = () => {
     setOpening(true);
     // slight delay to let ripple render beneath panel
-    setTimeout(() => {
+    setTimeout(async () => {
+      try {
+        const s = await getChatbotSettings();
+        setChatbot(s);
+      } catch {
+        setChatbot({
+          enabled: true,
+          name: 'Prism',
+          initialGreeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
+          bookingUrl: '',
+          bookingDescription: '',
+          showBookingQuickReply: true,
+          placeholders: [],
+          customQA: []
+        });
+      }
       setOpen(true);
       // stop ripple after animation window
       setTimeout(() => setOpening(false), 500);
@@ -306,7 +333,7 @@ export default function Chatbot() {
 
   const clearChat = () => {
     // reset chat history and visitor state
-    const greeting = (chatbot?.greeting?.trim()) || `Hi! I’m ${(chatbot?.name || 'Prism')} — ask me about projects, skills, or how I work.`;
+  const greeting = (chatbot?.initialGreeting?.trim()) || `Hi! I’m ${(chatbot?.name || 'Prism')} — ask me about projects, skills, or how I work.`;
     const seed = [{ role: 'assistant', content: greeting } as Msg];
     setMessages(seed);
     setAnimatedReply(null);
@@ -355,22 +382,18 @@ export default function Chatbot() {
     // If a rule matched (and not just generic fallback), we can tell by comparing
     // whether it came from rules path: we applied rules first in answerQuestion.
     // To avoid ambiguity, explicitly match again but only through rules:
-    const rules = (chatbot?.rules || []).filter(r => r && (r.enabled !== false) && r.reply?.trim());
+    const rules = (chatbot?.customQA || []).filter(r => r && (r.enabled !== false) && r.reply?.trim());
     const query = q.toLowerCase();
     const ruleMatched = rules.some(r => {
       const hasQ = !!(r.question && r.question.trim());
       const hasKw = Array.isArray(r.keywords) && r.keywords.length > 0;
-      // consider regex and case-sensitive too for quick check
-      if (r.regex && r.regex.trim()) {
-        try { const re = new RegExp(r.regex, r.caseSensitive ? '' : 'i'); if (re.test(q)) return true; } catch { /* ignore */ }
-      }
-      const hitQ = hasQ && (r.caseSensitive ? q.includes((r.question || '').trim()) : query.includes((r.question || '').toLowerCase().trim()));
+      const hitQ = hasQ && query.includes((r.question || '').trim().toLowerCase());
       let hitKw = false;
       if (hasKw) {
-        const kws = (r.keywords || []).map(k => (k || '').trim()).filter(Boolean);
-        hitKw = (r.match || 'any') === 'all'
-          ? (kws.length > 0 && kws.every(k => (r.caseSensitive ? q.includes(k) : query.includes(k.toLowerCase()))))
-          : kws.some(k => (r.caseSensitive ? q.includes(k) : query.includes(k.toLowerCase())));
+        const kws = (r.keywords || []).map(k => (k || '').trim().toLowerCase()).filter(Boolean);
+        hitKw = (r.matchMode || 'any') === 'all'
+          ? (kws.length > 0 && kws.every(k => query.includes(k)))
+          : kws.some(k => query.includes(k));
       }
       return (hitQ || hitKw);
     });

@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Experience } from '@/types';
-import { getExperiencesData, updateExperiences } from '@/lib/api';
+import { getExperiencesData, createExperience, updateExperience, deleteExperience } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, Briefcase, Calendar } from 'lucide-react';
@@ -37,9 +37,8 @@ const ExperienceForm: React.FC = () => {
     const handleDelete = async (expId: string) => {
         if (window.confirm('Are you sure you want to delete this experience entry?')) {
             try {
-                const updatedExperiences = experiences.filter(exp => exp.id !== expId);
-                await updateExperiences(updatedExperiences);
-                setExperiences(updatedExperiences);
+                await deleteExperience(expId);
+                await fetchData();
                 setMessage({ type: 'success', text: 'Experience deleted.' });
             } catch (e) {
                 console.error(e);
@@ -54,9 +53,12 @@ const ExperienceForm: React.FC = () => {
         setMessage(null);
         try {
             const isNew = !experiences.some(exp => exp.id === currentItem.id);
-            const updatedExperiences = isNew ? [...experiences, currentItem] : experiences.map(exp => (exp.id === currentItem.id ? currentItem : exp));
-            await updateExperiences(updatedExperiences);
-            setExperiences(updatedExperiences);
+            if (isNew) {
+                await createExperience(currentItem);
+            } else {
+                await updateExperience(currentItem);
+            }
+            await fetchData();
             setIsModalOpen(false);
             setCurrentItem(null);
             setMessage({ type: 'success', text: 'Experience saved.' });

@@ -99,15 +99,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiv
         <main className="flex-1 p-8" style={{ overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 72px)', maxHeight: 'calc(100vh - 72px)' }}>
           {(offline || (aiStatus && !aiStatus.configured) || aiError) && (
             <div className="max-w-7xl mx-auto mb-4">
-              {offline && (
-                <div className="admin-card bg-amber-500/10 border-amber-500/30 text-amber-300 mb-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <span>
-                      Database unavailable — working in local mode. Your changes are saved to this browser and will sync when the server is available.
-                    </span>
-                  </div>
-                </div>
-              )}
               {aiError && (
                 <div className="admin-card bg-rose-500/10 border-rose-500/30 text-rose-300 mb-2">
                   <div className="flex items-center justify-between gap-4">

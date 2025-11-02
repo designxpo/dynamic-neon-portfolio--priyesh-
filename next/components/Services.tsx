@@ -19,7 +19,7 @@ const ServiceCard: React.FC<{ service: Service; index: number }> = ({ service, i
       />
 
       {/* Content */}
-      <div className="relative z-10 p-6 md:p-7 flex flex-col items-start gap-4">
+  <div className="relative z-10 p-6 md:p-7 flex flex-col items-start gap-4">
         {/* Top row: icon + index badge */}
         <div className="w-full flex items-start justify-between">
           <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/10 border border-white/10 ring-1 ring-transparent group-hover:ring-brand-purple/40 transition-colors">

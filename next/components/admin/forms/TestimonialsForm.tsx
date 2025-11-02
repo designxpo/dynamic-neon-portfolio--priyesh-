@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { RawTestimonial } from '@/types';
-import { getTestimonialsData, updateTestimonials, convertFileToBase64 } from '@/lib/api';
+import { updateTestimonials, convertFileToBase64 } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, Star, Upload, X } from 'lucide-react';
@@ -15,12 +15,29 @@ const TestimonialsForm: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchTestimonials(); }, []);
 
-    const fetchData = async () => {
+    const fetchTestimonials = async () => {
         setIsLoading(true);
-        const data = await getTestimonialsData();
-        setTestimonials(data);
+        try {
+            const res = await fetch('/api/admin/testimonials', { cache: 'no-store' });
+            const result = await res.json();
+            if (result.success && Array.isArray(result.data)) {
+                const mapped = result.data.map((t: any) => ({
+                    id: t._id,
+                    clientName: t.name,
+                    roleCompany: t.role,
+                    quote: t.message,
+                    avatar: { url: t.avatar, alternativeText: '' },
+                }));
+                setTestimonials(mapped);
+            } else {
+                setTestimonials([]);
+            }
+        } catch (error) {
+            console.error('Error loading testimonials:', error);
+            setTestimonials([]);
+        }
         setIsLoading(false);
     };
 
@@ -33,20 +50,6 @@ const TestimonialsForm: React.FC = () => {
         setCurrentItem({ id: uuidv4(), clientName: '', roleCompany: '', quote: '', avatar: { url: '', alternativeText: '' } });
         setIsModalOpen(true);
     };
-
-    const handleDelete = async (testimonialId: string) => {
-        if (window.confirm('Are you sure you want to delete this testimonial?')) {
-            try {
-                const updatedTestimonials = testimonials.filter(t => t.id !== testimonialId);
-                await updateTestimonials(updatedTestimonials);
-                setTestimonials(updatedTestimonials);
-                setMessage({ type: 'success', text: 'Testimonial deleted.' });
-            } catch (e) {
-                console.error(e);
-                setMessage({ type: 'error', text: 'Failed to delete testimonial.' });
-            }
-        }
-    };
     
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && currentItem) {
@@ -58,15 +61,46 @@ const TestimonialsForm: React.FC = () => {
         }
     };
 
+const handleDelete = async (testimonialId: string) => {
+    if (window.confirm('Are you sure you want to delete this testimonial?')) {
+        await fetch(`/api/admin/testimonials/${testimonialId}`, { method: 'DELETE', cache: 'no-store' });
+        fetchTestimonials();
+    }
+};
     const handleSave = async () => {
         if (!currentItem) return;
         setSaving(true);
         setMessage(null);
         try {
-            const isNew = !testimonials.some(t => t.id === currentItem.id);
-            const updatedTestimonials = isNew ? [...testimonials, currentItem] : testimonials.map(t => (t.id === currentItem.id ? currentItem : t));
-            await updateTestimonials(updatedTestimonials);
-            setTestimonials(updatedTestimonials);
+            const isEdit = testimonials.some(t => t.id === currentItem.id);
+            let response;
+            if (isEdit) {
+                response = await fetch(`/api/admin/testimonials/${currentItem.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
+                    body: JSON.stringify({
+                        name: currentItem.clientName,
+                        role: currentItem.roleCompany,
+                        message: currentItem.quote,
+                        avatar: currentItem.avatar.url,
+                    }),
+                });
+            } else {
+                response = await fetch('/api/admin/testimonials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
+                    body: JSON.stringify({
+                        name: currentItem.clientName,
+                        role: currentItem.roleCompany,
+                        message: currentItem.quote,
+                        avatar: currentItem.avatar.url,
+                    }),
+                });
+            }
+            if (!response.ok) throw new Error('Failed to save testimonial');
+            await fetchTestimonials();
             setIsModalOpen(false);
             setCurrentItem(null);
             setMessage({ type: 'success', text: 'Testimonial saved.' });

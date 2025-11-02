@@ -12,15 +12,24 @@ const BlogsForm: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<Partial<Blog> | null>(null);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchblogs(); }, []);
 
-    const fetchData = async () => {
-        setIsLoading(true);
-        const data = await getBlogs();
-        setBlogs(data);
+    // const fetchData = async () => {
+    //     setIsLoading(true);
+    //     const data = await getBlogs();
+    //     setBlogs(data);
+    //     setIsLoading(false);
+    // };
+const fetchblogs = async () => {
+    try {
+        const blogItems = await fetch('/api/blogs').then(res => res.json());
+        setBlogs(blogItems);
+    } catch (error) {
+        console.error('Error loading blogs:', error);
+    } finally {
         setIsLoading(false);
-    };
-
+    }
+}
     const handleEdit = (blog: Blog) => {
         setCurrentItem(blog);
         setIsModalOpen(true);
@@ -39,25 +48,68 @@ const BlogsForm: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    // const handleDelete = async (blogId: string) => {
+    //     if (window.confirm('Are you sure you want to delete this blog post?')) {
+    //         await deleteBlog(blogId);
+    //         fetchData();
+    //     }
+    // };
     const handleDelete = async (blogId: string) => {
-        if (window.confirm('Are you sure you want to delete this blog post?')) {
-            await deleteBlog(blogId);
-            fetchData();
-        }
-    };
-    
-    const handleSave = async () => {
-        if (!currentItem) return;
-        if (currentItem.id) {
-            await updateBlog(currentItem as Blog);
-        } else {
-            await addBlog(currentItem as BlogData);
-        }
-        fetchData();
-        setIsModalOpen(false);
-        setCurrentItem(null);
-    };
+    if (window.confirm('Are you sure you want to delete this blog post?')) {
+        await fetch(`/api/blogs/${blogId}`, { method: 'DELETE' });
+        fetchblogs();
+    }
+};
 
+const handleSave = async () => {
+    if (!currentItem) return;
+    if (currentItem.id) {
+        // Edit existing blog
+        await fetch(`/api/blogs/${currentItem.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentItem),
+        });
+    } else {
+        // Add new blog
+        await fetch('/api/blogs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentItem),
+        });
+    }
+    fetchblogs();
+    setIsModalOpen(false);
+    setCurrentItem(null);
+};
+    
+    // const handleSave = async () => {
+    //     if (!currentItem) return;
+    //     if (currentItem.id) {
+    //         await updateBlog(currentItem as Blog);
+    //     } else {
+    //         await addBlog(currentItem as BlogData);
+    //     }
+    //     fetchData();
+    //     setIsModalOpen(false);
+    //     setCurrentItem(null);
+    // };
+//   const handleSave = async () => {
+//        const saveblog = await fetch('/api/blogs', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(currentItem),
+//       })
+//         .then((res) => res.json())
+//         .then((data) => {
+//           console.log('Blog post saved successfully:', data);
+//         })
+//         .catch((error) => {
+//           console.error('Error saving blog post:', error);
+//         });
+//     };
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">

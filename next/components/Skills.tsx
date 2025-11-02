@@ -9,12 +9,24 @@ interface SkillsProps {
 }
 
 const Skills: React.FC<SkillsProps> = ({ data }) => {
+  const [shouldScroll, setShouldScroll] = React.useState(false);
+  const skillsContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (skillsContainerRef.current) {
+      const containerWidth = skillsContainerRef.current.offsetWidth;
+      const skillsWidth = skillsContainerRef.current.scrollWidth;
+      setShouldScroll(skillsWidth > containerWidth);
+    }
+  }, [data]);
+
   if (!data || data.length === 0) {
     return null;
   }
 
-  // Duplicate the skills multiple times for seamless continuous scroll
-  const duplicatedSkills = Array(10).fill(data).flat(); // Repeat 10 times for very long scroll
+  // Render each skill only once
+  const duplicatedSkills = data;
+  const scrollSkills = shouldScroll ? Array(10).fill(data).flat() : data;
 
   const marqueeVariants = {
     animate: {
@@ -36,30 +48,30 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
         <p className="text-lg text-gray-400 mb-16" style={{ fontFamily: 'Inter, sans-serif' }}>
           I'm proficient in a variety of modern technologies for web and application development.
         </p>
-        <div className="relative w-full overflow-hidden">
+        <div className="relative w-full overflow-hidden" ref={skillsContainerRef}>
           <motion.div
-            className="flex gap-12"
-            variants={marqueeVariants}
-            animate="animate"
+            className={`flex gap-12 ${!shouldScroll ? 'justify-center' : ''}`}
+            variants={shouldScroll ? marqueeVariants : undefined}
+            animate={shouldScroll ? "animate" : undefined}
           >
-            {duplicatedSkills.map((skill, index) => (
+            {scrollSkills.map((skill, index) => (
               <div
                 key={`${skill.id}-${index}`}
                 className="flex-shrink-0 bg-white/10 border border-white/20 rounded-xl p-4 md:p-6 hover:bg-white/15 hover:border-brand-purple transition-colors duration-300 shadow-lg shadow-white/10"
                 style={{ minWidth: window.innerWidth < 768 ? '80px' : '96px' }}
-                title={skill.skillName}
+                title={skill.name}
               >
                 <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
                   {skill.image?.url ? (
                     <img
                       src={skill.image.url}
-                      alt={skill.skillName}
+                      alt={skill.name}
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
                     <img
                       src={typeof skill.icon === 'string' ? (skill.icon as string) : ''}
-                      alt={skill.skillName}
+                      alt={skill.name}
                       className="max-w-full max-h-full object-contain"
                       onError={(e) => {
                         // hide broken image if icon string isn't a valid URL
