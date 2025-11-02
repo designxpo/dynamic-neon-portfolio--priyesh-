@@ -48,11 +48,13 @@ export const updateExperience = async (data) => {
 };
 
 export const deleteExperience = async (_id) => {
-    const res = await fetch(`/api/experience?_id=${_id}`, {
-        method: 'DELETE'
-    });
-    if (!res.ok) throw new Error('Failed to delete experience');
-    return res.json();
+    // Try path-based route first, then fallback to query param shape
+    let resp = await fetch(`/api/experience/${encodeURIComponent(_id)}`, { method: 'DELETE' });
+    if (!resp.ok) {
+        resp = await fetch(`/api/experience?_id=${encodeURIComponent(_id)}`, { method: 'DELETE' });
+    }
+    if (!resp.ok) throw new Error('Failed to delete experience');
+    return resp.json();
 };
 // Additional Experience helpers used by Admin forms
 export const getExperiencesData = async (): Promise<Experience[]> => {
