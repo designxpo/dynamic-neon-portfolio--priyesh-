@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans`}>
+      <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans scroll-smooth`}>
         {/* Dev helper to auto-recover from transient chunk load errors */}
         <ChunkRecovery />
         <PremiumPreloader waitForEventName="portfolio:ready" durationMs={2000}>

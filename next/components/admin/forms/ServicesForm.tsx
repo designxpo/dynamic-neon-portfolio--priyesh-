@@ -168,7 +168,7 @@ const ServicesForm: React.FC = () => {
                                         <button onClick={() => handleEdit(service)} className="admin-icon-button" title="Edit">
                                             <Edit2 size={16} />
                                         </button>
-                                        <button onClick={() => handleDeleteService(service.id)} className="admin-button-danger" title="Delete">
+                                        <button onClick={() => handleDelete(service.id)} className="admin-button-danger" title="Delete">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
