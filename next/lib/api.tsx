@@ -423,12 +423,30 @@ export const getEducationsData = async (): Promise<Education[]> => {
             const res = await withTimeout(fetch('/api/education', { cache: 'no-store' }));
             if (!res.ok) throw new Error('Failed educations');
             const items = await res.json();
-            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id, ...doc }));
+            return (items || []).map((doc: any) => ({
+                id: doc._id || doc.id,
+                _id: doc._id,
+                degree: doc.degree || doc.course || '',
+                institution: doc.institution || doc.university || '',
+                startYear: doc.startYear || doc.start || '',
+                endYear: doc.endYear || doc.end || '',
+                description: doc.description || '',
+                order: typeof doc.order === 'number' ? doc.order : 0,
+            }));
         },
         () => {
             const db = getDb();
             const items = (db.educations || []) as any[];
-            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id || doc.id, ...doc }));
+            return (items || []).map((doc: any) => ({
+                id: doc._id || doc.id,
+                _id: doc._id || doc.id,
+                degree: doc.degree || doc.course || '',
+                institution: doc.institution || doc.university || '',
+                startYear: doc.startYear || doc.start || '',
+                endYear: doc.endYear || doc.end || '',
+                description: doc.description || '',
+                order: typeof doc.order === 'number' ? doc.order : 0,
+            }));
         }
     );
 };

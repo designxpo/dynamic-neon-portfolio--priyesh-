@@ -5,15 +5,28 @@ import Education from '@/models/Education';
 // GET all educations (sorted by order)
 export async function GET() {
   await connectDB();
-  const educations = await Education.find({}).sort({ order: 1 }).lean();
-  return NextResponse.json(educations);
+  const educations = await Education.find({}).sort({ order: 1, updatedAt: -1 }).lean();
+  // Normalize possible legacy fields (course/university) to degree/institution
+  const normalized = (educations || []).map((e: any) => ({
+    ...e,
+    degree: e.degree || e.course || '',
+    institution: e.institution || e.university || '',
+    startYear: e.startYear || e.start || '',
+    endYear: e.endYear || e.end || '',
+  }));
+  return NextResponse.json(normalized);
 }
 
 // CREATE new education
 export async function POST(request: Request) {
   await connectDB();
   const body = await request.json();
-  const created = await Education.create(body);
+  const payload = {
+    ...body,
+    degree: body.degree || body.course,
+    institution: body.institution || body.university,
+  };
+  const created = await Education.create(payload);
   return NextResponse.json(created);
 }
 
@@ -25,7 +38,12 @@ export async function PUT(request: Request) {
   if (!_id) {
     return NextResponse.json({ error: 'Missing _id in payload' }, { status: 400 });
   }
-  const updated = await Education.findByIdAndUpdate(_id, update, { new: true });
+  const payload = {
+    ...update,
+    degree: update.degree || (update as any).course,
+    institution: update.institution || (update as any).university,
+  };
+  const updated = await Education.findByIdAndUpdate(_id, payload, { new: true });
   if (!updated) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
