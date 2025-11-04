@@ -29,6 +29,7 @@ const Education: React.FC<EducationProps> = ({ data }) => {
               </div>
             </div>
           ))}
+
         </div>
       </div>
     </Section>
