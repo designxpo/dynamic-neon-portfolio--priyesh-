@@ -423,8 +423,7 @@ export const getEducationsData = async (): Promise<Education[]> => {
             const res = await withTimeout(fetch('/api/education', { cache: 'no-store' }));
             if (!res.ok) throw new Error('Failed educations');
             const items = await res.json();
-            console.log('[Client] getEducationsData - raw items:', items);
-            const mapped = (items || []).map((doc: any) => ({
+            return (items || []).map((doc: any) => ({
                 id: doc._id || doc.id,
                 _id: doc._id,
                 degree: doc.degree || doc.course || '',
@@ -434,8 +433,6 @@ export const getEducationsData = async (): Promise<Education[]> => {
                 description: doc.description || '',
                 order: typeof doc.order === 'number' ? doc.order : 0,
             }));
-            console.log('[Client] getEducationsData - mapped:', mapped);
-            return mapped;
         },
         () => {
             const db = getDb();
