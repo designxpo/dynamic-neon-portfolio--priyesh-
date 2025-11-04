@@ -6,14 +6,23 @@ import Education from '@/models/Education';
 export async function GET() {
   await connectDB();
   const educations = await Education.find({}).sort({ order: 1, updatedAt: -1 }).lean();
+  console.log('[Education API] Found documents:', educations?.length);
+  console.log('[Education API] Raw data sample:', JSON.stringify(educations?.[0], null, 2));
+  
   // Normalize possible legacy fields (course/university) to degree/institution
   const normalized = (educations || []).map((e: any) => ({
     ...e,
+    _id: e._id,
+    id: e._id?.toString(),
     degree: e.degree || e.course || '',
     institution: e.institution || e.university || '',
     startYear: e.startYear || e.start || '',
     endYear: e.endYear || e.end || '',
+    description: e.description || '',
+    order: e.order ?? 0,
   }));
+  
+  console.log('[Education API] Normalized sample:', JSON.stringify(normalized?.[0], null, 2));
   return NextResponse.json(normalized);
 }
 
