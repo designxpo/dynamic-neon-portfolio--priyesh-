@@ -429,8 +429,14 @@ export const getEducationsData = async (): Promise<Education[]> => {
             if (!res.ok) throw new Error('Failed educations');
             const items = await res.json();
             
+            console.log('[getEducationsData] Raw API response:', JSON.stringify(items, null, 2));
+            
             // Ensure we always return properly structured data
             return (items || []).map((doc: any) => {
+                console.log('[getEducationsData] Processing doc keys:', Object.keys(doc));
+                console.log('[getEducationsData] doc.degree:', doc.degree);
+                console.log('[getEducationsData] doc.institution:', doc.institution);
+                
                 const education = {
                     id: doc._id || doc.id || '',
                     _id: doc._id || doc.id,
@@ -442,10 +448,7 @@ export const getEducationsData = async (): Promise<Education[]> => {
                     order: typeof doc.order === 'number' ? doc.order : 0,
                 };
                 
-                // Debug log in production
-                if (process.env.NODE_ENV === 'production') {
-                    console.log('[Client Production] Education item:', education);
-                }
+                console.log('[getEducationsData] Mapped education:', education);
                 
                 return education;
             });
