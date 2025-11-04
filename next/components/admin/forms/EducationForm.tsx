@@ -19,7 +19,11 @@ const EducationForm: React.FC = () => {
 
     const fetchData = async () => {
         setIsLoading(true);
+        console.log('[EducationForm] Fetching education data...');
         const data = await getEducationsData();
+        console.log('[EducationForm] Received data:', data);
+        console.log('[EducationForm] Data length:', data?.length);
+        console.log('[EducationForm] First item:', data?.[0]);
         setEducations(data);
         setIsLoading(false);
     };
@@ -88,14 +92,22 @@ const EducationForm: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-                {educations.map((edu) => (
+                {educations.length === 0 && (
+                    <div className="admin-card text-center py-8 text-gray-400">
+                        <GraduationCap size={48} className="mx-auto mb-4 opacity-50" />
+                        <p>No education entries yet. Click "Add New Education" to get started.</p>
+                    </div>
+                )}
+                {educations.map((edu) => {
+                    console.log('[EducationForm] Rendering edu:', edu);
+                    return (
                     <div key={edu.id} className="admin-card group hover:border-electric-blue/30">
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex gap-4 flex-1">
                                 <div className="w-12 h-12 rounded-lg backdrop-blur-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center text-electric-blue flex-shrink-0"><GraduationCap size={24} /></div>
                                 <div className="flex-1">
-                                    <p className="font-semibold text-white text-lg">{edu.degree}</p>
-                                    <p className="text-electric-blue">{edu.institution}</p>
+                                    <p className="font-semibold text-white text-lg">{edu.degree || '[NO DEGREE]'}</p>
+                                    <p className="text-electric-blue">{edu.institution || '[NO INSTITUTION]'}</p>
                                     <div className="flex items-center gap-2 text-sm text-gray-400 mt-2"><Calendar size={14} /><span>{edu.startYear} - {edu.endYear}</span></div>
                                     <p className="text-gray-400 text-sm mt-2 line-clamp-2">{edu.description}</p>
                                 </div>
@@ -106,7 +118,7 @@ const EducationForm: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                ))}
+                )})}
             </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && educations.some(e => e.id === currentItem.id) ? 'Edit Education' : 'Add Education'}>
