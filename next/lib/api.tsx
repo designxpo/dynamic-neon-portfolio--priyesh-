@@ -420,19 +420,35 @@ export const getExperienceById = async (id: string): Promise<Experience> => {
 export const getEducationsData = async (): Promise<Education[]> => {
     return withFallback<Education[]>(
         async () => {
-            const res = await withTimeout(fetch('/api/education', { cache: 'no-store' }));
+            const res = await withTimeout(fetch('/api/education', { 
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                },
+            }));
             if (!res.ok) throw new Error('Failed educations');
             const items = await res.json();
-            return (items || []).map((doc: any) => ({
-                id: doc._id || doc.id,
-                _id: doc._id,
-                degree: doc.degree || doc.course || '',
-                institution: doc.institution || doc.university || '',
-                startYear: doc.startYear || doc.start || '',
-                endYear: doc.endYear || doc.end || '',
-                description: doc.description || '',
-                order: typeof doc.order === 'number' ? doc.order : 0,
-            }));
+            
+            // Ensure we always return properly structured data
+            return (items || []).map((doc: any) => {
+                const education = {
+                    id: doc._id || doc.id || '',
+                    _id: doc._id || doc.id,
+                    degree: String(doc.degree || doc.course || ''),
+                    institution: String(doc.institution || doc.university || ''),
+                    startYear: String(doc.startYear || doc.start || ''),
+                    endYear: String(doc.endYear || doc.end || ''),
+                    description: String(doc.description || ''),
+                    order: typeof doc.order === 'number' ? doc.order : 0,
+                };
+                
+                // Debug log in production
+                if (process.env.NODE_ENV === 'production') {
+                    console.log('[Client Production] Education item:', education);
+                }
+                
+                return education;
+            });
         },
         () => {
             const db = getDb();

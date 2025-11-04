@@ -4,23 +4,43 @@ import Education from '@/models/Education';
 
 // GET all educations (sorted by order)
 export async function GET() {
-  await connectDB();
-  const educations = await Education.find({}).sort({ order: 1, updatedAt: -1 }).lean();
-  
-  // Normalize possible legacy fields (course/university) to degree/institution
-  const normalized = (educations || []).map((e: any) => ({
-    ...e,
-    _id: e._id,
-    id: e._id?.toString(),
-    degree: e.degree || e.course || '',
-    institution: e.institution || e.university || '',
-    startYear: e.startYear || e.start || '',
-    endYear: e.endYear || e.end || '',
-    description: e.description || '',
-    order: e.order ?? 0,
-  }));
-  
-  return NextResponse.json(normalized);
+  try {
+    await connectDB();
+    const educations = await Education.find({}).sort({ order: 1, updatedAt: -1 }).lean();
+    
+    // Normalize possible legacy fields (course/university) to degree/institution
+    const normalized = (educations || []).map((e: any) => {
+      // Ensure all required fields are present
+      const result = {
+        _id: e._id,
+        id: e._id?.toString() || e.id || '',
+        degree: e.degree || e.course || '',
+        institution: e.institution || e.university || '',
+        startYear: e.startYear || e.start || '',
+        endYear: e.endYear || e.end || '',
+        description: e.description || '',
+        order: typeof e.order === 'number' ? e.order : 0,
+      };
+      
+      // Log in production to debug
+      if (process.env.NODE_ENV === 'production') {
+        console.log('[Education API Production] Returning:', result);
+      }
+      
+      return result;
+    });
+    
+    return NextResponse.json(normalized, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
+  } catch (error) {
+    console.error('[Education API] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch education data' }, { status: 500 });
+  }
 }
 
 // CREATE new education
