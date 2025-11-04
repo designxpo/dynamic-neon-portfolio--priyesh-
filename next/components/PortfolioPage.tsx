@@ -125,6 +125,8 @@ const PortfolioPage = () => {
                 const testimonials = results[6].status === 'fulfilled' ? results[6].value : [];
                 const blogItems = results[7].status === 'fulfilled' ? results[7].value : [];
 
+                console.log('[PortfolioPage] Educations loaded:', educations);
+
                 // Log any rejected promises for visibility without blocking UI
                 results.forEach((r, idx) => {
                     if (r.status === 'rejected') {

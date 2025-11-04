@@ -8,6 +8,8 @@ interface EducationProps {
 }
 
 const Education: React.FC<EducationProps> = ({ data }) => {
+  console.log('[Education Component] Received data:', data);
+  
   return (
     <Section title="My Education" id="education">
       <div className="max-w-3xl mx-auto">
