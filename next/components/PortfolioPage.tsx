@@ -144,6 +144,11 @@ const PortfolioPage = () => {
                     testimonials,
                 } : null);
 
+                console.log('[PortfolioPage] Portfolio data set:', {
+                    educations: educations?.length,
+                    educationsData: educations,
+                });
+
                 // Mark all as loaded to remove skeletons; empty datasets will render gracefully
                 setSectionsLoaded({
                     hero: true,
@@ -155,6 +160,8 @@ const PortfolioPage = () => {
                     testimonials: true,
                     contact: true,
                 });
+
+                console.log('[PortfolioPage] Sections marked as loaded, educations:', educations);
 
                 setBlogs(blogItems);
             } catch (error) {
