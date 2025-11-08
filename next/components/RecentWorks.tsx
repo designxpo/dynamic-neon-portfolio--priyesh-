@@ -1,4 +1,3 @@
-'use client';
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -6,8 +5,6 @@ import { Project } from '../types';
 import Section from './Section';
 import { ExternalLinkIcon, GitHubIcon } from './icons/Icons';
 import { getCategories } from '@/lib/api';
-import MagicBento from './MagicBento';
-import '../components/MagicBento.css';
 
 interface RecentWorksProps {
   data: Project[];
@@ -18,17 +15,7 @@ interface RecentWorksProps {
 const hasAnyLink = (url?: string) => !!url && url.trim().length > 0;
 
 const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void }> = ({ project, onReadMore }) => (
-  <MagicBento 
-    enableStars={true}
-    enableBorderGlow={true}
-    enableTilt={true}
-    enableMagnetism={true}
-    clickEffect={true}
-    particleCount={12}
-    glowColor="168, 85, 247"
-    spotlightRadius={280}
-  >
-    <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full h-full">
+  <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full h-full">
     <div className="relative overflow-hidden aspect-video">
       <img
         src={project.coverImage.url}
@@ -105,7 +92,6 @@ const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void
       )}
     </div>
   </div>
-  </MagicBento>
 );
 
 

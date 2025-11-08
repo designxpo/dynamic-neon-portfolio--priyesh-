@@ -21,8 +21,8 @@
   position: relative;
   width: 100%;
   border-radius: 20px;
-  border: 1px solid var(--border-color);
-  background: var(--background-dark);
+  border: 1px solid transparent;
+  background: transparent;
   font-weight: 300;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -34,8 +34,8 @@
 }
 
 .magic-bento-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .magic-bento-card__header,

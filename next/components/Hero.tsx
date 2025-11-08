@@ -149,36 +149,25 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
         {/* Stats section */}
         <motion.div
           className="mt-8 md:mt-12 lg:mt-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, delay: 1 }}
+          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 50, scale: 0.95 }}
+          transition={{ 
+            duration: 1, 
+            delay: 1,
+            ease: [0.25, 0.46, 0.45, 0.94] // Smooth easing curve
+          }}
         >
           <div className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-lg py-8 md:py-12 px-4 md:px-6 shadow-2xl max-w-5xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 divide-y sm:divide-y md:divide-y-0 md:divide-x divide-white/10">
               {Array.isArray(data?.stats) && data.stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  className="text-center px-4 py-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 + index * 0.1 }}
-                >
-                  <motion.p
-                    className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2"
-                    style={{
-                      textShadow: '0 0 10px rgba(168, 85, 247, 0.5)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.5, delay: 1.4 + index * 0.1 }}
-                  >
+                <div key={stat.label} className="text-center px-4 py-4">
+                  <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
                     {stat.value}
-                  </motion.p>
-                  <p className="text-gray-400 text-xs md:text-sm font-light uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  </p>
+                  <p className="text-gray-400 text-xs md:text-sm font-light uppercase tracking-wider">
                     {stat.label}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

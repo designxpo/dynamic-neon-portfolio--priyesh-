@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Section from './Section';
-import MagicBento from './MagicBento';
-import '../components/MagicBento.css';
 
 interface Testimonial {
   _id: string;
@@ -50,17 +48,7 @@ export default function Testimonials() {
       <div className='max-w-6xl mx-auto px-4'>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {testimonials.map((t) => (
-            <MagicBento
-              key={t._id}
-              enableStars={false}
-              enableBorderGlow={true}
-              enableTilt={false}
-              enableMagnetism={false}
-              clickEffect={true}
-              glowColor="132, 0, 255"
-              spotlightRadius={220}
-            >
-              <div className='border border-white/10 rounded-2xl p-6 shadow-sm bg-white/5 backdrop-blur-sm text-center'>
+            <div key={t._id} className='border border-white/10 rounded-2xl p-6 shadow-sm bg-white/5 backdrop-blur-sm text-center'>
               {t.avatar && (
                 <div className='flex justify-center mb-3'>
                   <img src={t.avatar} alt={t.name} className='w-16 h-16 rounded-full object-cover border border-white/20' />
@@ -82,7 +70,6 @@ export default function Testimonials() {
               <h4 className='font-semibold mt-3 text-white'>{t.name}</h4>
               <span className='text-sm text-gray-500'>{t.role}</span>
             </div>
-            </MagicBento>
           ))}
         </div>
       </div>

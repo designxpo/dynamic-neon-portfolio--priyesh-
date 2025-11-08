@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { CodeIcon } from './icons/Icons';
 import { HeroData } from '../types';
@@ -10,6 +12,14 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('');
+
+  const navLinks = [
+    { href: '#works', label: 'Works' },
+    { href: '#process', label: 'Process' },
+    { href: '#services', label: 'Services' },
+    { href: '#experience', label: 'Experience' },
+    { href: '#contact', label: 'Contact' },
+  ];
 
   const getActiveSection = () => {
     const sections = ['works', 'process', 'services', 'experience', 'contact'];
@@ -34,13 +44,15 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { href: '#works', label: 'Works' },
-    { href: '#process', label: 'Process' },
-    { href: '#services', label: 'Services' },
-    { href: '#experience', label: 'Experience' },
-    { href: '#contact', label: 'Contact' },
-  ];
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+      setActiveSection(getActiveSection());
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   const nameParts = (heroData?.name || 'Priyesh Mishra').split(' ');
   const firstName = nameParts[0];
