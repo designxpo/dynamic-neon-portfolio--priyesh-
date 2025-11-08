@@ -1,8 +1,11 @@
+'use client';
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Skill } from '../types';
 import Section from './Section';
+import MagicBento from './MagicBento';
+import '../components/MagicBento.css';
 
 interface SkillsProps {
   data: Skill[];
@@ -55,9 +58,18 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
             animate={shouldScroll ? "animate" : undefined}
           >
             {scrollSkills.map((skill, index) => (
-              <div
+              <MagicBento
                 key={`${skill.id}-${index}`}
-                className="flex-shrink-0 bg-white/10 border border-white/20 rounded-xl p-4 md:p-6 hover:bg-white/15 hover:border-brand-purple transition-colors duration-300 shadow-lg shadow-white/10"
+                enableStars={false}
+                enableBorderGlow={true}
+                enableTilt={false}
+                enableMagnetism={false}
+                clickEffect={true}
+                glowColor="132, 0, 255"
+                spotlightRadius={200}
+              >
+                <div
+                  className="flex-shrink-0 bg-white/10 border border-white/20 rounded-xl p-4 md:p-6 hover:bg-white/15 hover:border-brand-purple transition-colors duration-300 shadow-lg shadow-white/10"
                 style={{ minWidth: window.innerWidth < 768 ? '80px' : '96px' }}
                 title={skill.name}
               >
@@ -81,6 +93,7 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
                   )}
                 </div>
               </div>
+              </MagicBento>
             ))}
           </motion.div>
           <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-transparent via-transparent to-transparent pointer-events-none filter blur-sm" />

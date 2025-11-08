@@ -1,7 +1,10 @@
+'use client';
 // @ts-nocheck
 import React from 'react';
 import { Education as EducationType } from '../types';
 import Section from './Section';
+import MagicBento from './MagicBento';
+import '../components/MagicBento.css';
 
 interface EducationProps {
   data: EducationType[];
@@ -25,7 +28,17 @@ const Education: React.FC<EducationProps> = ({ data }) => {
           {data.map((edu, index) => {
             console.log(`[Education ${index}] degree="${edu.degree}", institution="${edu.institution}"`);
             return (
-            <div key={index} className="mb-10 ml-6">
+            <MagicBento
+              key={index}
+              enableStars={false}
+              enableBorderGlow={true}
+              enableTilt={false}
+              enableMagnetism={false}
+              clickEffect={true}
+              glowColor="132, 0, 255"
+              spotlightRadius={250}
+            >
+              <div className="mb-10 ml-6">
               <span className="absolute flex items-center justify-center w-6 h-6 bg-brand-purple rounded-full -left-3 ring-8 ring-brand-purple/20 shadow-xl shadow-brand-purple/60">
                  <svg className="w-2.5 h-2.5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                    <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4Z"/>
@@ -50,6 +63,7 @@ const Education: React.FC<EducationProps> = ({ data }) => {
                  <p className="text-xs md:text-sm text-gray-400">{edu.description}</p>
               </div>
             </div>
+            </MagicBento>
           )})}
 
 

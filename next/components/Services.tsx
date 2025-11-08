@@ -1,7 +1,10 @@
+'use client';
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Service } from '../types';
 import Section from './Section';
+import MagicBento from './MagicBento';
+import '../components/MagicBento.css';
 
 interface ServicesProps {
   data: Service[];
@@ -9,9 +12,19 @@ interface ServicesProps {
 
 const ServiceCard: React.FC<{ service: Service; index: number; onReadMore: () => void }> = ({ service, index, onReadMore }) => {
   return (
-    <div
-      className={`relative group h-full border border-white/15 rounded-2xl backdrop-blur-sm overflow-hidden transition-all duration-300 cursor-pointer transform bg-white/5 text-gray-300 hover:bg-white/10 hover:border-brand-purple/40 hover:shadow-[0_0_30px] hover:shadow-brand-purple/20 hover:-translate-y-0.5 ring-1 ring-transparent hover:ring-brand-purple/40`}
+    <MagicBento 
+      enableStars={true}
+      enableBorderGlow={true}
+      enableTilt={true}
+      enableMagnetism={true}
+      clickEffect={true}
+      particleCount={15}
+      glowColor="132, 0, 255"
+      spotlightRadius={300}
     >
+      <div
+        className={`relative group h-full border border-white/15 rounded-2xl backdrop-blur-sm overflow-hidden transition-all duration-300 cursor-pointer transform bg-white/5 text-gray-300 hover:bg-white/10 hover:border-brand-purple/40 hover:shadow-[0_0_30px] hover:shadow-brand-purple/20 hover:-translate-y-0.5 ring-1 ring-transparent hover:ring-brand-purple/40`}
+      >
       {/* Glow on hover */}
       <div
         aria-hidden
@@ -62,6 +75,7 @@ const ServiceCard: React.FC<{ service: Service; index: number; onReadMore: () =>
         </div>
       </div>
     </div>
+    </MagicBento>
   );
 };
 
