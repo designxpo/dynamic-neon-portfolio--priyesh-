@@ -22,8 +22,9 @@ html {
   --header-offset: 84px; /* adjust if header height changes */
 }
 
-/* Ensure anchored sections are not hidden under the fixed header */
-section[id] {
+/* Ensure anchored sections/divs are not hidden under the fixed header */
+section[id],
+div[id] {
   scroll-margin-top: var(--header-offset);
 }
 

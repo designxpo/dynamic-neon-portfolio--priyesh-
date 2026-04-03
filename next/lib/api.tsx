@@ -163,7 +163,7 @@ import {
 } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 // Local offline DB helpers (used as fallback when API is unavailable)
-import { getDb, saveDb, setAdminPassword as setAdminPasswordLocal } from '@/lib/db';
+import { getDb, saveDb } from '@/lib/db';
 import { setOfflineMode, isOfflineMode } from '@/lib/offline';
 import { convertFileToOptimizedBase64, storeImageSafely } from '@/lib/imageStorage';
 
@@ -799,28 +799,6 @@ export const updateSEO = async (seo: Partial<SEOConfig>): Promise<SEOConfig> => 
         }
     );
     return merged;
-};
-
-// --- Admin password ---
-export const getAdminPassword = async (): Promise<string> => {
-    return withFallback(async () => {
-        const res = await withTimeout(fetch('/api/admin/adminPassword', { cache: 'no-store' }));
-        if (!res.ok) throw new Error('Failed adminPassword');
-        const val = await res.json();
-        return typeof val === 'string' ? val : (val?.adminPassword ?? 'admin');
-    }, () => {
-        const db = getDb();
-        return db.adminPassword || 'admin';
-    });
-};
-export const setAdminPassword = async (pwd: string): Promise<void> => {
-    await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/adminPassword', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pwd) })),
-        () => {
-            // use local fallback setter to ensure any ancillary logic stays consistent
-            setAdminPasswordLocal(pwd);
-        }
-    );
 };
 
 // --- Chatbot settings ---

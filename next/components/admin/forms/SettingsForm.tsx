@@ -1,8 +1,5 @@
-// @ts-nocheck
 import React, { useRef, useState } from 'react';
-// Local offline DB utils as fallback when server API (Mongo) isn't available
-import { getAdminPassword as getAdminPasswordLocal, setAdminPassword as setAdminPasswordLocal, resetDbToDefaults, exportDb, importDb, setBaselineFromCurrent } from '@/lib/db';
-import { getAdminPassword as getAdminPasswordAPI, setAdminPassword as setAdminPasswordAPI } from '@/lib/api';
+import { resetDbToDefaults, exportDb, importDb, setBaselineFromCurrent } from '@/lib/db';
 import { Shield, Save, RotateCcw, Database, Upload as UploadIcon, Flag as FlagIcon } from 'lucide-react';
 
 const SettingsForm: React.FC = () => {
@@ -16,54 +13,34 @@ const SettingsForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
+
+        if (newPassword.length < 8) {
+            setMessage({ type: 'error', text: 'New password must be at least 8 characters.' });
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setMessage({ type: 'error', text: 'New passwords do not match.' });
+            return;
+        }
+
         setLoading(true);
-
         try {
-            // 1) Get current password from server with timeout protection
-            let storedPassword = 'admin';
-            try {
-                storedPassword = await getAdminPasswordAPI();
-            } catch {
-                // Fallback to local if API fails
-                storedPassword = getAdminPasswordLocal();
-            }
-
-            if (currentPassword !== storedPassword) {
-                setMessage({ type: 'error', text: 'Current password is incorrect.' });
-                setLoading(false);
-                return;
-            }
-
-            if (newPassword.length < 4) {
-                setMessage({ type: 'error', text: 'New password must be at least 4 characters long.' });
-                setLoading(false);
-                return;
-            }
-
-            if (newPassword !== confirmPassword) {
-                setMessage({ type: 'error', text: 'New passwords do not match.' });
-                setLoading(false);
-                return;
-            }
-
-                        // 3) Save new password with timeout protection
-            let success = false;
-            try {
-                await setAdminPasswordAPI(newPassword);
-                success = true;
-            } catch {
-                // Fallback to local storage if API fails
-                success = setAdminPasswordLocal(newPassword);
-            }
-
-            if (success) {
+            const res = await fetch('/api/admin/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
                 setMessage({ type: 'success', text: 'Password updated successfully!' });
                 setCurrentPassword('');
                 setNewPassword('');
                 setConfirmPassword('');
             } else {
-                setMessage({ type: 'error', text: 'Failed to update password.' });
+                setMessage({ type: 'error', text: data.error || 'Failed to update password.' });
             }
+        } catch {
+            setMessage({ type: 'error', text: 'Network error. Please try again.' });
         } finally {
             setLoading(false);
         }

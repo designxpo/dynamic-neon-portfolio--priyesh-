@@ -250,7 +250,8 @@ export interface Database {
   contact: RawContactData;
   blogs: Blog[];
   seo?: SEOConfig; // optional for backward compatibility
-  adminPassword?: string;
+  /** @deprecated Password is stored server-side as a hash; never expose on client */
+  adminPassword?: never;
   // Optional chatbot settings for admin-managed assistant config
   chatbot?: ChatbotSettings;
   // Optional site metadata for admin-managed SEO/OG/Twitter

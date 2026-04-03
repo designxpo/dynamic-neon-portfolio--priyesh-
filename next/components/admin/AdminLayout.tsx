@@ -25,6 +25,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiv
     seo: 'SEO',
     contact: 'Contact Information',
     'contact-submissions': 'Contact Submissions',
+    categories: 'Categories',
+    metadata: 'Metadata',
+    chatbot: 'Chatbot',
     settings: 'Settings',
   };
 

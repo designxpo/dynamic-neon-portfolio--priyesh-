@@ -4,9 +4,10 @@ export const revalidate = 0;
 export const runtime = 'nodejs';
 import { connectDB } from '../../../../lib/db/mongoose';
 import SiteConfig from '../../../../models/SiteConfig';
+import { isAuthenticated } from '../../../../lib/adminAuth';
 
 function pickContentSnapshot(obj: any) {
-  const omit = new Set(['_id', '__v', 'createdAt', 'updatedAt', 'baseline']);
+  const omit = new Set(['_id', '__v', 'createdAt', 'updatedAt', 'baseline', 'adminPassword', 'adminPasswordHash']);
   const out: any = {};
   Object.keys(obj || {}).forEach(k => {
     if (!omit.has(k)) out[k] = obj[k];
@@ -27,6 +28,9 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  if (!isAuthenticated(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     await connectDB();
     const url = new URL(req.url);

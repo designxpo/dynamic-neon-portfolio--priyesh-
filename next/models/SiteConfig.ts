@@ -26,7 +26,10 @@ const siteConfigSchema = new Schema(
     chatbot: Schema.Types.Mixed,
     siteMeta: Schema.Types.Mixed,
     categories: [String],
-    adminPassword: { type: String, default: 'admin' },
+    /** Scrypt hash of the admin password ("salt:hash"). Never stored in plaintext. */
+    adminPasswordHash: { type: String, default: '' },
+    /** @deprecated plaintext password — kept only for backwards-compat migration, cleared on first login */
+    adminPassword: { type: String, default: '' },
     baseline: { type: Schema.Types.Mixed, required: false },
     lastUpdated: { type: Date, default: Date.now },
     dataVersion: { type: Number, default: 1 }
@@ -48,7 +51,8 @@ export interface SiteConfigDoc extends mongoose.Document {
   chatbot?: any;
   siteMeta?: any;
   categories?: string[];
-  adminPassword?: string;
+  adminPasswordHash?: string;
+  adminPassword?: string; // @deprecated
   lastUpdated?: Date;
   dataVersion?: number;
 }
@@ -143,7 +147,7 @@ function buildDefaults() {
         { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available for new projects?', keywords: ['available','open','accepting','new projects','booking','schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
       ],
     },
-    adminPassword: 'admin',
+    adminPasswordHash: '', // set on first login via ADMIN_PASSWORD env var
     siteMeta: {
       title: 'Priyesh Mishra — UI/UX Designer & Developer Portfolio',
       description: 'Portfolio website of Priyesh Mishra, UI/UX designer and developer specializing in digital product design, usability, and creative strategy.',
@@ -211,7 +215,7 @@ siteConfigSchema.statics.getOrCreate = async function (): Promise<SiteConfigDoc>
         contact: { email: 'contact@example.com' },
         blogs: [],
         categories: ['General'],
-        adminPassword: 'admin',
+        adminPasswordHash: '',
         lastUpdated: new Date()
       });
       console.log('Created minimal production SiteConfig');

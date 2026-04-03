@@ -5,16 +5,23 @@ export const runtime = 'nodejs';
 import { connectDB, isDBHealthy } from '../../../../lib/db/mongoose';
 import SiteConfig from '../../../../models/SiteConfig';
 import { v4 as uuidv4 } from 'uuid';
+import { isAuthenticated } from '../../../../lib/adminAuth';
 
-const allowedKeys = new Set([
+// Keys readable via this route (never expose password fields)
+const allowedReadKeys = new Set([
   'hero', 'services', 'projects', 'experiences', 'educations', 'skills',
-  'testimonials', 'contact', 'blogs', 'seo', 'chatbot', 'siteMeta',
-  'categories', 'adminPassword'
+  'testimonials', 'contact', 'blogs', 'seo', 'chatbot', 'siteMeta', 'categories',
+]);
+
+// Keys writable via this route
+const allowedWriteKeys = new Set([
+  'hero', 'services', 'projects', 'experiences', 'educations', 'skills',
+  'testimonials', 'contact', 'blogs', 'seo', 'chatbot', 'siteMeta', 'categories',
 ]);
 
 export async function GET(_req: NextRequest, { params }: { params: { key: string } }) {
   const key = params.key;
-  if (!allowedKeys.has(key)) return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
+  if (!allowedReadKeys.has(key)) return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
   
   if (!process.env.MONGODB_URI) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
@@ -52,9 +59,13 @@ export async function GET(_req: NextRequest, { params }: { params: { key: string
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { key: string } }) {
+  if (!isAuthenticated(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const key = params.key;
-  if (!allowedKeys.has(key)) return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
-  
+  if (!allowedWriteKeys.has(key)) return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
+
   if (!process.env.MONGODB_URI) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }

@@ -46,9 +46,11 @@ export async function POST(req: NextRequest) {
         if (!backupDoc) {
           return NextResponse.json({ error: 'No data to backup' }, { status: 404 });
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { adminPassword: _ap, adminPasswordHash: _aph, ...safeBackup } = backupDoc.toObject();
         return NextResponse.json({
           success: true,
-          data: backupDoc.toObject(),
+          data: safeBackup,
           timestamp: new Date().toISOString()
         });
 
@@ -80,10 +82,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error('Migration error:', error);
-    return NextResponse.json({ 
-      error: 'Migration failed', 
-      details: error instanceof Error ? error.message : 'Unknown error' 
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Migration failed' }, { status: 500 });
   }
 }
 

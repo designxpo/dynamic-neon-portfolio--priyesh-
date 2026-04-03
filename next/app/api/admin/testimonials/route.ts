@@ -5,6 +5,7 @@ export const runtime = 'nodejs';
 
 import { connectDB, isDBHealthy } from '../../../../lib/db/mongoose';
 import Testimonial from '@/models/Testimonial';
+import { isAuthenticated } from '../../../../lib/adminAuth';
 
 // Admin Testimonials API
 // GET: list testimonials
@@ -17,7 +18,7 @@ export async function GET() {
   }
   try {
     if (!(await isDBHealthy())) {
-      console.log('[Admin Testimonials] DB not healthy, attempting reconnection');
+      console.warn('[Admin Testimonials] DB not healthy, attempting reconnection');
     }
     await connectDB();
     const items = await Testimonial.find({}, {
@@ -36,12 +37,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAuthenticated(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   if (!process.env.MONGODB_URI) {
     return NextResponse.json({ success: false, error: 'Database not configured' }, { status: 503 });
   }
   try {
     if (!(await isDBHealthy())) {
-      console.log('[Admin Testimonials] DB not healthy, attempting reconnection');
+      console.warn('[Admin Testimonials] DB not healthy, attempting reconnection');
     }
     await connectDB();
     const payload = await req.json();

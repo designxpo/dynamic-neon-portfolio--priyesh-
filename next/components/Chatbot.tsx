@@ -304,27 +304,11 @@ export default function Chatbot() {
 
   const openChat = () => {
     setOpening(true);
-    // slight delay to let ripple render beneath panel
-    setTimeout(async () => {
-      try {
-        const s = await getChatbotSettings();
-        setChatbot(s);
-      } catch {
-        setChatbot({
-          enabled: true,
-          name: 'Prism',
-          initialGreeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
-          bookingUrl: '',
-          bookingDescription: '',
-          showBookingQuickReply: true,
-          placeholders: [],
-          customQA: []
-        });
-      }
-      setOpen(true);
-      // stop ripple after animation window
-      setTimeout(() => setOpening(false), 500);
-    }, 10);
+    setOpen(true);
+    // stop ripple after animation window
+    setTimeout(() => setOpening(false), 500);
+    // Refresh chatbot settings in background (settings already loaded in mount effect)
+    getChatbotSettings().then(s => setChatbot(s)).catch(() => {});
   };
 
   const closeChat = () => {
@@ -513,13 +497,12 @@ export default function Chatbot() {
         {open ? (
           <motion.div
             key="chat-panel"
-            layoutId="chat-surface"
             className="relative w-[90vw] max-w-md h-[65vh] rounded-2xl border border-brand-purple/10 bg-dark-bg/95 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden"
             style={{ transformOrigin: 'bottom right', willChange: 'transform, opacity' }}
-            initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.96 }}
-            transition={{ type: 'tween', ease: [0.4, 0, 0.2, 1], duration: prefersReducedMotion ? 0.2 : 0.45 }}
+            initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.92, y: prefersReducedMotion ? 0 : 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.92, y: prefersReducedMotion ? 0 : 12 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.9 }}
           >
             {/* Optional glow ripple on open for premium feel */}
             <AnimatePresence>
@@ -705,7 +688,6 @@ export default function Chatbot() {
             />
             {/* Button core with subtle gradient and inner glow */}
             <motion.span
-              layoutId="chat-surface"
               className="relative inline-flex w-full h-full items-center justify-center rounded-[22px] bg-gradient-to-br from-dark-bg via-[#231c4a] to-deep-violet text-white shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] transition-shadow duration-300"
               style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45), 0 0 36px 6px rgba(108,99,255,0.25)', transformOrigin: 'bottom right' }}
               animate={prefersReducedMotion ? undefined : { scale: opening ? 1.1 : 1 }}
