@@ -9,7 +9,6 @@ interface ContactProps {
 }
 
 const Contact: React.FC<ContactProps> = ({ data }) => {
-  console.log("Contact data received:", data);
   // Fallbacks for missing data
   const safeData = {
     heading: data?.heading || 'Let’s Connect',

@@ -46,7 +46,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL : ''}/api/seo?page=home`, { cache: 'no-store' });
+    // SSR requires an absolute URL — build one from env or Vercel's auto-injected host
+    const apiBase = process.env.NEXT_PUBLIC_SITE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const res = await fetch(`${apiBase}/api/seo?page=home`, { cache: 'no-store' });
     if (!res.ok) return defaults;
     const seo = await res.json();
     return {

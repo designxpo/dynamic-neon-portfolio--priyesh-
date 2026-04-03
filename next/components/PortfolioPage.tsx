@@ -8,12 +8,10 @@ import Roadmap from './Roadmap';
 import Experience from './Experience';
 import Education from './Education';
 import Skills from './Skills';
-import Testimonials from './Testimonials';
 import Blogs from './Blogs';
 import Contact from './Contact';
 import Footer from './Footer';
 import AnimatedSection from './AnimatedSection';
-import Loader from './Loader';
 import HeroSkeleton from './skeletons/HeroSkeleton';
 import ServicesSkeleton from './skeletons/ServicesSkeleton';
 import ProjectsSkeleton from './skeletons/ProjectsSkeleton';
@@ -313,7 +311,6 @@ const PortfolioPage = () => {
                                         const shouldMarquee = list.length > 3;
                                         const Card = (t: any) => (
                                             <div
-                                                key={t.id + (Math.random().toString(36).slice(2))}
                                                 className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 max-w-xs w-full text-center shadow-[0_8px_30px_rgba(123,95,255,0.15)] border border-white/15 transition-all hover:scale-[1.02]"
                                             >
                                                 {t.avatar && (
