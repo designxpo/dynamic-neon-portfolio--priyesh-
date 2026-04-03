@@ -83,11 +83,21 @@ function escapeHtml(str: string) {
     .replace(/'/g, '&#039;');
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await connectDB();
-    const contacts = await Contact.find().sort({ submittedAt: -1 });
-    return NextResponse.json(contacts);
+    const url = new URL(request.url);
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || url.searchParams.get('pageSize') || '10', 10) || 10));
+    const query: any = {};
+    const total = await Contact.countDocuments(query);
+    const items = await Contact.find(query)
+      .sort({ submittedAt: -1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .lean();
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    return NextResponse.json({ items, total, page, pageSize, totalPages });
   } catch (err) {
     console.error('Error fetching contacts:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

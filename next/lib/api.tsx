@@ -1,11 +1,165 @@
+// --- Education API ---
+export const getEducation = async () => {
+    const res = await fetch('/api/education');
+    if (!res.ok) throw new Error('Failed to fetch education');
+    return res.json();
+};
+
+export const addEducation = async (data) => {
+    const res = await fetch('/api/education', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to add education');
+    return res.json();
+};
+
+// note: granular Education CRUD exists later in this file (createEducation/updateEducation/deleteEducation)
+
+// --- Experience API ---
+export const getExperience = async () => {
+    const res = await fetch('/api/experience');
+    if (!res.ok) throw new Error('Failed to fetch experience');
+    return res.json();
+};
+
+export const addExperience = async (data) => {
+    const res = await fetch('/api/experience', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to add experience');
+    return res.json();
+};
+
+export const updateExperience = async (data) => {
+    const payload: any = { ...data };
+    if (!payload._id && payload.id) payload._id = payload.id;
+    delete payload.id;
+    return serverOrLocal(
+        async () => {
+            // Prefer path-based when id present
+            const url = payload._id ? `/api/experience/${encodeURIComponent(payload._id)}` : '/api/experience';
+            const method = payload._id ? 'PUT' : 'PUT';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to update experience');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.experiences || []) as any[];
+            const idx = list.findIndex((e: any) => (e._id || e.id) === payload._id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...payload };
+                db.experiences = list as any;
+                saveDb(db);
+                return list[idx];
+            }
+            return payload;
+        }
+    );
+};
+
+export const deleteExperience = async (_id) => {
+    return serverOrLocal(
+        async () => {
+            // Try path-based route first, then fallback to query param shape
+            let resp = await fetch(`/api/experience/${encodeURIComponent(_id)}`, { method: 'DELETE' });
+            if (!resp.ok) {
+                resp = await fetch(`/api/experience?_id=${encodeURIComponent(_id)}`, { method: 'DELETE' });
+            }
+            if (!resp.ok) throw new Error('Failed to delete experience');
+            return resp.json();
+        },
+        () => {
+            const db = getDb();
+            const before = (db.experiences || []) as any[];
+            const after = before.filter((e: any) => (e._id || e.id) !== _id);
+            db.experiences = after as any;
+            saveDb(db);
+            return { success: true } as any;
+        }
+    );
+};
+// Additional Experience helpers used by Admin forms
+export const getExperiencesData = async (): Promise<Experience[]> => {
+    return withFallback<Experience[]>(
+        async () => {
+            const res = await fetch('/api/experience', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Failed experiences');
+            const items = await res.json();
+            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id, ...doc }));
+        },
+        () => {
+            const db = getDb();
+            const items = (db.experiences || []) as any[];
+            return (items || []).map((doc: any) => ({ id: doc._id || doc.id, _id: doc._id || doc.id, ...doc }));
+        }
+    );
+};
+
+export const createExperience = async (exp: Experience): Promise<Experience> => {
+    const { id: _clientId, ...rest } = exp as any;
+    return serverOrLocal(
+        async () => {
+            const res = await fetch('/api/experience', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rest)
+            });
+            if (!res.ok) throw new Error('Failed to create experience');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.experiences || []) as any[];
+            const localId = rest._id || _clientId || uuidv4();
+            const localDoc = { _id: localId, id: localId, order: 0, ...rest };
+            list.push(localDoc);
+            db.experiences = list as any;
+            saveDb(db);
+            return localDoc as any;
+        }
+    );
+};
+export async function getTestimonialsData() {
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/admin/testimonials`, {
+            cache: 'no-store',
+            next: { revalidate: 0 }
+        });
+
+        if (!res.ok) {
+            console.error('❌ Failed to fetch testimonials:', res.statusText);
+            return [];
+        }
+
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+            return data.data;
+        } else {
+            console.warn('⚠ Unexpected testimonials response:', data);
+            return [];
+        }
+    } catch (error) {
+        console.error('❌ Error in getTestimonialsData():', error);
+        return [];
+    }
+}
 // @ts-nocheck
 import React from 'react';
 // Mongo-backed API client helpers for client components to call Next API routes
 import * as Icons from '@/components/icons/Icons';
 import {
-    HeroData, RawHeroData, Service, RawService, Skill, RawSkill, SocialLink, RawSocialLink,
+    HeroData, RawHeroData, Service, RawService, Skill, RawSkill, SocialLink,
     Project, RawProject, Testimonial, RawTestimonial, ContactData, RawContactData,
-    Blog, BlogData, Education, Experience, SEOConfig, SectionKey, SeoMeta,
+    Blog, BlogData, Education, Experience, SEOConfig, SectionKey, SeoMeta, Stat,
 } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 // Local offline DB helpers (used as fallback when API is unavailable)
@@ -21,10 +175,9 @@ import {
     mockExperiencesData,
     mockEducationsData,
     mockSkillsData,
-    mockTestimonialsData,
     mockContactData,
 } from '@/data/mockData';
-import type { ChatbotSettings, SiteMetadata } from '@/types';
+import type { ChatbotSettings, RawSocialLink, SiteMetadata } from '@/types';
 
 // Timeout wrapper with increased timeout for MongoDB Atlas operations
 const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
@@ -45,67 +198,60 @@ const withFallback = async <T,>(fn: () => Promise<T>, fallback: () => T): Promis
     } catch {}
     try {
         const value = await fn();
-        // Mark as online as the server responded successfully, regardless of data shape
+        // Mark as online as the server responded successfully
         setOfflineMode(false);
-        // Some API routes may return undefined/null or empty arrays if DB is empty;
-        // in that case we still prefer to render fallback content but keep "online" state
-        if (value === undefined || value === null) return fallback();
-        // @ts-ignore
-        if (Array.isArray(value) && value.length === 0) return fallback();
-        return value;
+        // If API returns null/undefined, use fallback but keep online state
+        return (value === undefined || value === null) ? fallback() : value;
     } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
-            console.warn('[api fallback] Using mock data due to error:', e);
-        }
-        setOfflineMode(true);
+        // Mark as offline and use fallback
+        try { setOfflineMode(true); } catch {}
         return fallback();
     }
 };
 
-// Helper: attempt a server write; on failure, persist to local DB
-const serverOrLocal = async (doServer: () => Promise<Response>, doLocal: () => void): Promise<void> => {
+// Helper to attempt server first, fallback to local storage logic
+const serverOrLocal = async (serverFn: () => Promise<any>, localFn: () => any): Promise<any> => {
     try {
-        const res = await doServer();
-        if (!res.ok) throw new Error(`Server write failed: ${res.status}`);
-        setOfflineMode(false);
-        return;
+        const result = await serverFn();
+        try { setOfflineMode(false); } catch {}
+        return result;
     } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
-            console.warn('[api offline write] Falling back to local DB:', e);
-        }
-        setOfflineMode(true);
-        try {
-            doLocal();
-        } catch (err) {
-            console.error('[api offline write] Local write failed:', err);
-            throw err;
-        }
+        console.warn('[serverOrLocal] Server failed, using local fallback:', e);
+        try { setOfflineMode(true); } catch {}
+        return await localFn();
     }
 };
 
 // Helper to convert a file to a base64 string with compression and storage optimization
 export const convertFileToBase64 = async (file: File): Promise<string> => {
     try {
-        // Use the optimized version that compresses large images
+        // Prefer optimized conversion for large images
         const compressedDataUrl = await convertFileToOptimizedBase64(file);
-        
-        // Try to store in localStorage with error handling
-        const storageKey = `temp_image_${Date.now()}`;
-        const stored = storeImageSafely(storageKey, compressedDataUrl);
-        
-        if (!stored) {
-            console.warn('Image could not be stored in localStorage due to size limits, but will work for current session');
+        // Best-effort localStorage caching (non-blocking)
+        try {
+            const storageKey = `temp_image_${Date.now()}`;
+            const stored = storeImageSafely(storageKey, compressedDataUrl);
+            if (!stored) {
+                // Not fatal; continue using the data URL for this session
+                console.warn('Image could not be stored in localStorage due to size limits; using in-session only');
+            }
+        } catch (err) {
+            // Swallow storage issues; conversion still succeeded
+            console.debug('localStorage store skipped:', err);
         }
-        
         return compressedDataUrl;
     } catch (error) {
-        console.error('Error processing image:', error);
-        // Fallback to original method if compression fails
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = error => reject(error);
+        console.error('Error processing image, falling back to plain FileReader:', error);
+        // Fallback to plain base64 conversion if optimization fails
+        return new Promise<string>((resolve, reject) => {
+            try {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = (e) => reject(e);
+                reader.readAsDataURL(file);
+            } catch (err) {
+                reject(err);
+            }
         });
     }
 };
@@ -113,18 +259,75 @@ export const convertFileToBase64 = async (file: File): Promise<string> => {
 // Helper function to get an icon component by its string name
 export const getIcon = (iconName: string): React.ReactNode => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const IconComponent = (Icons as any)[iconName];
-    return IconComponent ? <IconComponent /> : null;
+    const iconsAny = Icons as any;
+    const raw = (iconName || '').trim();
+    const tryNames: string[] = [];
+
+    if (raw) {
+        const cleaned = raw.replace(/\s|-/g, '');
+        const cap = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+        const withIcon = /icon$/i.test(cleaned) ? cleaned : `${cleaned}Icon`;
+        const withIconCap = /Icon$/.test(cap) ? cap : `${cap}Icon`;
+
+        tryNames.push(raw);            // exact
+        tryNames.push(cleaned);        // remove spaces/dashes
+        tryNames.push(cap);            // PascalCase
+        tryNames.push(withIcon);       // add Icon suffix (lower)
+        tryNames.push(withIconCap);    // add Icon suffix (PascalCase)
+        tryNames.push(raw.toLowerCase()); // lowercase exact
+    }
+
+    for (const name of tryNames) {
+        const IconComponent = iconsAny[name];
+        if (IconComponent) return <IconComponent />;
+    }
+    // Fallback to a safe default so UI doesn't look empty in production
+    if (process.env.NODE_ENV !== 'production') {
+        console.warn(`[getIcon] Unknown icon name: "${iconName}". Falling back to BrandingIcon.`);
+    }
+    const Fallback = iconsAny['BrandingIcon'];
+    return Fallback ? <Fallback /> : null;
 };
 
 // --- Data Transformation Functions ---
 // Cast to align ReactNode types across module boundaries in Next monorepo context
 const toSocialLink = (raw: RawSocialLink): SocialLink => ({ ...raw, icon: getIcon(raw.icon) as unknown as React.ReactNode });
 const toService = (raw: RawService): Service => ({ ...raw, icon: getIcon(raw.icon) as unknown as React.ReactNode });
-const toSkill = (raw: RawSkill): Skill => ({ ...raw, icon: raw.skillIcon, image: raw.image });
-const toHeroData = (raw: RawHeroData): HeroData => ({ ...raw });
+const toSkill = (raw: any): Skill => ({
+    id: raw.id || raw._id || '',
+    name: raw.name,
+    icon: raw.icon,
+    image: raw.image || { url: '', alternativeText: '' },
+});
+
+// Stat transformation helper
+const toStat = (raw: any): Stat => ({
+    id: raw.id || raw._id || '',
+    label: raw.label || '',
+    value: raw.value || ''
+});
+const toHeroData = (raw: RawHeroData): HeroData => ({
+    name: raw.name || '',
+    title: raw.title || '',
+    shortBio: raw.shortBio || '',
+    profileImage: {
+        url: raw.profileImage?.url || '',
+        alternativeText: raw.profileImage?.alternativeText || '',
+    },
+    ctaButtonText: raw.ctaButtonText || '',
+    ctaButtonLink: raw.ctaButtonLink || '',
+    secondaryCtaText: raw.secondaryCtaText || '',
+    secondaryCtaLink: raw.secondaryCtaLink || '',
+    stats: Array.isArray(raw.stats) ? raw.stats.map(toStat) : [],
+    // Typing animation fields
+    titlePrefix: raw.titlePrefix || '',
+    titleWords: Array.isArray(raw.titleWords) ? raw.titleWords : [],
+});
 const toContactData = (raw: RawContactData): ContactData => ({ ...raw, socialLinks: (raw.socialLinks || []).map(toSocialLink) });
-const toProject = (raw: RawProject): Project => ({...raw});
+const toProject = (raw: RawProject): Project => ({
+    ...raw,
+    id: raw.id || '',
+});
 const toTestimonial = (raw: RawTestimonial): Testimonial => ({
     ...raw,
     avatar: raw?.avatar ?? {
@@ -145,33 +348,33 @@ const getIconName = (iconNode: React.ReactNode): string => {
 // --- API Functions ---
 
 // Hero
-export const getRawHeroData = async (): Promise<RawHeroData> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/hero', { cache: 'no-store' }));
+export const getRawHeroData = async (): Promise<RawHeroData> => {
+    const res = await fetch('/api/hero', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed hero');
     return res.json();
-}, () => ({
-    ...(getDb()?.hero || mockHeroData),
-    profileImage: { url: (getDb()?.hero?.profileImage?.url || '/images/profile.png'), alternativeText: 'Priyesh Mishra' }
-} as RawHeroData));
+};
 export const getHeroData = async (): Promise<HeroData> => toHeroData(await getRawHeroData());
 export const updateHeroData = async (data: RawHeroData): Promise<void> => {
-    await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/hero', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })),
-        () => {
-            const db = getDb();
-            db.hero = data;
-            saveDb(db);
-        }
-    );
+    const res = await fetch('/api/hero', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) throw new Error('Failed to update hero');
 };
 
 // Services
-export const getServicesData = async (): Promise<Service[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/services', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed services');
-    const raw = await res.json();
-    return (raw || []).map(toService).sort((a,b)=>a.order-b.order);
-}, () => ((getDb()?.services || mockServicesData) || []).map(toService).sort((a,b)=>a.order-b.order));
+export const getServicesData = async (): Promise<Service[]> => {
+    return withFallback<Service[]>(
+        async () => {
+            const res = await withTimeout(fetch('/api/admin/services', { cache: 'no-store' }));
+            if (!res.ok) throw new Error('Failed services');
+            const raw = await res.json();
+            return (raw || []).map(toService).sort((a, b) => a.order - b.order);
+        },
+        () => {
+            const db = getDb();
+            const items = (db.services || []) as RawService[];
+            return (items || []).map(toService).sort((a, b) => a.order - b.order);
+        }
+    );
+}
 export const updateServices = async (services: (Service | RawService)[]): Promise<void> => {
     const payload = services.map(s => ({ ...s, icon: getIconName((s as any).icon) }));
     await serverOrLocal(
@@ -185,19 +388,20 @@ export const updateServices = async (services: (Service | RawService)[]): Promis
 };
 
 // Projects
-export const getProjectsData = async (): Promise<Project[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/projects', { cache: 'no-store' }));
+export const getProjectsData = async (): Promise<Project[]> => {
+    // Use internal Next.js API route to avoid relying on an external port/server
+    const res = await withTimeout(fetch('/api/projects', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed projects');
     const raw = await res.json();
     return (raw || []).map(toProject);
-}, () => ((getDb()?.projects || mockProjectsData) || []).map(toProject));
+}
 export const getProjectById = async (id: string): Promise<Project | undefined> => {
     const projects = await getProjectsData();
     return Promise.resolve(projects.find(p => p.id === id));
 };
 export const updateProjects = async (projects: RawProject[]): Promise<void> => {
     await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(projects) })),
+        () => withTimeout(fetch('/api/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(projects) })),
         () => {
             const db = getDb();
             db.projects = projects as any;
@@ -206,29 +410,63 @@ export const updateProjects = async (projects: RawProject[]): Promise<void> => {
     );
 };
 
-// Experiences
-export const getExperiencesData = async (): Promise<Experience[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/experiences', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed experiences');
+export const getExperienceById = async (id: string): Promise<Experience> => {
+    const res = await fetch(`/api/experience?id=${id}`);
+    if (!res.ok) throw new Error('Failed to fetch experience');
     return res.json();
-}, () => getDb()?.experiences || mockExperiencesData);
-export const updateExperiences = async (experiences: Experience[]): Promise<void> => {
-    await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/experiences', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(experiences) })),
+};
+
+// Education
+export const getEducationsData = async (): Promise<Education[]> => {
+    return withFallback<Education[]>(
+        async () => {
+            const res = await withTimeout(fetch('/api/education', { 
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                },
+            }));
+            if (!res.ok) throw new Error('Failed educations');
+            const items = await res.json();
+            
+            // Ensure we always return properly structured data
+            return (items || []).map((doc: any) => {
+                const education = {
+                    id: doc._id || doc.id || '',
+                    _id: doc._id || doc.id,
+                    degree: String(doc.degree || doc.course || ''),
+                    institution: String(doc.institution || doc.university || ''),
+                    startYear: String(doc.startYear || doc.start || ''),
+                    endYear: String(doc.endYear || doc.end || ''),
+                    description: String(doc.description || ''),
+                    order: typeof doc.order === 'number' ? doc.order : 0,
+                };
+                
+                // Debug log in production
+                if (process.env.NODE_ENV === 'production') {
+                    console.log('[Client Production] Education item:', education);
+                }
+                
+                return education;
+            });
+        },
         () => {
             const db = getDb();
-            db.experiences = experiences as any;
-            saveDb(db);
+            const items = (db.educations || []) as any[];
+            return (items || []).map((doc: any) => ({
+                id: doc._id || doc.id,
+                _id: doc._id || doc.id,
+                degree: doc.degree || doc.course || '',
+                institution: doc.institution || doc.university || '',
+                startYear: doc.startYear || doc.start || '',
+                endYear: doc.endYear || doc.end || '',
+                description: doc.description || '',
+                order: typeof doc.order === 'number' ? doc.order : 0,
+            }));
         }
     );
 };
 
-// Education
-export const getEducationsData = async (): Promise<Education[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/educations', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed educations');
-    return res.json();
-}, () => getDb()?.educations || mockEducationsData);
 export const updateEducations = async (educations: Education[]): Promise<void> => {
     await serverOrLocal(
         () => withTimeout(fetch('/api/admin/educations', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(educations) })),
@@ -240,16 +478,102 @@ export const updateEducations = async (educations: Education[]): Promise<void> =
     );
 };
 
+// Granular Education CRUD
+export const createEducation = async (edu: Education): Promise<Education> => {
+    const { id: _clientId, ...rest } = edu as any;
+    return serverOrLocal(
+        async () => {
+            const res = await fetch('/api/education', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rest)
+            });
+            if (!res.ok) throw new Error('Failed to create education');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.educations || []) as any[];
+            const localId = rest._id || _clientId || uuidv4();
+            const localDoc = { _id: localId, id: localId, order: 0, ...rest };
+            list.push(localDoc);
+            db.educations = list as any;
+            saveDb(db);
+            return localDoc as any;
+        }
+    );
+};
+
+export const updateEducation = async (edu: Education): Promise<Education> => {
+    const payload: any = { ...edu };
+    if (!payload._id && payload.id) payload._id = payload.id;
+    delete payload.id;
+    return serverOrLocal(
+        async () => {
+            const url = payload._id ? `/api/education/${encodeURIComponent(payload._id)}` : '/api/education';
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to update education');
+            return res.json();
+        },
+        () => {
+            const db = getDb();
+            const list = (db.educations || []) as any[];
+            const idx = list.findIndex((e: any) => (e._id || e.id) === payload._id);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...payload };
+                db.educations = list as any;
+                saveDb(db);
+                return list[idx];
+            }
+            return payload;
+        }
+    );
+};
+
+
+export const deleteEducation = async (id: string): Promise<void> => {
+    return serverOrLocal(
+        async () => {
+            // Prefer path-based route, fallback to query param
+            let resp = await fetch(`/api/education/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!resp.ok) {
+                resp = await fetch(`/api/education?_id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+            }
+            if (!resp.ok) throw new Error('Failed to delete education');
+        },
+        () => {
+            const db = getDb();
+            const before = (db.educations || []) as any[];
+            const after = before.filter((e: any) => (e._id || e.id) !== id);
+            db.educations = after as any;
+            saveDb(db);
+        }
+    );
+};
+export const getEducationById = async (id: string): Promise<Education> => {
+    const res = await fetch(`/api/education?id=${id}`);
+    if (!res.ok) throw new Error('Failed to fetch education');
+    return res.json();
+};
+
 // Skills
-export const getSkillsData = async (): Promise<Skill[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/skills', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed skills');
-    const raw = await res.json();
-    return (raw || []).map(toSkill);
-}, () => ((getDb()?.skills || mockSkillsData) || []).map(toSkill));
+export const getSkillsData = async (): Promise<Skill[]> => {
+    try {
+        const res = await withTimeout(fetch('/api/skills', { cache: 'no-store' }));
+        if (!res.ok) return [];
+        const raw = await res.json();
+        return (raw || []).map(toSkill);
+    } catch {
+        return [];
+    }
+};
 export const updateSkills = async (skills: RawSkill[]): Promise<void> => {
     await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/skills', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(skills) })),
+        () => withTimeout(fetch('/api/skills', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(skills) })),
         () => {
             const db = getDb();
             db.skills = skills as any;
@@ -259,33 +583,76 @@ export const updateSkills = async (skills: RawSkill[]): Promise<void> => {
 };
 
 // Testimonials
-export const getTestimonialsData = async (): Promise<Testimonial[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/testimonials', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed testimonials');
-    const raw = await res.json();
-    return (raw || []).map(toTestimonial);
-}, () => ((getDb()?.testimonials || mockTestimonialsData) || []).map(toTestimonial));
-export const updateTestimonials = async (testimonials: Testimonial[]): Promise<void> => {
-    await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/testimonials', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(testimonials) })),
-        () => {
-            const db = getDb();
-            db.testimonials = testimonials as any;
-            saveDb(db);
+export async function fetchTestimonials(): Promise<Testimonial[]> {
+    try {
+        const response = await fetch('/api/admin/testimonials', { cache: 'no-store' });
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+            return result.data;
         }
-    );
-};
+        return [];
+    } catch (error) {
+        console.error('Failed to fetch testimonials:', error);
+        return [];
+    }
+}
 
 // Contact
-export const getRawContactData = async (): Promise<RawContactData> => withFallback(async () => {
-    const res = await fetch('/api/admin/contact', { cache: 'no-store' });
+export const getRawContactData = async (): Promise<RawContactData> => {
+    const res = await fetch('/api/contactInfo', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed contact');
-    return res.json();
-}, () => (getDb()?.contact || (mockContactData as RawContactData)));
-export const getContactData = async (): Promise<ContactData> => toContactData(await getRawContactData());
+    // API returns { success, data }
+    const result = await res.json();
+    // If result.data is an array, return the first item or {}
+    if (Array.isArray(result.data)) {
+        return (result.data[0] || {}) as RawContactData;
+    }
+    return (result.data || {}) as RawContactData;
+};
+export const getContactData = async (): Promise<ContactData> => {
+    try {
+        const raw = await getRawContactData();
+        // Ensure all required fields are present
+        return toContactData({
+            heading: raw?.heading || 'Let’s Connect',
+            description: raw?.description || 'Fill out the form below or reach out via email/socials. I’ll get back to you soon!',
+            email: raw?.email || 'hello@example.com',
+            phone: raw?.phone || '+91 00000 00000',
+            socialLinks: Array.isArray(raw?.socialLinks) ? raw.socialLinks : [],
+            notifyUserOnSubmit: raw?.notifyUserOnSubmit ?? false,
+            notifyAdminOnSubmit: raw?.notifyAdminOnSubmit ?? false,
+            notifyEmail: raw?.notifyEmail || '',
+        });
+    } catch (error) {
+        console.error('Error fetching contact data:', error);
+        return toContactData({
+            heading: 'Let’s Connect',
+            description: 'Fill out the form below or reach out via email/socials. I’ll get back to you soon!',
+            email: 'hello@example.com',
+            phone: '+91 00000 00000',
+            socialLinks: [],
+            notifyUserOnSubmit: false,
+            notifyAdminOnSubmit: false,
+            notifyEmail: '',
+        });
+    }
+};
+// Ensure getContactData returns {} not null
+export async function getContactDataDebug(): Promise<ContactData> {
+    try {
+        const res = await fetch('/api/contactInfo', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed contact');
+        const result = await res.json();
+    return (result.data || {}) as ContactData;
+    } catch (error) {
+        console.error('Error fetching contact data:', error);
+    return {} as unknown as ContactData;
+    }
+}
 export const updateContactData = async (data: RawContactData): Promise<void> => {
+    if (!data._id) throw new Error('Contact info ID is required for update');
     await serverOrLocal(
-        () => fetch('/api/admin/contact', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+        () => fetch(`/api/contactInfo/${data._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
         () => {
             const db = getDb();
             db.contact = data as any;
@@ -295,67 +662,11 @@ export const updateContactData = async (data: RawContactData): Promise<void> => 
 };
 
 // Blogs
-export const getBlogs = async (): Promise<Blog[]> => withFallback(async () => {
-        const res = await fetch('/api/admin/blogs', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Failed blogs');
-        return res.json();
-}, () => {
-    const db = getDb();
-    if (db?.blogs && db.blogs.length > 0) return db.blogs as Blog[];
-    // Seed with provided entries using local images so UI remains consistent offline/without DB
-    return [
-        {
-            id: uuidv4(),
-            title: 'YouTube Studio App Redesign — UI Case Study',
-            author: 'Priyesh Mishra',
-            content: 'A creator-centric UI case study where I redesigned the YouTube Studio mobile app to make analytics and channel management more intuitive and visually appealing.',
-            excerpt: 'Redesigning YouTube Studio for clearer analytics and faster on-the-go tasks.',
-            url: 'https://priyeshmishra1602.medium.com/youtube-studio-app-redesign-ui-case-study-by-priyesh-mishra-d4a7158563eb',
-            thumbnail: { url: '/images/Youtube_Studio_App_redesign_UI%20Case_Study.webp', alternativeText: 'YouTube Studio App redesign UI case study' },
-            publishedAt: new Date('2025-10-28').toISOString(),
-        },
-        {
-            id: uuidv4(),
-            title: 'The Graphic Advantage: How Visual Storytelling Boosts ROI in Today’s Market',
-            author: 'Priyesh Mishra',
-            content: 'In today’s hyper-competitive landscape, businesses need more than just a good product or service to succeed. They need a strong visual identity that resonates with their target audience and drives significant return on investment (ROI). This is where graphic design becomes an essential weapon in the arsenal of any modern business, be it a fledgling startup or an established corporation.',
-            excerpt: 'Why visual storytelling is a growth lever — and how design compounds ROI.',
-            url: 'https://priyeshmishra1602.medium.com/the-graphic-advantage-how-visual-storytelling-boosts-roi-in-todays-market-8b3b1dfaedfb',
-            thumbnail: { url: '/images/Graphic_Advantage.webp', alternativeText: 'The Graphic Advantage' },
-            publishedAt: new Date('2023-12-09').toISOString(),
-        },
-        {
-            id: uuidv4(),
-            title: 'Case Study: Growing an Instagram Following from 0 to 100,000 in 6 Months',
-            author: 'Priyesh Mishra',
-            content: 'To gain 100,000 followers on Instagram in 6 months by consistently posting videos and engaging with the audience.',
-            excerpt: 'The system behind scaling an Instagram audience to 100k in half a year.',
-            url: 'https://priyeshmishra1602.medium.com/case-study-growing-an-instagram-following-from-0-to-100-000-in-6-months-f18763ea8ef8',
-            thumbnail: { url: '/images/Spiritualtalksofficial.png', alternativeText: 'Instagram growth case study' },
-            publishedAt: new Date('2023-12-03').toISOString(),
-        },
-        {
-            id: uuidv4(),
-            title: 'Case Study: Forensic Library App UI Design by DesignXpo',
-            author: 'Priyesh Mishra',
-            content: 'To design a user interface for a forensic library app that is easy to use and navigate, and that provides users with quick and easy access to the forensic materials and ebooks they need.',
-            excerpt: 'Designing a dense library UI that stays simple, scannable, and fast.',
-            url: 'https://priyeshmishra1602.medium.com/case-study-forensic-library-app-ui-design-by-designxpo-719fe96acb11',
-            thumbnail: { url: '/images/Forensic_Library_App.webp', alternativeText: 'Forensic Library App UI' },
-            publishedAt: new Date('2023-10-30').toISOString(),
-        },
-        {
-            id: uuidv4(),
-            title: 'Application Where Skill Got Admired: Digital Video Sharing Platform',
-            author: 'Priyesh Mishra',
-            content: 'In this modern era, where almost everything is digitalized our project gives a platform to many people who wants to compete/ grow in their fields. It’s a people based entertainment service in which competitions will be held and one who got highest vote in a given interval wins the battle and will be greeted by a cash prize.',
-            excerpt: 'Building a video platform where creators compete and audiences decide.',
-            url: 'https://priyeshmishra1602.medium.com/application-where-skill-got-admired-digital-video-sharing-platform-395f469edd7f',
-            thumbnail: { url: '/images/Digital_App.webp', alternativeText: 'Digital video sharing platform' },
-            publishedAt: new Date('2021-12-30').toISOString(),
-        },
-    ] as Blog[];
-});
+export const getBlogs = async (): Promise<Blog[]> => {
+    const res = await fetch('/api/blogs', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch blogs');
+    return await res.json();
+};
 export const addBlog = async (blogData: BlogData): Promise<Blog> => {
     const blogs = await getBlogs();
     const newBlog: Blog = { ...blogData, id: uuidv4() };
@@ -461,7 +772,7 @@ const defaultSEO = (): SEOConfig => ({
 
 export const getSEO = async (): Promise<SEOConfig> => {
     return withFallback(async () => {
-        const res = await withTimeout(fetch('/api/admin/seo', { cache: 'no-store' }));
+        const res = await withTimeout(fetch('/api/seo', { cache: 'no-store' }));
         if (!res.ok) throw new Error('Failed seo');
         const seo = await res.json();
         return (seo && Object.keys(seo).length > 0) ? seo : defaultSEO();
@@ -480,7 +791,7 @@ export const updateSectionSEO = async (section: SectionKey, meta: SeoMeta): Prom
 export const updateSEO = async (seo: Partial<SEOConfig>): Promise<SEOConfig> => {
     const merged = { ...defaultSEO(), ...(await getSEO()), ...(seo as SEOConfig) } as SEOConfig;
     await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/seo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) })),
+        () => withTimeout(fetch('/api/seo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) })),
         () => {
             const db = getDb();
             db.seo = merged as any;
@@ -514,44 +825,54 @@ export const setAdminPassword = async (pwd: string): Promise<void> => {
 
 // --- Chatbot settings ---
 const defaultChatbotSettings = (): ChatbotSettings => ({
-    enabled: true,
-    name: 'Prism',
-    greeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
-    bookingUrl: 'https://calendar.app.google/bTfdiZGjeXZGqbeu9',
-    bookingDescription: 'A collaborative 30-minute call to understand each other’s work and creative process. We’ll talk about your design goals, review your portfolio or brand, and identify how my expertise can help you craft experiences that truly connect.',
-    showBookingQuickReply: true,
-    placeholders: {},
-    rules: [
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What services do you offer?', keywords: ['services','service','ui','ux','design','branding','strategy','website','app'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. I also help teams align business goals with user needs through user-centric digital design. You can browse my full list here: /#services' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What’s your design process?", keywords: ['process','workflow','approach','steps','how you work','method','design journey'], reply: 'My design process typically includes:\n1️⃣ Discovery & Research – Understanding user needs and business goals.\n2️⃣ Wireframing – Structuring the core experience.\n3️⃣ Visual Design – Building brand-aligned interfaces.\n4️⃣ Prototyping & Testing – Validating usability and flow.\n5️⃣ Delivery – Preparing developer-ready assets.\nYou can explore my detailed process here: /#process' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can I see your work?', keywords: ['work','portfolio','examples','projects','case studies','showcase'], reply: 'Absolutely! You can view my recent projects showcasing UI/UX design, web design, and branding here: /#work. Each case study highlights my approach, tools used, and design outcomes.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What are your rates?', keywords: ['pricing','rates','cost','charge','budget','packages','how much'], reply: 'My pricing depends on the project scope, complexity, and timeline. For smaller UI/UX design projects, I offer fixed packages. For ongoing work, I work on a retainer or hourly basis. Let\'s discuss your needs here: /#pricing' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How can we work together?', keywords: ['collaborate','start','hire','contact','get started','work with you','onboarding'], reply: 'I\'d love to collaborate! The best way to start is by sharing a few details about your project. You can schedule a quick intro call or fill out my inquiry form here: /#contact' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What tools do you use?', keywords: ['tools','stack','software','design tools','programs','apps'], reply: 'I mainly work with Figma, Adobe XD, Photoshop, and Illustrator for design — plus Notion, FigJam, and Miro for strategy and collaboration.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What's your experience?", keywords: ['experience','background','skills','career','years','education'], reply: 'I\'m a UI/UX designer with 8+ years of experience working across startups and enterprise products. My background combines design systems, user research, and brand storytelling to deliver seamless digital experiences.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How long will it take?', keywords: ['time','duration','timeline','delivery','how long','deadline'], reply: 'Most projects take between 2–6 weeks, depending on scope and complexity. I usually start with a discovery phase to define the exact timeline and milestones.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Do you allow revisions?', keywords: ['revision','edit','feedback','changes','update'], reply: 'Yes, of course! Every project includes 2–3 rounds of revisions to make sure the final result aligns perfectly with your vision and feedback.' },
-        { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available for new projects?', keywords: ['available','open','accepting','new projects','booking','schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
-    ],
+        enabled: true,
+        name: 'Prism',
+        initialGreeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me anything about design, branding, or creative strategy.',
+        bookingUrl: 'https://calendar.app.google/bTfdiZGjeXZGqbeu9',
+        bookingDescription: 'A collaborative 30-minute call to understand each other’s work and creative process...',
+        showBookingQuickReply: true,
+        placeholders: [],
+        customQA: [
+            {
+                enabled: true,
+                matchMode: 'any',
+                question: 'What services do you offer?',
+                keywords: ['services','service','ui','ux','design','branding','strategy','website','app'],
+                reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work...'
+            },
+            {
+                enabled: true,
+                matchMode: 'any',
+                question: "What’s your design process?",
+                keywords: ['process','workflow','approach','steps','how you work','method','design journey'],
+                reply: 'My design process typically includes:\n1️⃣ Discovery & Research...\n2️⃣ Wireframing...\n3️⃣ Visual Design...\n4️⃣ Prototyping & Testing...\n5️⃣ Delivery...'
+            },
+            // ...more rules with same structure
+        ]
 });
 
-export const getChatbotSettings = async (): Promise<ChatbotSettings> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/chatbot', { cache: 'no-store' }));
-    if (!res.ok) throw new Error('Failed chatbot');
-    const json = await res.json();
-    return { ...defaultChatbotSettings(), ...(json || {}) } as ChatbotSettings;
-}, () => {
-    const db = getDb();
-    return { ...defaultChatbotSettings(), ...(db?.chatbot || {}) } as ChatbotSettings;
-});
+// Important: Always attempt server for Chatbot to avoid stale offline cache hiding latest rules
+export const getChatbotSettings = async (): Promise<ChatbotSettings> => {
+    try {
+        const res = await withTimeout(fetch('/api/chatbot', { cache: 'no-store' }));
+        if (!res.ok) throw new Error('Failed chatbot');
+        const json = await res.json();
+        return json as ChatbotSettings;
+    } catch (e) {
+        const db = getDb();
+        if (db?.chatbot) {
+          return db.chatbot as ChatbotSettings;
+        }
+        return defaultChatbotSettings();
+    }
+};
 
 export const updateChatbotSettings = async (settings: Partial<ChatbotSettings>): Promise<void> => {
-    const merged = { ...defaultChatbotSettings(), ...(await getChatbotSettings()), ...(settings || {}) } as ChatbotSettings;
     await serverOrLocal(
-        () => withTimeout(fetch('/api/admin/chatbot', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) })),
+        () => withTimeout(fetch('/api/chatbot', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })),
         () => {
             const db = getDb();
-            db.chatbot = merged as any;
+            db.chatbot = settings as any;
             saveDb(db);
         }
     );
@@ -604,10 +925,11 @@ export const updateSiteMeta = async (meta: Partial<SiteMetadata>): Promise<void>
 
 // --- Categories ---
 export const getCategories = async (): Promise<string[]> => withFallback(async () => {
-    const res = await withTimeout(fetch('/api/admin/categories', { cache: 'no-store' }));
+    const res = await withTimeout(fetch('/api/categories', { cache: 'no-store' }));
     if (!res.ok) throw new Error('Failed categories');
     const json = await res.json();
-    return Array.isArray(json) ? json as string[] : [];
+    // Map to array of names
+    return Array.isArray(json) ? json.map((c: any) => c.name) : [];
 }, () => {
     const db = getDb();
     return Array.isArray(db?.categories) ? (db.categories as string[]) : ['Apps', 'Branding', 'UI/UX', 'Web'];

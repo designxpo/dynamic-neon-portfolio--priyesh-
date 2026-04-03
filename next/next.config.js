@@ -9,7 +9,8 @@ const nextConfig = {
     ],
     formats: ['image/webp', 'image/avif'],
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    // Serve optimized images inline to avoid download prompts
+    contentDispositionType: 'inline',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   compiler: {

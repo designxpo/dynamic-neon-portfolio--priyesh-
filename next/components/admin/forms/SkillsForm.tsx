@@ -30,20 +30,25 @@ const SkillsForm: React.FC = () => {
         return '';
     };
 
+
     const handleEdit = (skill: Skill) => {
-        setCurrentItem({ id: skill.id, skillName: skill.skillName, skillIcon: getIconName(skill.icon), image: skill.image || { url: '', alternativeText: '' } });
+        console.log('[DEBUG] Editing skill:', skill);
+        setCurrentItem({ id: skill.id, name: skill.name, icon: getIconName(skill.icon), image: skill.image || { url: '', alternativeText: '' } });
         setIsModalOpen(true);
     };
 
+
     const handleAddNew = () => {
-        setCurrentItem({ id: uuidv4(), skillName: '', skillIcon: '', image: { url: '', alternativeText: '' } });
+        console.log('[DEBUG] Adding new skill');
+        setCurrentItem({ id: uuidv4(), name: '', icon: '', image: { url: '', alternativeText: '' } });
         setIsModalOpen(true);
     };
     
+
     const handleDelete = async (skillId: string) => {
         if (window.confirm('Are you sure you want to delete this skill?')) {
             try {
-                const currentSkillsRaw = skills.map(s => ({ id: s.id, skillName: s.skillName, skillIcon: getIconName(s.icon) }));
+                const currentSkillsRaw = skills.map(s => ({ id: s.id, name: s.name, icon: getIconName(s.icon), image: s.image || { url: '', alternativeText: '' } }));
                 const updatedSkills = currentSkillsRaw.filter(s => s.id !== skillId);
                 await updateSkills(updatedSkills);
                 setMessage({ type: 'success', text: 'Skill deleted.' });
@@ -55,14 +60,28 @@ const SkillsForm: React.FC = () => {
         }
     };
 
+
     const handleSave = async () => {
         if (!currentItem) return;
         setSaving(true);
         setMessage(null);
         try {
-            const currentSkillsRaw = skills.map(s => ({ id: s.id, skillName: s.skillName, skillIcon: getIconName(s.icon) }));
+            const currentSkillsRaw = skills.map(s => ({ id: s.id, name: s.name, icon: getIconName(s.icon), image: s.image || { url: '', alternativeText: '' } }));
             const isNew = !currentSkillsRaw.some(s => s.id === currentItem.id);
-            const updatedSkills = isNew ? [...currentSkillsRaw, currentItem] : currentSkillsRaw.map(s => (s.id === currentItem.id ? currentItem : s));
+            console.log('[DEBUG] Saving skill:', currentItem);
+            if (currentItem.image) {
+                console.log('[DEBUG] Image object:', currentItem.image);
+                if (currentItem.image.url) {
+                    console.log('[DEBUG] Image URL:', currentItem.image.url.substring(0, 100)); // Print first 100 chars
+                }
+            }
+            const updatedSkills = isNew
+                ? [...currentSkillsRaw, currentItem]
+                : currentSkillsRaw.map(s =>
+                    s.id === currentItem.id
+                        ? { ...s, ...currentItem, image: currentItem.image }
+                        : s
+                );
             await updateSkills(updatedSkills);
             await fetchData();
             setIsModalOpen(false);
@@ -98,11 +117,11 @@ const SkillsForm: React.FC = () => {
                     <div key={skill.id} className="admin-card group">
                         <div className="flex flex-col items-center text-center gap-3">
                             {skill.image?.url ? (
-                                <img src={skill.image.url} alt={skill.skillName} className="w-12 h-12 rounded-lg object-cover" />
+                                <img src={skill.image.url} alt={skill.name} className="w-12 h-12 rounded-lg object-cover" />
                             ) : (
                                 <div className="text-electric-blue text-3xl"><Award size={32} /></div>
                             )}
-                            <p className="font-semibold text-white">{skill.skillName}</p>
+                            <p className="font-semibold text-white">{skill.name}</p>
                             <div className="flex items-center gap-2">
                                 {skill.image?.url ? (
                                     <span className="px-2 py-0.5 rounded-full text-[10px] font-medium backdrop-blur-xl bg-electric-blue/10 text-electric-blue border border-electric-blue/20">Custom Logo</span>
@@ -122,14 +141,25 @@ const SkillsForm: React.FC = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && skills.some(s => s.id === currentItem.id) ? 'Edit Skill' : 'Add Skill'}>
                 {currentItem && (
                     <div className="space-y-6">
-                        <div><label className="admin-label">Skill Name</label><input type="text" value={currentItem.skillName} onChange={e => setCurrentItem(p => p ? {...p, skillName: e.target.value} : null)} className="admin-input" placeholder="e.g., React, Python, AWS" /></div>
-                        <div><label className="admin-label">Icon Name</label><input type="text" value={currentItem.skillIcon} onChange={e => setCurrentItem(p => p ? {...p, skillIcon: e.target.value} : null)} className="admin-input" placeholder="e.g., ReactIcon" /><p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p></div>
+                        <div><label className="admin-label">Skill Name</label><input type="text" value={currentItem.name} onChange={e => setCurrentItem(p => p ? {...p, name: e.target.value} : null)} className="admin-input" placeholder="e.g., React, Python, AWS" /></div>
+                        <div><label className="admin-label">Icon Name</label><input type="text" value={currentItem.icon} onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} className="admin-input" placeholder="e.g., ReactIcon" /><p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p></div>
                         <div className="admin-card">
                             <label className="admin-label">Skill Image (Optional)</label>
                             {currentItem.image?.url && (<img src={currentItem.image.url} alt="Skill Preview" className="w-24 h-24 rounded-lg object-cover border border-white/10 mb-4" />)}
                             <div className="flex gap-3">
                                 <label className="admin-button-secondary flex items-center gap-2 cursor-pointer">
-                                    <input type="file" accept="image/*" onChange={async (e) => { if (e.target.files && e.target.files[0] && currentItem) { try { const base64 = await convertFileToBase64(e.target.files[0]); setCurrentItem({ ...currentItem, image: { ...currentItem.image, url: base64 } }); } catch (error) { console.error('Image conversion error:', error); } } }} className="hidden" />
+                                    <input type="file" accept="image/*" onChange={async (e) => {
+                                        if (e.target.files && e.target.files[0] && currentItem) {
+                                            try {
+                                                console.log('[DEBUG] Uploading image file:', e.target.files[0]);
+                                                const base64 = await convertFileToBase64(e.target.files[0]);
+                                                console.log('[DEBUG] Converted base64:', base64.substring(0, 100)); // Print first 100 chars
+                                                setCurrentItem({ ...currentItem, image: { ...currentItem.image, url: base64 } });
+                                            } catch (error) {
+                                                console.error('Image conversion error:', error);
+                                            }
+                                        }
+                                    }} className="hidden" />
                                     <Upload size={18} />
                                     Upload Image
                                 </label>

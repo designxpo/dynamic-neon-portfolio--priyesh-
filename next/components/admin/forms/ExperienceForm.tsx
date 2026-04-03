@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Experience } from '@/types';
-import { getExperiencesData, updateExperiences } from '@/lib/api';
+import { getExperiencesData, createExperience, updateExperience, deleteExperience } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, Briefcase, Calendar } from 'lucide-react';
@@ -30,16 +30,15 @@ const ExperienceForm: React.FC = () => {
     };
 
     const handleAddNew = () => {
-        setCurrentItem({ id: uuidv4(), positionTitle: '', companyName: '', startYear: '', endYear: '', description: '' });
+        setCurrentItem({ id: uuidv4(), positionTitle: '', companyName: '', startYear: '', endYear: '', description: '', current: false } as any);
         setIsModalOpen(true);
     };
     
     const handleDelete = async (expId: string) => {
         if (window.confirm('Are you sure you want to delete this experience entry?')) {
             try {
-                const updatedExperiences = experiences.filter(exp => exp.id !== expId);
-                await updateExperiences(updatedExperiences);
-                setExperiences(updatedExperiences);
+                await deleteExperience(expId);
+                await fetchData();
                 setMessage({ type: 'success', text: 'Experience deleted.' });
             } catch (e) {
                 console.error(e);
@@ -53,16 +52,38 @@ const ExperienceForm: React.FC = () => {
         setSaving(true);
         setMessage(null);
         try {
+            // Client-side validation to avoid server 400/500
+            const errs: string[] = [];
+            const req = ['positionTitle','companyName','startYear','endYear'] as const;
+            for (const k of req) {
+                const v = (currentItem as any)[k];
+                if (!v || !String(v).trim()) errs.push(k);
+            }
+            if (errs.length) {
+                setMessage({ type: 'error', text: `Please fill: ${errs.join(', ')}` });
+                setSaving(false);
+                return;
+            }
             const isNew = !experiences.some(exp => exp.id === currentItem.id);
-            const updatedExperiences = isNew ? [...experiences, currentItem] : experiences.map(exp => (exp.id === currentItem.id ? currentItem : exp));
-            await updateExperiences(updatedExperiences);
-            setExperiences(updatedExperiences);
+            // If currently working, normalize endYear to 'Present'
+            const toSave = { ...currentItem } as any;
+            if (toSave.current) {
+                toSave.endYear = 'Present';
+            }
+            if (isNew) {
+                await createExperience(toSave);
+            } else {
+                await updateExperience(toSave);
+            }
+            await fetchData();
             setIsModalOpen(false);
             setCurrentItem(null);
             setMessage({ type: 'success', text: 'Experience saved.' });
         } catch (e) {
             console.error(e);
-            setMessage({ type: 'error', text: 'Failed to save experience.' });
+            // Attempt to show API validation error if present
+            const errText = (e as any)?.message || 'Failed to save experience.';
+            setMessage({ type: 'error', text: errText });
         } finally {
             setSaving(false);
         }
@@ -116,7 +137,19 @@ const ExperienceForm: React.FC = () => {
                         <div><label className="admin-label">Company Name</label><input type="text" value={currentItem.companyName} onChange={e => setCurrentItem(p => p ? {...p, companyName: e.target.value} : null)} className="admin-input" placeholder="e.g., Tech Company Inc." /></div>
                         <div className="grid grid-cols-2 gap-6">
                             <div><label className="admin-label">Start Year</label><input type="text" value={currentItem.startYear} onChange={e => setCurrentItem(p => p ? {...p, startYear: e.target.value} : null)} className="admin-input" placeholder="2020" /></div>
-                            <div><label className="admin-label">End Year</label><input type="text" value={currentItem.endYear} onChange={e => setCurrentItem(p => p ? {...p, endYear: e.target.value} : null)} className="admin-input" placeholder="Present or 2023" /></div>
+                            <div>
+                                <label className="admin-label">End Year</label>
+                                <input type="text" value={currentItem.current ? 'Present' : currentItem.endYear}
+                                    onChange={e => setCurrentItem(p => p ? {...p, endYear: e.target.value} : null)}
+                                    disabled={!!currentItem.current}
+                                    className={`admin-input ${currentItem.current ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    placeholder="Present or 2023" />
+                                <label className="inline-flex items-center gap-2 text-xs text-gray-300 mt-2">
+                                    <input type="checkbox" className="accent-electric-blue" checked={!!(currentItem as any).current}
+                                        onChange={(e) => setCurrentItem(p => p ? { ...p, current: e.target.checked, endYear: e.target.checked ? 'Present' : '' } as any : null)} />
+                                    Currently working here
+                                </label>
+                            </div>
                         </div>
                         <div><label className="admin-label">Description</label><textarea rows={4} value={currentItem.description} onChange={e => setCurrentItem(p => p ? {...p, description: e.target.value} : null)} className="admin-textarea" placeholder="Describe your role and responsibilities..." /></div>
                         <div className="flex justify-end gap-3 pt-4 border-t border-white/10"><button onClick={() => setIsModalOpen(false)} className="admin-button-secondary">Cancel</button><button onClick={handleSave} disabled={saving} className="admin-button-primary">{saving ? 'Saving...' : 'Save Experience'}</button></div>

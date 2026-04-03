@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '700', '800'], variable: '--font-poppins' });
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Fetch admin-configured site metadata; fall back to safe defaults if unavailable
+  // Fetch dynamic SEO meta from MongoDB; fall back to safe defaults if unavailable
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://priyeshmishra.com';
   const defaults: Metadata = {
     metadataBase: new URL(siteUrl),
@@ -46,24 +46,24 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 
   try {
-    // Must use an absolute URL for server-side fetch. Fall back to localhost in dev.
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
-      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-    const res = await fetch(`${baseUrl}/api/admin/siteMeta`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL : ''}/api/seo?page=home`, { cache: 'no-store' });
     if (!res.ok) return defaults;
-    const meta = await res.json();
-    const m: Metadata = {
+    const seo = await res.json();
+    return {
       ...defaults,
-      title: meta?.title ?? defaults.title,
-      description: meta?.description ?? defaults.description,
-      keywords: meta?.keywords ?? defaults.keywords,
-      authors: meta?.authors ?? defaults.authors,
-      robots: meta?.robots ?? defaults.robots,
-      icons: meta?.icons ?? defaults.icons,
-      openGraph: meta?.openGraph ? { ...meta.openGraph } : defaults.openGraph,
-      twitter: meta?.twitter ? { ...meta.twitter } : defaults.twitter,
+      title: seo.metaTitle || defaults.title,
+      description: seo.metaDescription || defaults.description,
+      keywords: Array.isArray(seo.keywords) ? seo.keywords.join(', ') : (seo.keywords || defaults.keywords),
+      icons: seo.favicon ? { icon: seo.favicon } : defaults.icons,
+      openGraph: {
+        ...defaults.openGraph,
+        title: seo.ogTitle || seo.metaTitle || (defaults.openGraph?.title as string),
+        description: seo.ogDescription || seo.metaDescription || (defaults.openGraph?.description as string),
+        images: seo.ogImage ? [{ url: seo.ogImage }] : (defaults.openGraph?.images || []),
+        url: seo.canonicalUrl || (defaults.openGraph?.url as string),
+      },
+      alternates: seo.canonicalUrl ? { canonical: seo.canonicalUrl } : undefined,
     };
-    return m;
   } catch {
     return defaults;
   }
@@ -73,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans`}>
+      <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans scroll-smooth`}>
         {/* Dev helper to auto-recover from transient chunk load errors */}
         <ChunkRecovery />
         <PremiumPreloader waitForEventName="portfolio:ready" durationMs={2000}>

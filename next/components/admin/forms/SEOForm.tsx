@@ -36,13 +36,26 @@ const SEOForm: React.FC = () => {
     setSeo(prev => prev ? { ...prev, [section]: { ...prev[section], [field]: value } } as SEOConfig : prev);
   };
 
+
   const handleSave = async () => {
     if (!seo) return;
     setSaving(true);
     setMessage(null);
     try {
-      await updateSEO(seo);
+      // Save each section's SEO individually
+      await Promise.all(
+        Object.entries(seo).map(async ([section, meta]) => {
+          const res = await fetch(`/api/seo?page=${section}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(meta),
+          });
+          if (!res.ok) throw new Error(`Failed to save SEO for ${section}`);
+        })
+      );
       setMessage('SEO settings saved');
+    } catch (err) {
+      setMessage('Error saving SEO: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -92,12 +105,12 @@ const SEOForm: React.FC = () => {
                 <input type="text" className="admin-input" value={seo[key].metaTitle} onChange={(e) => handleChange(key, 'metaTitle', e.target.value)} placeholder="e.g., Projects — Case Studies" />
               </div>
               <div>
-                <label className="admin-label">Meta Keywords</label>
-                <input type="text" className="admin-input" value={seo[key].metaKeywords} onChange={(e) => handleChange(key, 'metaKeywords', e.target.value)} placeholder="design, ui, ux, product" />
-              </div>
-              <div>
                 <label className="admin-label">Meta Description</label>
                 <textarea rows={3} className="admin-textarea" value={seo[key].metaDescription} onChange={(e) => handleChange(key, 'metaDescription', e.target.value)} placeholder="A concise summary for search engines..." />
+              </div>
+              <div>
+                <label className="admin-label">Meta Keywords</label>
+                <input type="text" className="admin-input" value={seo[key].metaKeywords} onChange={(e) => handleChange(key, 'metaKeywords', e.target.value)} placeholder="design, ui, ux, product" />
               </div>
             </div>
           </div>

@@ -62,7 +62,16 @@ const ContactForm: React.FC = () => {
         setSaving(true);
         setMessage(null);
         try {
-            await updateContactData(formData);
+            if (formData._id) {
+                await updateContactData(formData);
+            } else {
+                // Create new contact info
+                await fetch('/api/contactInfo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+            }
             setMessage({ type: 'success', text: "Contact information saved successfully!" });
         } catch (error) {
             setMessage({ type: 'error', text: "An error occurred while saving. Check console for details." });
@@ -108,6 +117,8 @@ const ContactForm: React.FC = () => {
                     <label className="flex items-center gap-3">
                         <input
                             type="checkbox"
+                            id="notifyUserOnSubmit"
+                            name="notifyUserOnSubmit"
                             className="accent-electric-blue"
                             checked={formData.notifyUserOnSubmit ?? true}
                             onChange={(e) => setFormData({ ...formData, notifyUserOnSubmit: e.target.checked })}
@@ -117,6 +128,8 @@ const ContactForm: React.FC = () => {
                     <label className="flex items-center gap-3">
                         <input
                             type="checkbox"
+                            id="notifyAdminOnSubmit"
+                            name="notifyAdminOnSubmit"
                             className="accent-electric-blue"
                             checked={formData.notifyAdminOnSubmit ?? true}
                             onChange={(e) => setFormData({ ...formData, notifyAdminOnSubmit: e.target.checked })}
@@ -124,13 +137,15 @@ const ContactForm: React.FC = () => {
                         <span className="text-sm text-gray-300">Send a notification email to me when someone submits</span>
                     </label>
                     <div>
-                        <label className="admin-label">Notification recipient (optional)</label>
+                        <label className="admin-label" htmlFor="notifyEmail">Notification recipient (optional)</label>
                         <input
                             type="email"
+                            id="notifyEmail"
+                            name="notifyEmail"
                             className="admin-input"
                             value={formData.notifyEmail || ''}
-                            onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.value })}
-                            placeholder={`Defaults to ${formData.email || 'your contact email'}`}
+                            onChange={e => setFormData({ ...formData, notifyEmail: e.target.value })}
+                            placeholder="your@email.com"
                         />
                         <p className="text-xs text-gray-400 mt-1">Set SMTP in next/.env.local to enable sending. If not set, the server skips sending in development.</p>
                     </div>
@@ -147,11 +162,11 @@ const ContactForm: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label htmlFor="email" className="admin-label flex items-center gap-2"><Mail size={16} /> Email Address</label>
-                            <input type="email" name="email" id="email" value={formData.email || ''} onChange={handleChange} className="admin-input" placeholder="your@email.com" />
+                            <input type="email" name="email" id="email" autoComplete="email" value={formData.email || ''} onChange={handleChange} className="admin-input" placeholder="your@email.com" />
                         </div>
                         <div>
                             <label htmlFor="phone" className="admin-label flex items-center gap-2"><Phone size={16} /> Phone Number</label>
-                            <input type="tel" name="phone" id="phone" value={formData.phone || ''} onChange={handleChange} className="admin-input" placeholder="+1 (555) 123-4567" />
+                            <input type="tel" name="phone" id="phone" autoComplete="tel" value={formData.phone || ''} onChange={handleChange} className="admin-input" placeholder="+91 98765 43210" />
                         </div>
                     </div>
                 </div>
@@ -166,9 +181,33 @@ const ContactForm: React.FC = () => {
                     {formData.socialLinks?.map((link, index) => (
                         <div key={index} className="flex items-center gap-4 p-4 rounded-lg backdrop-blur-xl bg-white/5 border border-white/10">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                                <input type="text" value={link.platform} onChange={e => handleSocialLinkChange(index, 'platform', e.target.value)} placeholder="Platform (e.g., GitHub)" className="admin-input" />
-                                <input type="url" value={link.url} onChange={e => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://..." className="admin-input" />
-                                <input type="text" value={link.icon} onChange={e => handleSocialLinkChange(index, 'icon', e.target.value)} placeholder="Icon Name" className="admin-input" />
+                                <input
+                                    type="text"
+                                    id={`social-platform-${index}`}
+                                    name={`socialLinks[${index}].platform`}
+                                    value={link.platform}
+                                    onChange={e => handleSocialLinkChange(index, 'platform', e.target.value)}
+                                    placeholder="Platform (e.g., GitHub)"
+                                    className="admin-input"
+                                />
+                                <input
+                                    type="url"
+                                    id={`social-url-${index}`}
+                                    name={`socialLinks[${index}].url`}
+                                    value={link.url}
+                                    onChange={e => handleSocialLinkChange(index, 'url', e.target.value)}
+                                    placeholder="https://..."
+                                    className="admin-input"
+                                />
+                                <input
+                                    type="text"
+                                    id={`social-icon-${index}`}
+                                    name={`socialLinks[${index}].icon`}
+                                    value={link.icon}
+                                    onChange={e => handleSocialLinkChange(index, 'icon', e.target.value)}
+                                    placeholder="Icon Name"
+                                    className="admin-input"
+                                />
                             </div>
                             <button type="button" onClick={() => removeSocialLink(index)} className="admin-button-danger flex-shrink-0" title="Remove">
                                 <Trash2 size={16} />

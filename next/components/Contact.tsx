@@ -9,10 +9,20 @@ interface ContactProps {
 }
 
 const Contact: React.FC<ContactProps> = ({ data }) => {
+  console.log("Contact data received:", data);
+  // Fallbacks for missing data
+  const safeData = {
+    heading: data?.heading || 'Let’s Connect',
+    description: data?.description || 'Fill out the form below or reach out via email/socials. I’ll get back to you soon!',
+    email: data?.email || 'hello@example.com',
+  phone: data?.phone || '+91 00000 00000',
+    socialLinks: Array.isArray(data?.socialLinks) ? data.socialLinks : [],
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    countryCode: '+1',
+    countryCode: '+91',
     contactNumber: '',
     message: ''
   });
@@ -46,6 +56,12 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (name === 'contactNumber') {
+      // Allow only digits for the local phone number part
+      const digitsOnly = value.replace(/\D+/g, '');
+      setFormData(prev => ({ ...prev, contactNumber: digitsOnly }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -90,7 +106,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
       if (response.ok) {
         setSubmitStatus('success');
         setErrorDetail(null);
-        setFormData({ name: '', email: '', countryCode: '+1', contactNumber: '', message: '' });
+  setFormData({ name: '', email: '', countryCode: '+91', contactNumber: '', message: '' });
       } else {
         // Attempt to read error for debugging and then set error state
         try {
@@ -112,7 +128,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
         localStorage.setItem(key, JSON.stringify([...existing, { ...formData, submittedAt: new Date().toISOString() }]));
         setSubmitStatus('success');
         setErrorDetail(null);
-        setFormData({ name: '', email: '', countryCode: '+1', contactNumber: '', message: '' });
+  setFormData({ name: '', email: '', countryCode: '+91', contactNumber: '', message: '' });
       } catch {
         setSubmitStatus('error');
       }
@@ -124,10 +140,8 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
   return (
     <Section title="Get In Touch" id="contact">
       <div className="max-w-4xl xl:max-w-6xl mx-auto text-center">
-        <h3 className="text-xl md:text-2xl xl:text-3xl font-bold mb-4">{data.heading}</h3>
-        <p className="text-base md:text-lg text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto">{data.description}</p>
-
-        {/* Booking CTA removed as requested */}
+        <h3 className="text-xl md:text-2xl xl:text-3xl font-bold mb-4">{safeData.heading}</h3>
+        <p className="text-base md:text-lg text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto">{safeData.description}</p>
 
         {/* Backend status banner */}
         {backendReachable === 'down' && (
@@ -192,6 +206,9 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
                   value={formData.contactNumber}
                   onChange={handleInputChange}
                   required
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="tel-national"
                   className="w-full sm:flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
                   placeholder="Phone Number"
                 />
@@ -241,19 +258,19 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
               <EmailIcon />
             </div>
             <h4 className="text-lg md:text-xl font-semibold mb-2">Email</h4>
-            <a href={`mailto:${data.email}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors break-all">{data.email}</a>
+            <a href={`mailto:${safeData.email}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors break-all">{safeData.email}</a>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8 flex flex-col items-center">
             <div className="p-3 md:p-4 bg-brand-purple/20 rounded-full mb-4 text-brand-purple-light">
               <PhoneIcon />
             </div>
             <h4 className="text-lg md:text-xl font-semibold mb-2">Phone</h4>
-            <a href={`tel:${data.phone}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors">{data.phone}</a>
+            <a href={`tel:${safeData.phone}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors">{safeData.phone}</a>
           </div>
         </div>
 
         <div className="flex justify-center gap-4 md:gap-6">
-          {data.socialLinks.map(link => (
+          {safeData.socialLinks.map(link => (
             <a key={link.platform} href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-purple transform hover:scale-110 transition-all duration-300">
               <span className="sr-only">{link.platform}</span>
               {link.icon}

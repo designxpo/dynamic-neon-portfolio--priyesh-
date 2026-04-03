@@ -59,6 +59,8 @@ const PortfolioPage = () => {
         testimonials: false,
         contact: false,
     });
+    // Modal state for testimonials "Read more"
+    const [selectedTestimonial, setSelectedTestimonial] = useState<any | null>(null);
 
     // Load hero data first (critical above-the-fold content)
     useEffect(() => {
@@ -133,7 +135,7 @@ const PortfolioPage = () => {
             timers.push(setTimeout(() => loadSection('skills', getSkillsData, 'skills'), 500));
             timers.push(setTimeout(() => loadSection('testimonials', getTestimonialsData, 'testimonials'), 600));
 
-            // Load blogs separately
+            // Load blogs separately with fallback
             timers.push(setTimeout(async () => {
                 try {
                     if (cancelled) return;
@@ -193,7 +195,7 @@ const PortfolioPage = () => {
                     ];
                     setBlogs(blogItems?.length ? blogItems : fallbackBlogs);
                 } catch {
-                    // blogs load failure is non-fatal; section stays hidden
+                    // blogs load failure is non-fatal
                 }
             }, 700));
         };
@@ -232,22 +234,18 @@ const PortfolioPage = () => {
 
                 {/* Services section - show skeleton until loaded */}
                 {sectionsLoaded.services ? (
-                    portfolioData?.services?.length > 0 && (
-                        <AnimatedSection>
-                            <Services data={portfolioData.services} />
-                        </AnimatedSection>
-                    )
+                    <AnimatedSection>
+                        <Services data={portfolioData?.services || []} />
+                    </AnimatedSection>
                 ) : (
                     <ServicesSkeleton />
                 )}
 
                 {/* Projects section - show skeleton until loaded */}
                 {sectionsLoaded.projects ? (
-                    portfolioData?.projects?.length > 0 && (
-                        <AnimatedSection>
-                            <RecentWorks data={portfolioData.projects} />
-                        </AnimatedSection>
-                    )
+                    <AnimatedSection>
+                        <RecentWorks data={portfolioData?.projects || []} />
+                    </AnimatedSection>
                 ) : (
                     <ProjectsSkeleton />
                 )}
@@ -258,31 +256,167 @@ const PortfolioPage = () => {
                 </AnimatedSection>
 
                 {/* Experience section */}
-                {sectionsLoaded.experiences && portfolioData?.experiences?.length > 0 && (
+                {sectionsLoaded.experiences && (
                     <AnimatedSection>
-                        <Experience data={portfolioData.experiences} />
+                        <Experience data={portfolioData?.experiences || []} />
                     </AnimatedSection>
                 )}
 
                 {/* Education section */}
-                {sectionsLoaded.educations && portfolioData?.educations?.length > 0 && (
+                {sectionsLoaded.educations && (
                     <AnimatedSection>
-                        <Education data={portfolioData.educations} />
+                        <Education data={portfolioData?.educations || []} />
                     </AnimatedSection>
                 )}
 
                 {/* Skills section */}
-                {sectionsLoaded.skills && portfolioData?.skills?.length > 0 && (
+                {sectionsLoaded.skills && (
                     <AnimatedSection>
-                        <Skills data={portfolioData.skills} />
+                        <section className='relative py-20 bg-transparent overflow-hidden'>
+                            <Skills data={portfolioData?.skills || []} />
+                        </section>
                     </AnimatedSection>
                 )}
 
                 {/* Testimonials section */}
-                {sectionsLoaded.testimonials && portfolioData?.testimonials?.length > 0 && (
+                {sectionsLoaded.testimonials && (
                     <AnimatedSection>
-                        <Testimonials data={portfolioData.testimonials} />
+                        <section
+                            id="testimonials"
+                            className="relative py-20 bg-transparent"
+                            style={{
+                                position: 'relative',
+                                zIndex: 1,
+                            }}
+                        >
+                            <div
+                                aria-hidden
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    zIndex: 0,
+                                    pointerEvents: 'none',
+                                    background: 'radial-gradient(ellipse at 50% 30%, rgba(123,95,255,0.12) 0%, rgba(123,95,255,0.04) 60%, transparent 100%)',
+                                    filter: 'blur(12px)',
+                                }}
+                            />
+                            <div className="container mx-auto px-6 text-center">
+                                <h2 className="text-4xl md:text-5xl font-extrabold mb-16 bg-gradient-to-r from-white to-[#7b5fff] bg-clip-text text-transparent" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                                    <span className="text-white">What </span><span className="text-[#7b5fff]">Clients</span><span className="text-white"> Say</span>
+                                </h2>
+                                {portfolioData?.testimonials && portfolioData.testimonials.length > 0 ? (
+                                    (() => {
+                                        const list = portfolioData.testimonials || [];
+                                        const shouldMarquee = list.length > 3;
+                                        const Card = (t: any) => (
+                                            <div
+                                                key={t.id + (Math.random().toString(36).slice(2))}
+                                                className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 max-w-xs w-full text-center shadow-[0_8px_30px_rgba(123,95,255,0.15)] border border-white/15 transition-all hover:scale-[1.02]"
+                                            >
+                                                {t.avatar && (
+                                                    <img
+                                                        src={t.avatar}
+                                                        alt={t.name}
+                                                        className="w-20 h-20 rounded-full border border-white/20 mx-auto mb-5 object-cover"
+                                                    />
+                                                )}
+                                                <p className="text-gray-200 italic mb-4 leading-relaxed clamp-3">“{t.message}”</p>
+                                                {t.message && t.message.length > 160 && (
+                                                    <button
+                                                        type="button"
+                                                        className="text-xs text-gray-400 hover:text-white/90 underline decoration-transparent hover:decoration-white/80"
+                                                        onClick={() => setSelectedTestimonial(t)}
+                                                        aria-label={`Read full testimonial from ${t.name}`}
+                                                    >
+                                                        Read more
+                                                    </button>
+                                                )}
+                                                <h4 className="text-lg font-semibold text-white">{t.name}</h4>
+                                                <span className="text-sm text-gray-400">{t.role}</span>
+                                            </div>
+                                        );
+
+                                        if (!shouldMarquee) {
+                                            return (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
+                                                    {list.map((t) => (
+                                                        <Card key={t.id} {...t} />
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
+
+                                        // Marquee mode for >3 testimonials: duplicate track and scroll
+                                        return (
+                                            <div className="relative overflow-hidden">
+                                                <div className={`testimonials-track ${selectedTestimonial ? 'paused' : ''} gap-10`}
+                                                     style={{ ['--testimonial-speed' as any]: '70s' }}
+                                                >
+                                                    <div className="flex gap-10 pr-10">
+                                                        {list.map((t) => (
+                                                            <Card key={`a-${t.id}`} {...t} />
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex gap-10">
+                                                        {list.map((t) => (
+                                                            <Card key={`b-${t.id}`} {...t} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                {/* Soft gradient edges */}
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-dark-bg/60 to-transparent" />
+                                                <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-dark-bg/60 to-transparent" />
+                                            </div>
+                                        );
+                                    })()
+                                ) : (
+                                    <p className="text-center text-gray-400">No testimonials available.</p>
+                                )}
+                            </div>
+                        </section>
                     </AnimatedSection>
+                )}
+
+                {/* Testimonials Modal */}
+                {selectedTestimonial && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        onClick={() => setSelectedTestimonial(null)}
+                    >
+                        <div
+                            className="relative w-full max-w-xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl p-6 text-white"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                aria-label="Close"
+                                className="absolute top-3 right-3 rounded-md bg-white/10 hover:bg-white/20 border border-white/10 px-2 py-1 text-sm"
+                                onClick={() => setSelectedTestimonial(null)}
+                            >
+                                ✕
+                            </button>
+
+                            <div className="flex items-center gap-3 mb-3">
+                                {selectedTestimonial.avatar && (
+                                    <img
+                                        src={selectedTestimonial.avatar}
+                                        alt={selectedTestimonial.name}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                )}
+                                <div>
+                                    <h4 className="font-semibold">{selectedTestimonial.name}</h4>
+                                    <span className="text-xs text-gray-400">{selectedTestimonial.role}</span>
+                                </div>
+                            </div>
+
+                            <p className="text-sm leading-relaxed text-gray-300">“{selectedTestimonial.message}”</p>
+                        </div>
+                    </div>
                 )}
 
                 {/* Blogs section */}
@@ -292,10 +426,20 @@ const PortfolioPage = () => {
                     </AnimatedSection>
                 )}
 
-                {/* Contact section */}
-                {sectionsLoaded.contact && portfolioData?.contact && (
+                {/* Contact section - ✅ Contact section - dynamic from MongoDB, fallback if missing */}
+                {sectionsLoaded.contact && (
                     <AnimatedSection>
-                        <Contact data={portfolioData.contact} />
+                        {portfolioData?.contact ? (
+                            <Contact data={portfolioData.contact} />
+                        ) : (
+                            <Contact data={{
+                                heading: 'Let’s Connect',
+                                description: 'Fill out the form below or reach out via email/socials. I’ll get back to you soon!',
+                                email: 'hello@example.com',
+                                phone: '+1-000-000-0000',
+                                socialLinks: [],
+                            }} />
+                        )}
                     </AnimatedSection>
                 )}
             </main>

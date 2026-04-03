@@ -21,16 +21,20 @@ const ContactSubmissions: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [target, setTarget] = useState<ContactSubmission | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => {
-    fetchSubmissions();
-  }, []);
+    fetchSubmissions(page, pageSize);
+  }, [page, pageSize]);
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = async (pageNum: number, size: number) => {
     try {
       const API_BASE = getApiBase();
       const base = (API_BASE || '').replace(/\/+$/, '');
-      const url = `${base}/api/contacts`;
+      const url = `${base}/api/contacts?page=${pageNum}&limit=${size}`;
       const response = await fetch(url);
       if (!response.ok) {
         // Try to read server-provided JSON error, otherwise fallback to text
@@ -52,7 +56,17 @@ const ContactSubmissions: React.FC = () => {
         return;
       }
       const data = await response.json();
-      setSubmissions(Array.isArray(data) ? data : []);
+      if (data && Array.isArray(data.items)) {
+        setSubmissions(data.items);
+        setTotal(data.total || 0);
+      } else if (Array.isArray(data)) {
+        // Backward compatibility with older API shape
+        setSubmissions(data);
+        setTotal(data.length);
+      } else {
+        setSubmissions([]);
+        setTotal(0);
+      }
     } catch (err) {
       setError('Error fetching submissions');
       console.error('Error:', err);
@@ -124,7 +138,7 @@ const ContactSubmissions: React.FC = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-white">Contact Submissions</h3>
-              <p className="text-gray-400 text-sm">Total: {submissions.length} submission{submissions.length !== 1 ? 's' : ''}</p>
+              <p className="text-gray-400 text-sm">Total: {total} submission{total !== 1 ? 's' : ''}</p>
             </div>
           </div>
         </div>
@@ -136,6 +150,7 @@ const ContactSubmissions: React.FC = () => {
             <p className="text-gray-400">No contact submissions yet.</p>
           </div>
         ) : (
+          <>
           <div className="space-y-4">
             {submissions.map((submission) => (
               <div
@@ -182,6 +197,36 @@ const ContactSubmissions: React.FC = () => {
               </div>
             ))}
           </div>
+          {/* Pagination Controls */}
+          <div className="admin-card flex items-center justify-between gap-3">
+            <div className="text-sm text-gray-400">Page {page} of {totalPages}</div>
+            <div className="flex items-center gap-2">
+              <button
+                className="admin-button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+              >
+                Prev
+              </button>
+              <button
+                className="admin-button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                Next
+              </button>
+              <select
+                className="admin-input ml-2"
+                value={pageSize}
+                onChange={(e) => { setPage(1); setPageSize(parseInt(e.target.value, 10) || 10); }}
+              >
+                {[10, 20, 50, 100].map(sz => (
+                  <option key={sz} value={sz}>{sz} / page</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          </>
         )}
       </div>
       {/* Delete Confirmation Modal */}

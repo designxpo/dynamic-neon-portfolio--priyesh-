@@ -1,3 +1,31 @@
+import mongoose from 'mongoose';
+
+let isConnected = false;
+
+export async function dbConnect() {
+    if (isConnected) {
+        console.log('[DB] Already connected to MongoDB');
+        return;
+    }
+    const uri = process.env.MONGODB_URI;
+    console.log('[DB] Attempting to connect to MongoDB with URI:', uri);
+    if (!uri) {
+        console.error('[DB] MONGODB_URI not set in environment');
+        throw new Error('MONGODB_URI not set in environment');
+    }
+    try {
+        await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+        isConnected = true;
+        console.log('[DB] Connected to MongoDB');
+    } catch (err) {
+        if (err.name === 'MongoNetworkTimeoutError') {
+            console.error('[DB] MongoDB network timeout:', err.message);
+        } else {
+            console.error('[DB] MongoDB connection error:', err);
+        }
+        throw new Error('Failed to connect to MongoDB: ' + err?.message);
+    }
+}
 import { Database } from '../types';
 import {
     mockHeroData,
@@ -103,22 +131,22 @@ const getDefaultDb = (): Database => {
         chatbot: {
             enabled: true,
             name: 'Prism',
-            greeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
+            initialGreeting: 'Hey there 👋 I’m Prism — Priyesh’s virtual assistant. Ask me about design, branding, or creative strategy — I’ll help and answer in Priyesh’s voice.',
             bookingUrl: 'https://calendar.app.google/bTfdiZGjeXZGqbeu9',
             bookingDescription: 'A collaborative 30-minute call to understand each other’s work and creative process. We’ll talk about your design goals, review your portfolio or brand, and identify how my expertise can help you craft experiences that truly connect.',
             showBookingQuickReply: true,
-            placeholders: {},
-            rules: [
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What services do you offer?', keywords: ['services', 'service', 'ui', 'ux', 'design', 'branding', 'strategy', 'website', 'app'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. I also help teams align business goals with user needs through user-centric digital design. You can browse my full list here: /#services' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What’s your design process?", keywords: ['process', 'workflow', 'approach', 'steps', 'how you work', 'method', 'design journey'], reply: 'My design process typically includes:\n1️⃣ Discovery & Research – Understanding user needs and business goals.\n2️⃣ Wireframing – Structuring the core experience.\n3️⃣ Visual Design – Building brand-aligned interfaces.\n4️⃣ Prototyping & Testing – Validating usability and flow.\n5️⃣ Delivery – Preparing developer-ready assets.\nYou can explore my detailed process here: /#process' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can I see your work?', keywords: ['work', 'portfolio', 'examples', 'projects', 'case studies', 'showcase'], reply: 'Absolutely! You can view my recent projects showcasing UI/UX design, web design, and branding here: /#work. Each case study highlights my approach, tools used, and design outcomes.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What are your rates?', keywords: ['pricing', 'rates', 'cost', 'charge', 'budget', 'packages', 'how much'], reply: 'My pricing depends on the project scope, complexity, and timeline. For smaller UI/UX design projects, I offer fixed packages. For ongoing work, I work on a retainer or hourly basis. Let\'s discuss your needs here: /#pricing' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How can we work together?', keywords: ['collaborate', 'start', 'hire', 'contact', 'get started', 'work with you', 'onboarding'], reply: 'I\'d love to collaborate! The best way to start is by sharing a few details about your project. You can schedule a quick intro call or fill out my inquiry form here: /#contact' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What tools do you use?', keywords: ['tools', 'stack', 'software', 'design tools', 'programs', 'apps'], reply: 'I mainly work with Figma, Adobe XD, Photoshop, and Illustrator for design — plus Notion, FigJam, and Miro for strategy and collaboration.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What\'s your experience?", keywords: ['experience', 'background', 'skills', 'career', 'years', 'education'], reply: 'I\'m a UI/UX designer with 8+ years of experience working across startups and enterprise products. My background combines design systems, user research, and brand storytelling to deliver seamless digital experiences.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How long will it take?', keywords: ['time', 'duration', 'timeline', 'delivery', 'how long', 'deadline'], reply: 'Most projects take between 2–6 weeks, depending on scope and complexity. I usually start with a discovery phase to define the exact timeline and milestones.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Do you allow revisions?', keywords: ['revision', 'edit', 'feedback', 'changes', 'update'], reply: 'Yes, of course! Every project includes 2–3 rounds of revisions to make sure the final result aligns perfectly with your vision and feedback.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available for new projects?', keywords: ['available', 'open', 'accepting', 'new projects', 'booking', 'schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
+            placeholders: [],
+            customQA: [
+                { enabled: true, matchMode: 'any', question: 'What services do you offer?', keywords: ['services', 'service', 'ui', 'ux', 'design', 'branding', 'strategy', 'website', 'app'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. I also help teams align business goals with user needs through user-centric digital design. You can browse my full list here: /#services' },
+                { enabled: true, matchMode: 'any', question: "What’s your design process?", keywords: ['process', 'workflow', 'approach', 'steps', 'how you work', 'method', 'design journey'], reply: 'My design process typically includes:\n1️⃣ Discovery & Research – Understanding user needs and business goals.\n2️⃣ Wireframing – Structuring the core experience.\n3️⃣ Visual Design – Building brand-aligned interfaces.\n4️⃣ Prototyping & Testing – Validating usability and flow.\n5️⃣ Delivery – Preparing developer-ready assets.\nYou can explore my detailed process here: /#process' },
+                { enabled: true, matchMode: 'any', question: 'Can I see your work?', keywords: ['work', 'portfolio', 'examples', 'projects', 'case studies', 'showcase'], reply: 'Absolutely! You can view my recent projects showcasing UI/UX design, web design, and branding here: /#work. Each case study highlights my approach, tools used, and design outcomes.' },
+                { enabled: true, matchMode: 'any', question: 'What are your rates?', keywords: ['pricing', 'rates', 'cost', 'charge', 'budget', 'packages', 'how much'], reply: 'My pricing depends on the project scope, complexity, and timeline. For smaller UI/UX design projects, I offer fixed packages. For ongoing work, I work on a retainer or hourly basis. Let\'s discuss your needs here: /#pricing' },
+                { enabled: true, matchMode: 'any', question: 'How can we work together?', keywords: ['collaborate', 'start', 'hire', 'contact', 'get started', 'work with you', 'onboarding'], reply: 'I\'d love to collaborate! The best way to start is by sharing a few details about your project. You can schedule a quick intro call or fill out my inquiry form here: /#contact' },
+                { enabled: true, matchMode: 'any', question: 'What tools do you use?', keywords: ['tools', 'stack', 'software', 'design tools', 'programs', 'apps'], reply: 'I mainly work with Figma, Adobe XD, Photoshop, and Illustrator for design — plus Notion, FigJam, and Miro for strategy and collaboration.' },
+                { enabled: true, matchMode: 'any', question: "What's your experience?", keywords: ['experience', 'background', 'skills', 'career', 'years', 'education'], reply: 'I\'m a UI/UX designer with 8+ years of experience working across startups and enterprise products. My background combines design systems, user research, and brand storytelling to deliver seamless digital experiences.' },
+                { enabled: true, matchMode: 'any', question: 'How long will it take?', keywords: ['time', 'duration', 'timeline', 'delivery', 'how long', 'deadline'], reply: 'Most projects take between 2–6 weeks, depending on scope and complexity. I usually start with a discovery phase to define the exact timeline and milestones.' },
+                { enabled: true, matchMode: 'any', question: 'Do you allow revisions?', keywords: ['revision', 'edit', 'feedback', 'changes', 'update'], reply: 'Yes, of course! Every project includes 2–3 rounds of revisions to make sure the final result aligns perfectly with your vision and feedback.' },
+                { enabled: true, matchMode: 'any', question: 'Are you available for new projects?', keywords: ['available', 'open', 'accepting', 'new projects', 'booking', 'schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
             ],
         },
         siteMeta: {

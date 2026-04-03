@@ -53,15 +53,15 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 bg-dark-bg/80 backdrop-blur-lg border-b border-gray-800' : 'py-3 md:py-4'}`}>
-      <div className="container mx-auto px-4 md:px-8 flex items-center">
+  <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 bg-dark-bg/80 backdrop-blur-lg border-b border-gray-800' : 'py-3 md:py-4'}`}>
+  <div className="container mx-auto px-4 md:px-8 flex items-center">
         {/* Left Section - Logo */}
         <div className="flex-1">
-          <button
-            onClick={handleScrollToTop}
-            className="flex items-center gap-2 text-xl md:text-2xl font-bold"
-            aria-label="Scroll to top"
-          >
+            <button
+              onClick={handleScrollToTop}
+              className="flex items-center gap-2 text-xl md:text-2xl font-bold"
+              aria-label="Scroll to top"
+            >
             <img
               src="/images/pmlogo.png"
               alt="Priyesh Mishra Logo"
@@ -107,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
       </div>
       
       {/* Mobile Menu */}
-      <div className={`md:hidden absolute top-full left-0 w-full bg-dark-bg/95 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 border-t border-gray-800' : 'max-h-0'}`}>
+  <div className={`md:hidden absolute top-full left-0 w-full bg-dark-bg/95 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 border-t border-gray-800' : 'max-h-0'}`}>
         <nav className="flex flex-col items-center space-y-4 py-6">
             {navLinks.map((link) => (
                 <a

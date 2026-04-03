@@ -26,8 +26,33 @@ const ChatbotForm: React.FC = () => {
     if (!settings) return;
     setSaving(true);
     setMessage(null);
+    // Ensure required fields and correct structure
+    // Convert placeholders object to array of {key, value}
+    let placeholdersArr: { key: string; value: string }[] = [];
+    if (settings.placeholders && typeof settings.placeholders === 'object' && !Array.isArray(settings.placeholders)) {
+      placeholdersArr = Object.entries(settings.placeholders).map(([key, value]) => ({ key, value }));
+    } else if (Array.isArray(settings.placeholders)) {
+      placeholdersArr = settings.placeholders;
+    }
+    // Use customQA directly
+    let customQA = Array.isArray(settings.customQA)
+      ? settings.customQA.filter(q => q && typeof q === 'object' && q.question && q.reply)
+      : [];
+    const payload = {
+      enabled: settings.enabled ?? true,
+      name: settings.name ?? '',
+      initialGreeting: settings.initialGreeting ?? '',
+      bookingUrl: settings.bookingUrl ?? '',
+      bookingDescription: settings.bookingDescription ?? '',
+      showBookingQuickReply: settings.showBookingQuickReply ?? true,
+      placeholders: placeholdersArr,
+  customQA,
+    };
+    console.log('[ChatbotForm] Saving payload:', payload);
     try {
-      await updateChatbotSettings(settings);
+      await updateChatbotSettings(payload);
+      const updated = await getChatbotSettings();
+      setSettings(updated);
       setMessage('Chatbot settings saved');
     } finally {
       setSaving(false);
@@ -83,7 +108,7 @@ const ChatbotForm: React.FC = () => {
             </div>
             <div>
               <label className="admin-label">Initial Greeting</label>
-              <textarea rows={3} className="admin-textarea" value={settings.greeting} onChange={(e) => handleChange({ greeting: e.target.value })} placeholder="Welcome message shown when chat opens..." />
+              <textarea rows={3} className="admin-textarea" value={settings.initialGreeting} onChange={(e) => handleChange({ initialGreeting: e.target.value })} placeholder="Welcome message shown when chat opens..." />
             </div>
           </div>
         </div>
@@ -199,8 +224,8 @@ const ChatbotForm: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              const newRule: ChatbotRule = { id: crypto.randomUUID(), question: '', keywords: [], reply: '', enabled: true };
-              handleChange({ rules: [...(settings.rules || []), newRule] });
+              const newRule = { question: '', keywords: [], reply: '', enabled: true, matchMode: 'any' };
+              handleChange({ customQA: [...(settings.customQA || []), newRule] });
             }}
             className="admin-button-secondary flex items-center gap-2"
           >
@@ -210,13 +235,13 @@ const ChatbotForm: React.FC = () => {
         <p className="text-sm text-gray-400 mb-3">Each rule triggers when the user message contains the question text or any of the keywords. First match wins.</p>
 
         <div className="space-y-4">
-          {(settings.rules || []).length === 0 && (
+          {(settings.customQA || []).length === 0 && (
             <div className="text-gray-400 text-sm">No rules yet. Click “Add Rule” to create one.</div>
           )}
 
-          {(settings.rules || []).map((rule, idx) => (
+          {(settings.customQA || []).map((rule, idx) => (
             <div
-              key={rule.id}
+              key={idx}
               className="rounded-xl border border-white/10 p-4 bg-white/5"
               draggable
               onDragStart={(e) => { setDragIndex(idx); e.dataTransfer.effectAllowed = 'move'; }}
@@ -224,11 +249,11 @@ const ChatbotForm: React.FC = () => {
               onDrop={(e) => {
                 e.preventDefault();
                 if (dragIndex === null || dragIndex === idx) return;
-                const rules = [...(settings.rules || [])];
-                const [moved] = rules.splice(dragIndex, 1);
-                rules.splice(idx, 0, moved);
+                const customQA = [...(settings.customQA || [])];
+                const [moved] = customQA.splice(dragIndex, 1);
+                customQA.splice(idx, 0, moved);
                 setDragIndex(null);
-                handleChange({ rules });
+                handleChange({ customQA });
               }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -238,10 +263,10 @@ const ChatbotForm: React.FC = () => {
                     type="button"
                     onClick={() => {
                       if (idx === 0) return;
-                      const rules = [...(settings.rules || [])];
-                      const [moved] = rules.splice(idx, 1);
-                      rules.splice(idx - 1, 0, moved);
-                      handleChange({ rules });
+                      const customQA = [...(settings.customQA || [])];
+                      const [moved] = customQA.splice(idx, 1);
+                      customQA.splice(idx - 1, 0, moved);
+                      handleChange({ customQA });
                     }}
                     className="text-gray-300 hover:text-white"
                     title="Move up"
@@ -251,11 +276,11 @@ const ChatbotForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      const rules = [...(settings.rules || [])];
-                      if (idx >= rules.length - 1) return;
-                      const [moved] = rules.splice(idx, 1);
-                      rules.splice(idx + 1, 0, moved);
-                      handleChange({ rules });
+                      const customQA = [...(settings.customQA || [])];
+                      if (idx >= customQA.length - 1) return;
+                      const [moved] = customQA.splice(idx, 1);
+                      customQA.splice(idx + 1, 0, moved);
+                      handleChange({ customQA });
                     }}
                     className="text-gray-300 hover:text-white"
                     title="Move down"
@@ -265,17 +290,17 @@ const ChatbotForm: React.FC = () => {
                   <label className="inline-flex items-center gap-2 text-xs text-gray-300">
                     <input type="checkbox" className="accent-electric-blue" checked={rule.enabled !== false}
                       onChange={(e) => {
-                        const rules = [...(settings.rules || [])];
-                        rules[idx] = { ...rule, enabled: e.target.checked };
-                        handleChange({ rules });
+                        const customQA = [...(settings.customQA || [])];
+                        customQA[idx] = { ...rule, enabled: e.target.checked };
+                        handleChange({ customQA });
                       }} /> Enabled
                   </label>
                   <button
                     type="button"
                     onClick={() => {
-                      const rules = [...(settings.rules || [])];
-                      rules.splice(idx, 1);
-                      handleChange({ rules });
+                      const customQA = [...(settings.customQA || [])];
+                      customQA.splice(idx, 1);
+                      handleChange({ customQA });
                     }}
                     className="text-red-400 hover:text-red-300"
                     title="Delete rule"
@@ -289,9 +314,9 @@ const ChatbotForm: React.FC = () => {
                   <label className="admin-label">Question contains</label>
                   <input type="text" className="admin-input" value={rule.question || ''}
                     onChange={(e) => {
-                      const rules = [...(settings.rules || [])];
-                      rules[idx] = { ...rule, question: e.target.value };
-                      handleChange({ rules });
+                      const customQA = [...(settings.customQA || [])];
+                      customQA[idx] = { ...rule, question: e.target.value };
+                      handleChange({ customQA });
                     }}
                     placeholder="e.g., pricing, availability, location" />
                 </div>
@@ -303,9 +328,9 @@ const ChatbotForm: React.FC = () => {
                         .split(',')
                         .map(s => s.trim())
                         .filter(Boolean);
-                      const rules = [...(settings.rules || [])];
-                      rules[idx] = { ...rule, keywords: arr };
-                      handleChange({ rules });
+                      const customQA = [...(settings.customQA || [])];
+                      customQA[idx] = { ...rule, keywords: arr };
+                      handleChange({ customQA });
                     }}
                     placeholder="design, ui, ux" />
                 </div>
@@ -313,18 +338,18 @@ const ChatbotForm: React.FC = () => {
                   <label className="admin-label">Regex (optional)</label>
                   <input type="text" className="admin-input" value={rule.regex || ''}
                     onChange={(e) => {
-                      const rules = [...(settings.rules || [])];
-                      rules[idx] = { ...rule, regex: e.target.value };
-                      handleChange({ rules });
+                      const customQA = [...(settings.customQA || [])];
+                      customQA[idx] = { ...rule, regex: e.target.value };
+                      handleChange({ customQA });
                     }}
                     placeholder="e.g., ^(price|pricing)$" />
                 </div>
                 <div>
                   <label className="admin-label">Match mode</label>
-                  <select className="admin-input" value={rule.match || 'any'} onChange={(e) => {
-                    const rules = [...(settings.rules || [])];
-                    rules[idx] = { ...rule, match: (e.target.value as 'any' | 'all') };
-                    handleChange({ rules });
+                  <select className="admin-input" value={rule.matchMode || 'any'} onChange={(e) => {
+                    const customQA = [...(settings.customQA || [])];
+                    customQA[idx] = { ...rule, matchMode: (e.target.value as 'any' | 'all') } as any;
+                    handleChange({ customQA });
                   }}>
                     <option value="any">Any keyword</option>
                     <option value="all">All keywords</option>
@@ -334,9 +359,9 @@ const ChatbotForm: React.FC = () => {
                   <label className="inline-flex items-center gap-2 text-xs text-gray-300">
                     <input type="checkbox" className="accent-electric-blue" checked={!!rule.caseSensitive}
                       onChange={(e) => {
-                        const rules = [...(settings.rules || [])];
-                        rules[idx] = { ...rule, caseSensitive: e.target.checked };
-                        handleChange({ rules });
+                        const customQA = [...(settings.customQA || [])];
+                        customQA[idx] = { ...rule, caseSensitive: e.target.checked };
+                        handleChange({ customQA });
                       }} /> Case-sensitive
                   </label>
                 </div>
@@ -345,9 +370,9 @@ const ChatbotForm: React.FC = () => {
                 <label className="admin-label">Reply</label>
                 <textarea rows={3} className="admin-textarea" value={rule.reply}
                   onChange={(e) => {
-                    const rules = [...(settings.rules || [])];
-                    rules[idx] = { ...rule, reply: e.target.value };
-                    handleChange({ rules });
+                    const customQA = [...(settings.customQA || [])];
+                    customQA[idx] = { ...rule, reply: e.target.value };
+                    handleChange({ customQA });
                   }}
                   placeholder="The message the assistant should send when this rule matches" />
               </div>

@@ -22,14 +22,6 @@ import CategoriesForm from './forms/CategoriesForm';
 export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  function handleResetLocalData() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('portfolio-db-v2');
-      localStorage.removeItem('portfolio-db-v2-baseline');
-      window.location.reload();
-    }
-  }
-
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -76,13 +68,6 @@ export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
       onLogout={onLogout}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <button
-          type="button"
-          style={{ alignSelf: 'flex-end', background: '#dc2626', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.375rem', marginBottom: '1rem' }}
-          onClick={handleResetLocalData}
-        >
-          Reset Local Data
-        </button>
         {renderContent()}
       </div>
     </AdminLayout>
