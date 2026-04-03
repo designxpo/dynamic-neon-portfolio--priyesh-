@@ -99,7 +99,7 @@ const getDefaultDb = (): Database => {
             },
         ],
         adminPassword: 'admin',
-    categories: ['Apps', 'Branding', 'UI/UX', 'Web'],
+        categories: ['Apps', 'Branding', 'UI/UX', 'Web'],
         chatbot: {
             enabled: true,
             name: 'Prism',
@@ -109,16 +109,16 @@ const getDefaultDb = (): Database => {
             showBookingQuickReply: true,
             placeholders: {},
             rules: [
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What services do you offer?', keywords: ['services','service','ui','ux','design','branding','strategy','website','app'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. I also help teams align business goals with user needs through user-centric digital design. You can browse my full list here: /#services' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What’s your design process?", keywords: ['process','workflow','approach','steps','how you work','method','design journey'], reply: 'My design process typically includes:\n1️⃣ Discovery & Research – Understanding user needs and business goals.\n2️⃣ Wireframing – Structuring the core experience.\n3️⃣ Visual Design – Building brand-aligned interfaces.\n4️⃣ Prototyping & Testing – Validating usability and flow.\n5️⃣ Delivery – Preparing developer-ready assets.\nYou can explore my detailed process here: /#process' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can I see your work?', keywords: ['work','portfolio','examples','projects','case studies','showcase'], reply: 'Absolutely! You can view my recent projects showcasing UI/UX design, web design, and branding here: /#work. Each case study highlights my approach, tools used, and design outcomes.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What are your rates?', keywords: ['pricing','rates','cost','charge','budget','packages','how much'], reply: 'My pricing depends on the project scope, complexity, and timeline. For smaller UI/UX design projects, I offer fixed packages. For ongoing work, I work on a retainer or hourly basis. Let\'s discuss your needs here: /#pricing' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How can we work together?', keywords: ['collaborate','start','hire','contact','get started','work with you','onboarding'], reply: 'I\'d love to collaborate! The best way to start is by sharing a few details about your project. You can schedule a quick intro call or fill out my inquiry form here: /#contact' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What tools do you use?', keywords: ['tools','stack','software','design tools','programs','apps'], reply: 'I mainly work with Figma, Adobe XD, Photoshop, and Illustrator for design — plus Notion, FigJam, and Miro for strategy and collaboration.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What\'s your experience?", keywords: ['experience','background','skills','career','years','education'], reply: 'I\'m a UI/UX designer with 8+ years of experience working across startups and enterprise products. My background combines design systems, user research, and brand storytelling to deliver seamless digital experiences.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How long will it take?', keywords: ['time','duration','timeline','delivery','how long','deadline'], reply: 'Most projects take between 2–6 weeks, depending on scope and complexity. I usually start with a discovery phase to define the exact timeline and milestones.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Do you allow revisions?', keywords: ['revision','edit','feedback','changes','update'], reply: 'Yes, of course! Every project includes 2–3 rounds of revisions to make sure the final result aligns perfectly with your vision and feedback.' },
-                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available for new projects?', keywords: ['available','open','accepting','new projects','booking','schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What services do you offer?', keywords: ['services', 'service', 'ui', 'ux', 'design', 'branding', 'strategy', 'website', 'app'], reply: 'I offer UI/UX design, product strategy, design systems, and brand experience work. I also help teams align business goals with user needs through user-centric digital design. You can browse my full list here: /#services' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What’s your design process?", keywords: ['process', 'workflow', 'approach', 'steps', 'how you work', 'method', 'design journey'], reply: 'My design process typically includes:\n1️⃣ Discovery & Research – Understanding user needs and business goals.\n2️⃣ Wireframing – Structuring the core experience.\n3️⃣ Visual Design – Building brand-aligned interfaces.\n4️⃣ Prototyping & Testing – Validating usability and flow.\n5️⃣ Delivery – Preparing developer-ready assets.\nYou can explore my detailed process here: /#process' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Can I see your work?', keywords: ['work', 'portfolio', 'examples', 'projects', 'case studies', 'showcase'], reply: 'Absolutely! You can view my recent projects showcasing UI/UX design, web design, and branding here: /#work. Each case study highlights my approach, tools used, and design outcomes.' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What are your rates?', keywords: ['pricing', 'rates', 'cost', 'charge', 'budget', 'packages', 'how much'], reply: 'My pricing depends on the project scope, complexity, and timeline. For smaller UI/UX design projects, I offer fixed packages. For ongoing work, I work on a retainer or hourly basis. Let\'s discuss your needs here: /#pricing' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How can we work together?', keywords: ['collaborate', 'start', 'hire', 'contact', 'get started', 'work with you', 'onboarding'], reply: 'I\'d love to collaborate! The best way to start is by sharing a few details about your project. You can schedule a quick intro call or fill out my inquiry form here: /#contact' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'What tools do you use?', keywords: ['tools', 'stack', 'software', 'design tools', 'programs', 'apps'], reply: 'I mainly work with Figma, Adobe XD, Photoshop, and Illustrator for design — plus Notion, FigJam, and Miro for strategy and collaboration.' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: "What\'s your experience?", keywords: ['experience', 'background', 'skills', 'career', 'years', 'education'], reply: 'I\'m a UI/UX designer with 8+ years of experience working across startups and enterprise products. My background combines design systems, user research, and brand storytelling to deliver seamless digital experiences.' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'How long will it take?', keywords: ['time', 'duration', 'timeline', 'delivery', 'how long', 'deadline'], reply: 'Most projects take between 2–6 weeks, depending on scope and complexity. I usually start with a discovery phase to define the exact timeline and milestones.' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Do you allow revisions?', keywords: ['revision', 'edit', 'feedback', 'changes', 'update'], reply: 'Yes, of course! Every project includes 2–3 rounds of revisions to make sure the final result aligns perfectly with your vision and feedback.' },
+                { id: uuidv4(), enabled: true, match: 'any', caseSensitive: false, question: 'Are you available for new projects?', keywords: ['available', 'open', 'accepting', 'new projects', 'booking', 'schedule'], reply: 'I\'m currently accepting new projects this month! You can check my availability or book a quick discovery call here: /#contact' },
             ],
         },
         siteMeta: {
@@ -147,9 +147,7 @@ const getDefaultDb = (): Database => {
 
 export const initDb = () => {
     const existing = localStorage.getItem(DB_KEY);
-    console.log('initDb called, existing data:', existing ? 'EXISTS' : 'NULL');
     if (existing) {
-        console.log('Database already exists, not reinitializing');
         return;
     }
 
@@ -162,7 +160,6 @@ export const initDb = () => {
                 const parsed = JSON.parse(legacy) as Database;
                 // Basic sanity check
                 if (parsed && typeof parsed === 'object') {
-                    console.log(`Migrating data from legacy key: ${key} -> ${DB_KEY}`);
                     localStorage.setItem(DB_KEY, JSON.stringify(parsed));
                     // Initialize baseline from migrated data if not present
                     if (!localStorage.getItem(BASELINE_KEY)) {
@@ -179,10 +176,8 @@ export const initDb = () => {
     // If no legacy data found, initialize from existing baseline if present; otherwise use defaults
     const baseline = localStorage.getItem(BASELINE_KEY);
     if (baseline) {
-        console.log('Initializing database from baseline snapshot');
         localStorage.setItem(DB_KEY, baseline);
     } else {
-        console.log('Initializing database with default data');
         const defaults = JSON.stringify(getDefaultDb());
         localStorage.setItem(DB_KEY, defaults);
         // Also seed the baseline so future resets restore to this snapshot
@@ -191,10 +186,8 @@ export const initDb = () => {
 };
 
 export const getDb = (): Database => {
-    console.log('getDb called');
     initDb();
     const dbString = localStorage.getItem(DB_KEY);
-    console.log('Loading database from localStorage, size:', dbString?.length, 'characters');
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const db = JSON.parse(dbString!) as Database;
     return db;
@@ -202,23 +195,20 @@ export const getDb = (): Database => {
 
 export const saveDb = (db: Database) => {
     try {
-        console.log('Saving database to localStorage...', DB_KEY);
         const dbString = JSON.stringify(db);
-        console.log('Database size:', dbString.length, 'characters');
-        
+
         // Check if database is getting too large
         if (dbString.length > 4 * 1024 * 1024) { // 4MB warning threshold
             console.warn('Database is getting large (>4MB). Consider optimizing image storage.');
         }
-        
+
         localStorage.setItem(DB_KEY, dbString);
-        console.log('Database saved successfully');
-        
+
         // Create backup baseline snapshot if this save was successful
         if (!localStorage.getItem(BASELINE_KEY)) {
             localStorage.setItem(BASELINE_KEY, dbString);
         }
-        
+
     } catch (error) {
         console.error('Error saving database:', error);
         if (error instanceof Error && error.name === 'QuotaExceededError') {
@@ -229,7 +219,7 @@ export const saveDb = (db: Database) => {
                 const minimalString = JSON.stringify(minimalDb);
                 localStorage.setItem(DB_KEY, minimalString);
                 console.log('Database saved with compressed images');
-                
+
                 // Alert user about the compression
                 if (typeof window !== 'undefined') {
                     alert('Storage space is limited. Images have been compressed to fit. Consider using smaller image files.');
@@ -250,13 +240,13 @@ export const saveDb = (db: Database) => {
 // Helper function to compress database for storage
 const compressDbForStorage = (db: Database): Database => {
     const compressed = JSON.parse(JSON.stringify(db)); // Deep clone
-    
+
     // Replace large base64 images with placeholders or smaller versions
     if (compressed.hero?.profileImage?.url?.length > 100000) { // >100KB
         console.log('Compressing hero profile image for storage');
         compressed.hero.profileImage.url = '/images/profile.png'; // Fallback to default
     }
-    
+
     // Compress project images
     if (compressed.projects) {
         compressed.projects.forEach((project: any) => {
@@ -266,7 +256,7 @@ const compressDbForStorage = (db: Database): Database => {
             }
         });
     }
-    
+
     // Compress testimonial avatars
     if (compressed.testimonials) {
         compressed.testimonials.forEach((testimonial: any) => {
@@ -276,7 +266,7 @@ const compressDbForStorage = (db: Database): Database => {
             }
         });
     }
-    
+
     return compressed;
 };
 

@@ -62,11 +62,19 @@ export async function PUT(req: NextRequest, { params }: { params: { key: string 
   try {
     // First check if connection is healthy
     if (!(await isDBHealthy())) {
-      console.log(`${key}: DB not healthy, attempting reconnection`);
+      console.warn(`${key}: DB not healthy, attempting reconnection`);
     }
-    
+
     await connectDB();
-    const payload = await req.json();
+    let payload: unknown;
+    try {
+      payload = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    if (payload === undefined || payload === null) {
+      return NextResponse.json({ error: 'Payload must not be null' }, { status: 400 });
+    }
     const cfg = await SiteConfig.getOrCreate();
     (cfg as any)[key] = payload;
     cfg.lastUpdated = new Date();

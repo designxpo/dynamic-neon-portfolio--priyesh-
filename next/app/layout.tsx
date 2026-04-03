@@ -5,12 +5,19 @@ import dynamic from 'next/dynamic';
 import ChunkRecovery from '../components/ChunkRecovery';
 import PremiumPreloader from '../components/PremiumPreloader';
 
+const Chatbot = dynamic(() => import('../components/Chatbot'), {
+  ssr: false,
+  loading: () => null
+});
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const poppins = Poppins({ subsets: ['latin'], weight: ['400','600','700','800'], variable: '--font-poppins' });
+const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '700', '800'], variable: '--font-poppins' });
 
 export async function generateMetadata(): Promise<Metadata> {
   // Fetch admin-configured site metadata; fall back to safe defaults if unavailable
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://priyeshmishra.com';
   const defaults: Metadata = {
+    metadataBase: new URL(siteUrl),
     title: 'Priyesh Mishra | UI/UX Designer',
     description: 'Portfolio of Priyesh Mishra, showcasing UI/UX design projects, case studies, and modern web interfaces.',
     keywords: 'Priyesh Mishra, Portfolio, UI/UX Designer, UI Design, UX Design, Web Design, Interaction Design, User Experience, User Interface',
@@ -39,7 +46,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL : ''}/api/admin/siteMeta`, { cache: 'no-store' });
+    // Must use an absolute URL for server-side fetch. Fall back to localhost in dev.
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const res = await fetch(`${baseUrl}/api/admin/siteMeta`, { cache: 'no-store' });
     if (!res.ok) return defaults;
     const meta = await res.json();
     const m: Metadata = {
@@ -60,11 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const Chatbot = dynamic(() => import('../components/Chatbot'), { 
-    ssr: false,
-    loading: () => null 
-  });
-  
+
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans`}>

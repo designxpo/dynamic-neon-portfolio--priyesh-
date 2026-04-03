@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { HeroData } from '../types';
 
@@ -44,8 +43,7 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <span className="text-white">UI/UX </span>
-              <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">Designer</span>
+              <span className="bg-gradient-to-r from-white via-white to-brand-purple-light bg-clip-text text-transparent">{data.title || 'UI/UX Designer'}</span>
             </motion.h1>
 
             <motion.p

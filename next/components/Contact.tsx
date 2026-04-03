@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { ContactData } from '../types';
 import Section from './Section';
@@ -124,136 +123,144 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
 
   return (
     <Section title="Get In Touch" id="contact">
-        <div className="max-w-4xl xl:max-w-6xl mx-auto text-center">
-             <h3 className="text-xl md:text-2xl xl:text-3xl font-bold mb-4">{data.heading}</h3>
-             <p className="text-base md:text-lg text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto">{data.description}</p>
+      <div className="max-w-4xl xl:max-w-6xl mx-auto text-center">
+        <h3 className="text-xl md:text-2xl xl:text-3xl font-bold mb-4">{data.heading}</h3>
+        <p className="text-base md:text-lg text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto">{data.description}</p>
 
-             {/* Booking CTA removed as requested */}
+        {/* Booking CTA removed as requested */}
 
-             {/* Backend status banner */}
-       {backendReachable === 'down' && (
-         <div className="max-w-2xl w-full mx-auto mb-6 text-left rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-200 px-4 py-3">
-           Backend API isn’t reachable. If you’re in production, set NEXT_PUBLIC_API_BASE_URL to your API host and rebuild; in dev, just run `npm run dev` from the next/ folder.
-         </div>
-       )}
+        {/* Backend status banner */}
+        {backendReachable === 'down' && (
+          <div className="max-w-2xl w-full mx-auto mb-6 text-left rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-200 px-4 py-3">
+            Backend API isn’t reachable. If you’re in production, set NEXT_PUBLIC_API_BASE_URL to your API host and rebuild; in dev, just run `npm run dev` from the next/ folder.
+          </div>
+        )}
 
-             {/* Contact Form */}
-       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 md:p-8 mb-8 md:mb-12 max-w-2xl w-full mx-auto text-left">
-                 <form onSubmit={handleSubmit} className="space-y-6">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <div>
-                             <input
-                                 type="text"
-                                 id="name"
-                                 name="name"
-                                 value={formData.name}
-                                 onChange={handleInputChange}
-                                 required
-                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
-                                 placeholder="Name"
-                             />
-                         </div>
-                         <div>
-                             <input
-                                 type="email"
-                                 id="email"
-                                 name="email"
-                                 value={formData.email}
-                                 onChange={handleInputChange}
-                                 required
-                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
-                                 placeholder="Email"
-                             />
-                         </div>
-                     </div>
-           <div>
-             <div className="flex flex-col sm:flex-row gap-3">
-                             <select
-                                 id="countryCode"
-                                 name="countryCode"
-                                 value={formData.countryCode}
-                                 onChange={handleInputChange}
-                 className="w-full sm:w-auto px-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors min-w-[100px]"
-                             >
-                                 {countryCodes.map(country => (
-                                     <option key={country.code} value={country.code} className="bg-gray-800">
-                                         {country.code}
-                                     </option>
-                                 ))}
-                             </select>
-                             <input
-                                 type="tel"
-                                 id="contactNumber"
-                                 name="contactNumber"
-                                 value={formData.contactNumber}
-                                 onChange={handleInputChange}
-                                 required
-                 className="w-full sm:flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
-                                 placeholder="Phone Number"
-                             />
-                         </div>
-                     </div>
-                     <div>
-                         <textarea
-                             id="message"
-                             name="message"
-                             value={formData.message}
-                             onChange={handleInputChange}
-                             required
-                             rows={4}
-                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors resize-none"
-                             placeholder="Tell me about your project or how we can work together... *"
-                         />
-                     </div>
-           <div className="pt-4">
-                         <button
-                             type="submit"
-                             disabled={isSubmitting}
-               className="bg-brand-purple hover:bg-brand-purple-light text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-brand-purple/25 block mx-auto"
-                         >
-                             {isSubmitting ? 'Sending...' : 'Send Message'}
-                         </button>
-                         {submitStatus === 'success' && (
-                             <p className="text-green-400 mt-4 text-sm">Message sent successfully! I'll get back to you soon.</p>
-                         )}
-                         {submitStatus === 'error' && (
-                           <div className="mt-4 text-sm">
-                             <p className="text-red-400">Failed to send message. Please try again.</p>
-                             {errorDetail && (
-                               <p className="text-red-300/80 mt-1 break-words">{errorDetail}</p>
-                             )}
-                           </div>
-                         )}
-                     </div>
-                 </form>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-12">
-                 <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8 flex flex-col items-center">
-                     <div className="p-3 md:p-4 bg-brand-purple/20 rounded-full mb-4 text-brand-purple-light">
-                        <EmailIcon />
-                     </div>
-                     <h4 className="text-lg md:text-xl font-semibold mb-2">Email</h4>
-                     <a href={`mailto:${data.email}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors break-all">{data.email}</a>
-                 </div>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8 flex flex-col items-center">
-                    <div className="p-3 md:p-4 bg-brand-purple/20 rounded-full mb-4 text-brand-purple-light">
-                        <PhoneIcon />
-                    </div>
-                    <h4 className="text-lg md:text-xl font-semibold mb-2">Phone</h4>
-                    <a href={`tel:${data.phone}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors">{data.phone}</a>
-                 </div>
-             </div>
-
-             <div className="flex justify-center gap-4 md:gap-6">
-                 {data.socialLinks.map(link => (
-                      <a key={link.platform} href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-purple transform hover:scale-110 transition-all duration-300">
-                          <span className="sr-only">{link.platform}</span>
-                          {link.icon}
-                      </a>
+        {/* Contact Form */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 md:p-8 mb-8 md:mb-12 max-w-2xl w-full mx-auto text-left">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="name" className="sr-only">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
+                  placeholder="Name"
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="sr-only">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
+                  placeholder="Email"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <label htmlFor="countryCode" className="sr-only">Country Code</label>
+                <select
+                  id="countryCode"
+                  name="countryCode"
+                  value={formData.countryCode}
+                  onChange={handleInputChange}
+                  aria-label="Country code"
+                  className="w-full sm:w-auto px-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors min-w-[100px]"
+                >
+                  {countryCodes.map(country => (
+                    <option key={country.code} value={country.code} className="bg-gray-800">
+                      {country.code}
+                    </option>
                   ))}
-             </div>
+                </select>
+                <label htmlFor="contactNumber" className="sr-only">Phone Number</label>
+                <input
+                  type="tel"
+                  id="contactNumber"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full sm:flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
+                  placeholder="Phone Number"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="message" className="sr-only">Message</label>
+              <textarea
+                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleInputChange}
+                required
+                rows={4}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors resize-none"
+                placeholder="Tell me about your project or how we can work together... *"
+              />
+            </div>
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-brand-purple hover:bg-brand-purple-light text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-brand-purple/25 block mx-auto"
+              >
+                {isSubmitting ? 'Sending...' : 'Send Message'}
+              </button>
+              <div aria-live="polite" aria-atomic="true" className="mt-4 text-sm">
+                {submitStatus === 'success' && (
+                  <p className="text-green-400">Message sent successfully! I'll get back to you soon.</p>
+                )}
+                {submitStatus === 'error' && (
+                  <div>
+                    <p className="text-red-400">Failed to send message. Please try again.</p>
+                    {errorDetail && (
+                      <p className="text-red-300/80 mt-1 break-words">{errorDetail}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </form>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-12">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8 flex flex-col items-center">
+            <div className="p-3 md:p-4 bg-brand-purple/20 rounded-full mb-4 text-brand-purple-light">
+              <EmailIcon />
+            </div>
+            <h4 className="text-lg md:text-xl font-semibold mb-2">Email</h4>
+            <a href={`mailto:${data.email}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors break-all">{data.email}</a>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8 flex flex-col items-center">
+            <div className="p-3 md:p-4 bg-brand-purple/20 rounded-full mb-4 text-brand-purple-light">
+              <PhoneIcon />
+            </div>
+            <h4 className="text-lg md:text-xl font-semibold mb-2">Phone</h4>
+            <a href={`tel:${data.phone}`} className="text-sm md:text-base text-gray-300 hover:text-brand-purple transition-colors">{data.phone}</a>
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-4 md:gap-6">
+          {data.socialLinks.map(link => (
+            <a key={link.platform} href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-purple transform hover:scale-110 transition-all duration-300">
+              <span className="sr-only">{link.platform}</span>
+              {link.icon}
+            </a>
+          ))}
+        </div>
+      </div>
     </Section>
   );
 };

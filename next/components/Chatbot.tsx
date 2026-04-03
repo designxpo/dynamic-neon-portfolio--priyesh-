@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
-import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog, ChatbotSettings, ChatbotRule } from '../types';
+import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog, ChatbotSettings } from '../types';
 import { getChatbotSettings } from '@/lib/api';
 import { Bot, Send, X, Trash2, Calendar } from 'lucide-react';
 
@@ -275,7 +275,7 @@ export default function Chatbot() {
       setMessages(seed);
       // persist to cookie and localStorage as a fallback
       saveCookieMessages(seed);
-      try { localStorage.setItem('chatbot-history', JSON.stringify(seed)); } catch {}
+      try { localStorage.setItem('chatbot-history', JSON.stringify(seed)); } catch { }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatbot]);
@@ -283,7 +283,7 @@ export default function Chatbot() {
   useEffect(() => {
     // persist to cookie (primary) and localStorage (fallback) on changes
     saveCookieMessages(messages);
-    try { localStorage.setItem('chatbot-history', JSON.stringify(messages.slice(-50))); } catch {}
+    try { localStorage.setItem('chatbot-history', JSON.stringify(messages.slice(-50))); } catch { }
     // scroll to bottom on new message
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
@@ -311,10 +311,10 @@ export default function Chatbot() {
     setMessages(seed);
     setAnimatedReply(null);
     setAnimatedIndex(0);
-    try { sessionStorage.removeItem('chat-visitor-name'); } catch {}
+    try { sessionStorage.removeItem('chat-visitor-name'); } catch { }
     setVisitorName('');
     clearCookie(CHAT_COOKIE);
-    try { localStorage.removeItem('chatbot-history'); } catch {}
+    try { localStorage.removeItem('chatbot-history'); } catch { }
     // Save seed back to cookie so greeting persists
     saveCookieMessages(seed);
   };
@@ -334,8 +334,8 @@ export default function Chatbot() {
     return null;
   };
 
-  const send = async () => {
-    const q = input.trim();
+  const send = async (overrideText?: string) => {
+    const q = (overrideText ?? input).trim();
     if (!db || !q) return;
     const now = Date.now();
     if (now - lastSendAtRef.current < 500) return; // debounce rapid triggers
@@ -345,13 +345,13 @@ export default function Chatbot() {
     const maybeName = extractName(q);
     if (maybeName) {
       setVisitorName(maybeName);
-      try { sessionStorage.setItem('chat-visitor-name', maybeName); } catch {}
+      try { sessionStorage.setItem('chat-visitor-name', maybeName); } catch { }
     }
     const userMsg: Msg = { role: 'user', content: q };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     // Check custom rules before invoking server or fallback
-  const ruleReply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
+    const ruleReply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
     // If a rule matched (and not just generic fallback), we can tell by comparing
     // whether it came from rules path: we applied rules first in answerQuestion.
     // To avoid ambiguity, explicitly match again but only through rules:
@@ -422,7 +422,7 @@ export default function Chatbot() {
         }
       }
       // Non-ok or empty answer => fallback
-  const reply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
+      const reply = answerQuestion(q, db, chatbot, visitorName || maybeName || '');
       setIsBotTyping(false);
       setAnimatedReply(reply);
       setAnimatedIndex(0);
@@ -478,10 +478,9 @@ export default function Chatbot() {
   };
 
   const quickSend = async (text: string, navigateId?: string) => {
-    setInput(text);
-    await new Promise(r => setTimeout(r, 0));
+    setInput('');
     if (navigateId) scrollToId(navigateId);
-    send();
+    send(text);
   };
 
   return (
@@ -537,121 +536,127 @@ export default function Chatbot() {
             </AnimatePresence>
             {/* Content fade-in to avoid popping during scale animation */}
             <motion.div className="contents" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.08, duration: 0.2 }}>
-            {/* Side pop arrow */}
-            <motion.div
-              aria-hidden
-              className="hidden md:block absolute -right-2 bottom-16 w-4 h-4 bg-dark-bg/95 border border-brand-purple/10 rotate-45 shadow-xl"
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 8 }}
-              transition={{ duration: 0.2 }}
-            />
-            <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
-                  <Bot size={18} className="opacity-90" />
+              {/* Side pop arrow */}
+              <motion.div
+                aria-hidden
+                className="hidden md:block absolute -right-2 bottom-16 w-4 h-4 bg-dark-bg/95 border border-brand-purple/10 rotate-45 shadow-xl"
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.2 }}
+              />
+              <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
+                    <Bot size={18} className="opacity-90" />
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-semibold text-white">{chatbot?.name || 'Prism'}</div>
+                    <div className="text-white/60">Ask about projects, skills, and more</div>
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <div className="font-semibold text-white">{chatbot?.name || 'Prism'}</div>
-                  <div className="text-white/60">Ask about projects, skills, and more</div>
+                <div className="flex items-center gap-1.5">
+                  <motion.button
+                    onClick={clearChat}
+                    className="text-white/60 hover:text-white p-1 rounded-md"
+                    aria-label="Clear chat"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    title="Clear chat"
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <Trash2 size={18} />
+                  </motion.button>
+                  <motion.button
+                    onClick={closeChat}
+                    className="text-white/60 hover:text-white p-1 rounded-md"
+                    aria-label="Close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <X size={18} />
+                  </motion.button>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <motion.button
-                  onClick={clearChat}
-                  className="text-white/60 hover:text-white p-1 rounded-md"
-                  aria-label="Clear chat"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  title="Clear chat"
-                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <Trash2 size={18} />
-                </motion.button>
-                <motion.button
-                  onClick={closeChat}
-                  className="text-white/60 hover:text-white p-1 rounded-md"
-                  aria-label="Close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <X size={18} />
-                </motion.button>
-              </div>
-            </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-            {/* Initial assistant message is injected into history on first load */}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto p-4 space-y-3"
+                aria-live="polite"
+                aria-label="Chat messages"
+                role="log"
+              >
+                {/* Initial assistant message is injected into history on first load */}
 
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
-                {m.role === 'assistant' && (
-                  <div className="mb-1 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white">
-                    <Bot size={14} className="opacity-90" />
+                {messages.map((m, i) => (
+                  <div key={`${m.role}-${i}`} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
+                    {m.role === 'assistant' && (
+                      <div className="mb-1 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white">
+                        <Bot size={14} className="opacity-90" />
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] inline-block whitespace-pre-wrap break-words px-3 py-2 text-sm rounded-2xl shadow-sm ${m.role === 'user' ? 'bg-brand-purple text-white rounded-br-sm' : 'bg-white/5 text-white rounded-tl-sm border border-brand-purple/10'}`}>
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing/animated assistant reply */}
+                {isBotTyping && (
+                  <div className="flex justify-start items-end gap-2">
+                    <div className="mb-1 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white">
+                      <Bot size={14} className="opacity-90" />
+                    </div>
+                    <div className="inline-flex items-center gap-1 bg-white/5 text-white rounded-2xl rounded-tl-sm px-3 py-2 text-sm shadow-sm border border-brand-purple/10">
+                      <span className="animate-bounce">•</span>
+                      <span className="animate-bounce [animation-delay:150ms]">•</span>
+                      <span className="animate-bounce [animation-delay:300ms]">•</span>
+                    </div>
                   </div>
                 )}
-                <div className={`max-w-[80%] inline-block whitespace-pre-wrap break-words px-3 py-2 text-sm rounded-2xl shadow-sm ${m.role === 'user' ? 'bg-brand-purple text-white rounded-br-sm' : 'bg-white/5 text-white rounded-tl-sm border border-brand-purple/10'}`}>
-                  {m.content}
-                </div>
-              </div>
-            ))}
 
-            {/* Typing/animated assistant reply */}
-            {isBotTyping && (
-              <div className="flex justify-start items-end gap-2">
-                <div className="mb-1 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white">
-                  <Bot size={14} className="opacity-90" />
-                </div>
-                <div className="inline-flex items-center gap-1 bg-white/5 text-white rounded-2xl rounded-tl-sm px-3 py-2 text-sm shadow-sm border border-brand-purple/10">
-                  <span className="animate-bounce">•</span>
-                  <span className="animate-bounce [animation-delay:150ms]">•</span>
-                  <span className="animate-bounce [animation-delay:300ms]">•</span>
-                </div>
+                {animatedReply != null && (
+                  <div className="flex justify-start items-end gap-2">
+                    <div className="mb-1 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white">
+                      <Bot size={14} className="opacity-90" />
+                    </div>
+                    <div className="max-w-[80%] inline-block whitespace-pre-wrap break-words px-3 py-2 text-sm rounded-2xl shadow-sm bg-white/5 text-white rounded-tl-sm border border-brand-purple/10">
+                      {animatedReply.slice(0, animatedIndex)}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {animatedReply != null && (
-              <div className="flex justify-start items-end gap-2">
-                <div className="mb-1 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white">
-                  <Bot size={14} className="opacity-90" />
-                </div>
-                <div className="max-w-[80%] inline-block whitespace-pre-wrap break-words px-3 py-2 text-sm rounded-2xl shadow-sm bg-white/5 text-white rounded-tl-sm border border-brand-purple/10">
-                  {animatedReply.slice(0, animatedIndex)}
-                </div>
+              {/* Quick reply buttons */}
+              <div className="px-4 pb-2 flex flex-wrap gap-2">
+                <button onClick={() => quickSend('Show me your projects', 'works')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">View My Projects</button>
+                <button onClick={() => { try { window.open('/images/Priyesh%20Mishra%20UIUX.pdf', '_blank'); } catch { } quickSend('Can I download your resume?'); }} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Download Resume</button>
+                <button onClick={() => quickSend('How can I contact you?', 'contact')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Contact Me</button>
+                <button onClick={() => quickSend('Tell me about yourself', 'home')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">About Me</button>
+                {chatbot?.showBookingQuickReply && chatbot?.bookingUrl && (
+                  <button onClick={() => { try { window.open(chatbot.bookingUrl as string, '_blank'); } catch { } quickSend('I want to book a 30-minute session.'); }} className="px-3 py-1.5 rounded-full text-xs bg-green-500/15 text-green-300 hover:bg-green-500/25 transition inline-flex items-center gap-1">
+                    <Calendar size={14} /> Book 30‑min Session
+                  </button>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Quick reply buttons */}
-          <div className="px-4 pb-2 flex flex-wrap gap-2">
-            <button onClick={() => quickSend('Show me your projects', 'works')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">View My Projects</button>
-            <button onClick={() => { try { window.open('/images/Priyesh%20Mishra%20UIUX.pdf', '_blank'); } catch {} quickSend('Can I download your resume?'); }} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Download Resume</button>
-            <button onClick={() => quickSend('How can I contact you?', 'contact')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">Contact Me</button>
-            <button onClick={() => quickSend('Tell me about yourself', 'home')} className="px-3 py-1.5 rounded-full text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition">About Me</button>
-            {chatbot?.showBookingQuickReply && chatbot?.bookingUrl && (
-              <button onClick={() => { try { window.open(chatbot.bookingUrl as string, '_blank'); } catch {} quickSend('I want to book a 30-minute session.'); }} className="px-3 py-1.5 rounded-full text-xs bg-green-500/15 text-green-300 hover:bg-green-500/25 transition inline-flex items-center gap-1">
-                <Calendar size={14} /> Book 30‑min Session
-              </button>
-            )}
-          </div>
-
-            <div className="p-3 border-t border-brand-purple/10 flex gap-2">
-              <div className="flex-1 relative">
-                <input
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') send(); }}
-                  placeholder="Ask anything…"
-                  className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-brand-purple/30"
-                />
+              <div className="p-3 border-t border-brand-purple/10 flex gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') send(); }}
+                    placeholder="Ask anything…"
+                    className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-brand-purple/30"
+                  />
+                </div>
+                <button disabled={disabled} onClick={() => send()} className={`px-3.5 py-2 rounded-full text-sm flex items-center gap-1 ${disabled ? 'bg-white/10 text-white/40' : 'bg-brand-purple text-white hover:brightness-110'}`} aria-label="Send">
+                  <Send size={16} />
+                </button>
               </div>
-              <button disabled={disabled} onClick={send} className={`px-3.5 py-2 rounded-full text-sm flex items-center gap-1 ${disabled ? 'bg-white/10 text-white/40' : 'bg-brand-purple text-white hover:brightness-110'}`} aria-label="Send">
-                <Send size={16} />
-              </button>
-            </div>
             </motion.div>
           </motion.div>
         ) : ((chatbot?.enabled ?? true) ? (

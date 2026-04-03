@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Project } from '../types';
@@ -28,8 +27,8 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
     <div className="p-4 md:p-6">
       <div className="flex items-start justify-between mb-3">
         <div className="flex flex-wrap gap-1">
-          {((project.categories && project.categories.length ? project.categories : (project.category ? [project.category] : []))).slice(0, 2).map((cat, idx) => (
-            <span key={idx} className="text-xs bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full border border-brand-purple/30 font-medium">
+          {((project.categories && project.categories.length ? project.categories : (project.category ? [project.category] : []))).slice(0, 2).map((cat) => (
+            <span key={cat} className="text-xs bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full border border-brand-purple/30 font-medium">
               {cat}
             </span>
           ))}
@@ -68,9 +67,9 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
 
       {project.technologies && (
         <div className="flex flex-wrap gap-2">
-          {project.technologies.slice(0, 3).map((tech, index) => (
+          {project.technologies.slice(0, 3).map((tech) => (
             <span
-              key={index}
+              key={tech}
               className="text-xs bg-white/10 text-gray-200 px-3 py-1 rounded-md border border-white/20 font-medium"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
@@ -112,9 +111,9 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const filteredProjects = filter === 'All'
     ? data
     : data.filter(p => {
-        const cats = (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : []));
-        return cats.includes(filter);
-      });
+      const cats = (p.categories && p.categories.length ? p.categories : (p.category ? [p.category] : []));
+      return cats.includes(filter);
+    });
 
   return (
     <Section title="My Recent Works" id="works">
@@ -133,11 +132,10 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
               <button
                 key={category}
                 onClick={() => setFilter(category)}
-                className={`px-2 sm:px-4 md:px-6 py-1 sm:py-2 md:py-3 text-xs sm:text-xs md:text-sm lg:text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
-                  filter === category
+                className={`px-2 sm:px-4 md:px-6 py-1 sm:py-2 md:py-3 text-xs sm:text-xs md:text-sm lg:text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${filter === category
                     ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30'
                     : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                }`}
+                  }`}
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 {category}

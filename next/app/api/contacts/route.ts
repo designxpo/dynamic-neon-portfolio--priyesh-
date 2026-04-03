@@ -16,6 +16,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
+    // Basic input length limits to prevent abuse
+    if (String(name).length > 200 || String(email).length > 320 || String(contactNumber).length > 30 || String(message).length > 10000) {
+      return NextResponse.json({ error: 'Input exceeds allowed length' }, { status: 400 });
+    }
+
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(email))) {
+      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+    }
+
     await connectDB();
     const saved = await Contact.create({ name, email, contactNumber, message });
 
@@ -38,7 +49,7 @@ export async function POST(request: Request) {
       const subject = `Thanks for reaching out, ${name}!`;
       const text = `Hi ${name},\n\nThanks for getting in touch — I received your message and will get back to you shortly.\n\nHere’s a copy of what you sent:\n${message}\n\n— ${siteName}`;
       const html = `
-        <div style=\"font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #0f172a;\">\n          <h2 style=\"margin:0 0 12px;\">Thanks for reaching out, ${name}!</h2>\n          <p style=\"margin:0 0 16px; line-height:1.6;\">I received your message and will get back to you shortly.</p>\n          <div style=\"background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin: 0 0 16px;\">\n            <div style=\"font-weight:600; margin-bottom:8px;\">Your message:</div>\n            <div style=\"white-space:pre-wrap;\">${escapeHtml(message)}</div>\n          </div>\n          <p style=\"margin:0 0 8px; line-height:1.6;\">— ${siteName}</p>\n        </div>`;
+        <div style=\"font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #0f172a;\">\n          <h2 style=\"margin:0 0 12px;\">Thanks for reaching out, ${escapeHtml(name)}!</h2>\n          <p style=\"margin:0 0 16px; line-height:1.6;\">I received your message and will get back to you shortly.</p>\n          <div style=\"background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin: 0 0 16px;\">\n            <div style=\"font-weight:600; margin-bottom:8px;\">Your message:</div>\n            <div style=\"white-space:pre-wrap;\">${escapeHtml(message)}</div>\n          </div>\n          <p style=\"margin:0 0 8px; line-height:1.6;\">— ${siteName}</p>\n        </div>`;
       sendMail({ to: email, subject, text, html }).then((res) => {
         if (!res.ok) console.error('Confirmation email failed:', res);
       }).catch((e) => console.error('Confirmation email error:', e));
