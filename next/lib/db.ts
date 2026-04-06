@@ -126,7 +126,6 @@ const getDefaultDb = (): Database => {
                 publishedAt: new Date('2021-12-30').toISOString(),
             },
         ],
-        adminPassword: 'admin',
         categories: ['Apps', 'Branding', 'UI/UX', 'Web'],
         chatbot: {
             enabled: true,
@@ -296,23 +295,6 @@ const compressDbForStorage = (db: Database): Database => {
     }
 
     return compressed;
-};
-
-export const getAdminPassword = (): string => {
-    const db = getDb();
-    return db.adminPassword || 'admin';
-};
-
-export const setAdminPassword = (password: string): boolean => {
-    try {
-        const db = getDb();
-        db.adminPassword = password;
-        saveDb(db);
-        return true;
-    } catch (e) {
-        console.error("Failed to set admin password", e);
-        return false;
-    }
 };
 
 // Remove older DB keys and reinitialize with defaults. Returns true if successful.
