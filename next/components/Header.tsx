@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { CodeIcon } from './icons/Icons';
 import { HeroData } from '../types';
 
 interface HeaderProps {
@@ -41,16 +40,23 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
     { href: '#experience', label: 'Experience' },
     { href: '#contact', label: 'Contact' },
   ];
-  
-  const nameParts = (heroData?.name || 'Priyesh Mishra').split(' ');
-  const firstName = nameParts[0];
-  const lastName = nameParts.slice(1).join(' ');
 
   const handleScrollToTop = () => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.location.hash = id;
+    }
+    setIsMenuOpen(false);
+  };
+
+  const botName = heroData?.name || 'Priyesh Mishra';
 
   return (
   <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 bg-dark-bg/80 backdrop-blur-lg border-b border-gray-800' : 'py-3 md:py-4'}`}>
@@ -60,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
             <button
               onClick={handleScrollToTop}
               className="flex items-center gap-2 text-xl md:text-2xl font-bold"
-              aria-label="Scroll to top"
+              aria-label={`${botName} — scroll to top`}
             >
             <img
               src="/images/pmlogo.png"
@@ -77,6 +83,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
               <a
                 key={link.href}
                 href={link.href}
+                onClick={(e) => handleNavClick(e, link.href.slice(1))}
                 className={`transition-all duration-300 text-sm lg:text-base relative ${
                   activeSection === link.href.slice(1)
                     ? 'text-brand-purple border-b-2 border-brand-purple'
@@ -91,8 +98,12 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
 
         {/* Right Section - Contact Button and Mobile Menu */}
         <div className="flex-1 flex justify-end">
-          <a href="#contact" className="hidden md:inline-block bg-brand-purple text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm lg:text-base">
-              Contact Me
+          <a
+            href="#contact"
+            onClick={(e) => handleNavClick(e, 'contact')}
+            className="hidden md:inline-block bg-brand-purple text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm lg:text-base"
+          >
+            Contact Me
           </a>
 
           {/* Mobile Menu Button */}
@@ -105,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile Menu */}
   <div className={`md:hidden absolute top-full left-0 w-full bg-dark-bg/95 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 border-t border-gray-800' : 'max-h-0'}`}>
         <nav className="flex flex-col items-center space-y-4 py-6">
@@ -113,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => handleNavClick(e, link.href.slice(1))}
                   className={`transition-all duration-300 text-base md:text-lg relative ${
                     activeSection === link.href.slice(1)
                       ? 'text-brand-purple border-b-2 border-brand-purple'
@@ -123,7 +134,11 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
                   {link.label}
                 </a>
             ))}
-             <a href="#contact" onClick={() => setIsMenuOpen(false)} className="bg-brand-purple text-white px-6 md:px-8 py-3 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 w-4/5 text-center mt-4 text-sm md:text-base">
+             <a
+               href="#contact"
+               onClick={(e) => handleNavClick(e, 'contact')}
+               className="bg-brand-purple text-white px-6 md:px-8 py-3 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 w-4/5 text-center mt-4 text-sm md:text-base"
+             >
                 Contact Me
             </a>
         </nav>
