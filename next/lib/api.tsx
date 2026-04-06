@@ -158,7 +158,7 @@ import React from 'react';
 import * as Icons from '@/components/icons/Icons';
 import {
     HeroData, RawHeroData, Service, RawService, Skill, RawSkill, SocialLink,
-    Project, RawProject, Testimonial, RawTestimonial, ContactData, RawContactData,
+    Project, RawProject, Testimonial, ContactData, RawContactData,
     Blog, BlogData, Education, Experience, SEOConfig, SectionKey, SeoMeta, Stat,
 } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -167,16 +167,6 @@ import { getDb, saveDb } from '@/lib/db';
 import { setOfflineMode, isOfflineMode } from '@/lib/offline';
 import { convertFileToOptimizedBase64, storeImageSafely } from '@/lib/imageStorage';
 
-// Fallback mock data for when API is unavailable (e.g., Mongo not configured in dev)
-import {
-    mockHeroData,
-    mockServicesData,
-    mockProjectsData,
-    mockExperiencesData,
-    mockEducationsData,
-    mockSkillsData,
-    mockContactData,
-} from '@/data/mockData';
 import type { ChatbotSettings, RawSocialLink, SiteMetadata } from '@/types';
 
 // Timeout wrapper with increased timeout for MongoDB Atlas operations
@@ -327,13 +317,6 @@ const toContactData = (raw: RawContactData): ContactData => ({ ...raw, socialLin
 const toProject = (raw: RawProject): Project => ({
     ...raw,
     id: raw.id || '',
-});
-const toTestimonial = (raw: RawTestimonial): Testimonial => ({
-    ...raw,
-    avatar: raw?.avatar ?? {
-        url: `https://i.pravatar.cc/150?u=${encodeURIComponent((raw?.clientName || 'client').replace(/\s/g, ''))}`,
-        alternativeText: raw?.clientName || 'Client Avatar',
-    },
 });
 
 const getIconName = (iconNode: React.ReactNode): string => {

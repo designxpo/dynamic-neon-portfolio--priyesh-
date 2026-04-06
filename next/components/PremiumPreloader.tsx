@@ -52,7 +52,7 @@ export default function PremiumPreloader({ children, durationMs = 3200, enableSo
       clearTimeout(t);
       clearTimeout(hard);
     };
-  }, [durationMs]);
+  }, [durationMs, waitForEventName]);
 
   useEffect(() => {
     if (!waitForEventName) return;

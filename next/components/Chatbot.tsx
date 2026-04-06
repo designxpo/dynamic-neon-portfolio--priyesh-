@@ -105,7 +105,7 @@ function answerQuestion(q: string, db: Database, chatbot: ChatbotSettings | null
       .replace(/\{\s*bookingUrl\s*\}/gi, (chatbot?.bookingUrl || ''))
       .replace(/\{\s*contactLink\s*\}/gi, '#contact');
   // apply admin-defined placeholders
-    let ph: Record<string, string> = {};
+    const ph: Record<string, string> = {};
     if (Array.isArray(chatbot?.placeholders)) {
       for (const p of chatbot.placeholders) {
         if (p && typeof p.key === 'string' && typeof p.value === 'string') {

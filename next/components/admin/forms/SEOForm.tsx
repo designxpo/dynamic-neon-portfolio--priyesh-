@@ -2,7 +2,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { SEOConfig, SectionKey, SeoMeta } from '@/types';
-import { getSEO, updateSEO } from '@/lib/api';
+import { getSEO } from '@/lib/api';
 import { FileText, Save, Info } from 'lucide-react';
 
 const sectionLabels: Record<SectionKey, string> = {

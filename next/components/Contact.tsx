@@ -236,7 +236,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
               </button>
               <div aria-live="polite" aria-atomic="true" className="mt-4 text-sm">
                 {submitStatus === 'success' && (
-                  <p className="text-green-400">Message sent successfully! I'll get back to you soon.</p>
+                  <p className="text-green-400">Message sent successfully! I&apos;ll get back to you soon.</p>
                 )}
                 {submitStatus === 'error' && (
                   <div>

@@ -1,6 +1,7 @@
 // @ts-nocheck
 "use client";
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Skill, RawSkill } from '@/types';
 import { getSkillsData, updateSkills, convertFileToBase64 } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
@@ -117,7 +118,7 @@ const SkillsForm: React.FC = () => {
                     <div key={skill.id} className="admin-card group">
                         <div className="flex flex-col items-center text-center gap-3">
                             {skill.image?.url ? (
-                                <img src={skill.image.url} alt={skill.name} className="w-12 h-12 rounded-lg object-cover" />
+                                <Image src={skill.image.url} alt={skill.name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover" />
                             ) : (
                                 <div className="text-electric-blue text-3xl"><Award size={32} /></div>
                             )}
@@ -145,7 +146,7 @@ const SkillsForm: React.FC = () => {
                         <div><label className="admin-label">Icon Name</label><input type="text" value={currentItem.icon} onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} className="admin-input" placeholder="e.g., ReactIcon" /><p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p></div>
                         <div className="admin-card">
                             <label className="admin-label">Skill Image (Optional)</label>
-                            {currentItem.image?.url && (<img src={currentItem.image.url} alt="Skill Preview" className="w-24 h-24 rounded-lg object-cover border border-white/10 mb-4" />)}
+                            {currentItem.image?.url && (<Image src={currentItem.image.url} alt="Skill Preview" width={96} height={96} className="w-24 h-24 rounded-lg object-cover border border-white/10 mb-4" />)}
                             <div className="flex gap-3">
                                 <label className="admin-button-secondary flex items-center gap-2 cursor-pointer">
                                     <input type="file" accept="image/*" onChange={async (e) => {

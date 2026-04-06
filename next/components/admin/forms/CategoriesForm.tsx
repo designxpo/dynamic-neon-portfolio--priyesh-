@@ -1,7 +1,6 @@
 // @ts-nocheck
 "use client";
-import React, { useEffect, useMemo, useState } from 'react';
-import { getCategories, updateCategories, getProjectsData, updateProjects } from '@/lib/api';
+import React, { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, Save, Trash2, Info, RefreshCcw } from 'lucide-react';
 
 type CatRow = { id: string; name: string; original: string };
@@ -27,18 +26,6 @@ const CategoriesForm: React.FC = () => {
   };
 
   useEffect(() => { fetchCategories(); }, []);
-
-  const renameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const r of rows) {
-      const from = (r.original || '').trim();
-      const to = (r.name || '').trim();
-      if (from && to && from !== to) map.set(from, to);
-    }
-    return map;
-  }, [rows]);
-
-  const currentList = useMemo(() => Array.from(new Set(rows.map(r => r.name.trim()).filter(Boolean))), [rows]);
 
   const move = (i: number, dir: -1 | 1) => {
     setRows(prev => {

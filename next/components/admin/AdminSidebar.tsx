@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React from 'react';
+import Image from 'next/image';
 import { LayoutDashboard, Target, Zap, Rocket, Briefcase, GraduationCap, Award, Star, FileText, Mail, Inbox, Settings, LogOut, Search, MessageCircle, FileCog, Tags } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -82,9 +83,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
       <div className="relative z-10 p-6 border-b border-white/10">
         <div className="flex flex-col items-start gap-2">
           <div className="relative">
-            <img
+            <Image
               src="/images/pmlogo.png"
               alt="Logo"
+              width={64}
+              height={64}
               className="h-16 w-auto"
             />
           </div>

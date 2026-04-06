@@ -1,8 +1,9 @@
 // @ts-nocheck
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Blog, BlogData, Image } from '@/types';
-import { getBlogs, addBlog, updateBlog, deleteBlog, convertFileToBase64 } from '@/lib/api';
+import NextImage from 'next/image';
+import { Blog, Image } from '@/types';
+import { convertFileToBase64 } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { Edit2, Trash2, Plus, FileText, Calendar, User, Upload, X, Link as LinkIcon } from 'lucide-react';
 
@@ -136,7 +137,7 @@ const handleSave = async () => {
                     <div key={blog.id} className="admin-card group hover:border-electric-blue/30">
                         {blog.thumbnail?.url && (
                             <div className="mb-4 -mx-6 -mt-6 overflow-hidden rounded-t-xl">
-                                <img src={blog.thumbnail.url} alt={blog.title} className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300" />
+                                <NextImage src={blog.thumbnail.url} alt={blog.title} width={400} height={160} className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300" />
                             </div>
                         )}
                         <div className="flex items-start gap-3 mb-3">
@@ -178,7 +179,7 @@ const handleSave = async () => {
                         <label className="admin-label">Thumbnail Image</label>
                         {currentItem?.thumbnail?.url && (
                             <div className="mb-3 relative inline-block">
-                                <img src={currentItem.thumbnail.url} alt={currentItem.title || 'thumbnail'} className="w-full h-40 object-cover rounded-lg border border-white/10" />
+                                <NextImage src={currentItem.thumbnail.url} alt={currentItem.title || 'thumbnail'} width={400} height={160} className="w-full h-40 object-cover rounded-lg border border-white/10" />
                                 <button type="button" onClick={() => setCurrentItem(p => ({...p, thumbnail: undefined}))} className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center backdrop-blur-xl transition-colors" title="Remove image"><X size={14} /></button>
                             </div>
                         )}

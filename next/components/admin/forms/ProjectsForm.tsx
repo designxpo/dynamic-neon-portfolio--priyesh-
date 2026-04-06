@@ -1,6 +1,7 @@
 // @ts-nocheck
 "use client";
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { RawProject } from '@/types';
 import { convertFileToBase64, getCategories } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
@@ -99,6 +100,7 @@ const ProjectsForm: React.FC = () => {
         setMessage(null);
         // Ensure required fields
         // Do not include _id in payload for PUT/POST
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { _id, ...rest } = currentItem;
         const payload = {
             ...rest,
@@ -176,7 +178,7 @@ const ProjectsForm: React.FC = () => {
                             <tr key={project._id}>
                                 <td>
                                     <div className="flex items-center gap-4">
-                                        <img src={project.coverImage.url} alt={project.title} className="w-16 h-12 object-cover rounded-lg border border-white/10" />
+                                        <Image src={project.coverImage.url} alt={project.title} width={64} height={48} className="w-16 h-12 object-cover rounded-lg border border-white/10" />
                                         <div>
                                             <p className="font-semibold text-white">{project.title}</p>
                                             <p className="text-xs text-gray-500 line-clamp-1">{project.descriptionShort}</p>
@@ -289,7 +291,7 @@ const ProjectsForm: React.FC = () => {
                         <div className="admin-card">
                             <label className="admin-label">Cover Image</label>
                             {currentItem.coverImage.url && (
-                                <img src={currentItem.coverImage.url} alt="Cover preview" className="w-full h-48 object-cover rounded-lg border border-white/10 mb-4" />
+                                <Image src={currentItem.coverImage.url} alt="Cover preview" width={672} height={192} className="w-full h-48 object-cover rounded-lg border border-white/10 mb-4" />
                             )}
                             <div className="flex gap-3">
                                 <label className="admin-button-secondary flex items-center gap-2 cursor-pointer">

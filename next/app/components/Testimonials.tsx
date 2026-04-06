@@ -2,6 +2,7 @@
 
 import { connectDB } from '@/lib/db/mongoose';
 import Testimonial from '@/models/Testimonial';
+import Image from 'next/image';
 
 export default async function Testimonials() {
   await connectDB();
@@ -20,9 +21,11 @@ export default async function Testimonials() {
       {testimonials.map((t: any) => (
         <div key={t._id.toString()} className='border rounded-lg p-4 shadow-sm bg-white dark:bg-neutral-900'>
           {t.avatar && (
-            <img
+            <Image
               src={t.avatar}
               alt={t.name}
+              width={64}
+              height={64}
               className='w-16 h-16 rounded-full mb-3 object-cover'
             />
           )}

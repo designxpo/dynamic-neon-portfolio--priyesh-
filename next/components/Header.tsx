@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { HeroData } from '../types';
 
 interface HeaderProps {
@@ -12,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
 
   const getActiveSection = () => {
     const sections = ['works', 'process', 'services', 'experience', 'contact'];
-    for (let section of sections) {
+    for (const section of sections) {
       const element = document.getElementById(section);
       if (element) {
         const rect = element.getBoundingClientRect();
@@ -68,9 +69,11 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
               className="flex items-center gap-2 text-xl md:text-2xl font-bold"
               aria-label={`${botName} — scroll to top`}
             >
-            <img
+            <Image
               src="/images/pmlogo.png"
               alt="Priyesh Mishra Logo"
+              width={80}
+              height={80}
               className="h-10 md:h-12 lg:h-16 xl:h-20 w-auto"
             />
           </button>

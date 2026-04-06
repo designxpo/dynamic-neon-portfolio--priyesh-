@@ -1,8 +1,9 @@
 // @ts-nocheck
 "use client";
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { RawTestimonial } from '@/types';
-import { updateTestimonials, convertFileToBase64 } from '@/lib/api';
+import { convertFileToBase64 } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, Star, Upload, X } from 'lucide-react';
@@ -135,7 +136,7 @@ const handleDelete = async (testimonialId: string) => {
                     <div key={testimonial.id} className="admin-card group hover:border-electric-blue/30">
                         <div className="flex items-start gap-4">
                             <div className="relative flex-shrink-0">
-                                <img src={testimonial.avatar.url} alt={testimonial.clientName} className="w-16 h-16 object-cover rounded-full border-2 border-electric-blue/20" />
+                                <Image src={testimonial.avatar.url} alt={testimonial.clientName} width={64} height={64} className="w-16 h-16 object-cover rounded-full border-2 border-electric-blue/20" />
                                 <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full backdrop-blur-xl bg-electric-blue/20 border border-electric-blue/30 flex items-center justify-center">
                                     <Star size={12} className="text-electric-blue fill-electric-blue" />
                                 </div>
@@ -143,7 +144,7 @@ const handleDelete = async (testimonialId: string) => {
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-white">{testimonial.clientName}</p>
                                 <p className="text-sm text-electric-blue mb-2">{testimonial.roleCompany}</p>
-                                <p className="text-gray-400 text-sm line-clamp-3 italic">"{testimonial.quote}"</p>
+                                <p className="text-gray-400 text-sm line-clamp-3 italic">&quot;{testimonial.quote}&quot;</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -163,14 +164,14 @@ const handleDelete = async (testimonialId: string) => {
                         <div>
                             <label className="admin-label">Quote</label>
                             <textarea rows={6} value={currentItem.quote} onChange={e => setCurrentItem(p => p ? { ...p, quote: e.target.value } : null)} className="admin-textarea" placeholder="Enter the testimonial quote..." style={{ background: 'rgba(0, 0, 0, 0.3)', lineHeight: '1.7' }} />
-                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Write a compelling testimonial that highlights the client's experience</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Write a compelling testimonial that highlights the client&apos;s experience</p>
                         </div>
                         <div>
                             <label className="admin-label">Avatar Image</label>
                             <div className="flex items-center gap-6">
                                 {currentItem.avatar.url && (
                                     <div className="relative">
-                                        <img src={currentItem.avatar.url} alt="Avatar preview" className="w-24 h-24 object-cover rounded-full border-2 border-electric-blue/20" />
+                                        <Image src={currentItem.avatar.url} alt="Avatar preview" width={96} height={96} className="w-24 h-24 object-cover rounded-full border-2 border-electric-blue/20" />
                                         <button type="button" onClick={() => setCurrentItem(p => p ? { ...p, avatar: { ...p.avatar, url: '' } } : null)} className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center backdrop-blur-xl transition-colors" title="Remove image"><X size={14} /></button>
                                     </div>
                                 )}

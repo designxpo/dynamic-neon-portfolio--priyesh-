@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Header from './Header';
 import Hero from './Hero';
 import Services from './Services';
@@ -29,14 +30,6 @@ import {
 } from '@/lib/api';
 
 import {
-    HeroData,
-    Service,
-    Project,
-    Experience as ExperienceType,
-    Education as EducationType,
-    Skill,
-    Testimonial,
-    ContactData as ContactDataType,
     PortfolioData,
     Blog
 } from '@/types';
@@ -314,9 +307,11 @@ const PortfolioPage = () => {
                                                 className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 max-w-xs w-full text-center shadow-[0_8px_30px_rgba(123,95,255,0.15)] border border-white/15 transition-all hover:scale-[1.02]"
                                             >
                                                 {t.avatar && (
-                                                    <img
+                                                    <Image
                                                         src={t.avatar}
                                                         alt={t.name}
+                                                        width={80}
+                                                        height={80}
                                                         className="w-20 h-20 rounded-full border border-white/20 mx-auto mb-5 object-cover"
                                                     />
                                                 )}
@@ -399,9 +394,11 @@ const PortfolioPage = () => {
 
                             <div className="flex items-center gap-3 mb-3">
                                 {selectedTestimonial.avatar && (
-                                    <img
+                                    <Image
                                         src={selectedTestimonial.avatar}
                                         alt={selectedTestimonial.name}
+                                        width={40}
+                                        height={40}
                                         className="w-10 h-10 rounded-full object-cover"
                                     />
                                 )}

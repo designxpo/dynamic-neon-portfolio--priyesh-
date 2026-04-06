@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Project } from '../types';
 import Section from './Section';
 import { ExternalLinkIcon, GitHubIcon } from './icons/Icons';
-import { getCategories } from '@/lib/api';
 
 interface RecentWorksProps {
   data: Project[];
@@ -16,9 +16,11 @@ const hasAnyLink = (url?: string) => !!url && url.trim().length > 0;
 const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void }> = ({ project, onReadMore }) => (
   <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full h-full">
     <div className="relative overflow-hidden aspect-video">
-      <img
+      <Image
         src={project.coverImage.url}
         alt={project.coverImage.alternativeText || project.title}
+        width={400}
+        height={300}
         className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
       />
   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
@@ -96,16 +98,8 @@ const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void
 
 const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
-  const [orderedCats, setOrderedCats] = useState<string[] | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
   const [visibleCount, setVisibleCount] = useState(4);
-
-  // Load saved categories order from Admin; if unavailable, fall back to derived
-  useEffect(() => {
-    (async () => {
-      try { const cats = await getCategories(); setOrderedCats(cats || []); } catch { setOrderedCats([]); }
-    })();
-  }, []);
 
   // Only show categories that have at least one project
   const derivedCats = Array.from(new Set(
@@ -212,7 +206,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
             {/* Cover image */}
             {selected.coverImage?.url && (
               <div className="relative w-full h-48 md:h-56 overflow-hidden">
-                <img src={selected.coverImage.url} alt={selected.coverImage.alternativeText || selected.title} className="w-full h-full object-cover" />
+                <Image src={selected.coverImage.url} alt={selected.coverImage.alternativeText || selected.title} width={672} height={224} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
             )}

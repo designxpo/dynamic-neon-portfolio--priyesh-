@@ -262,7 +262,7 @@ const SettingsForm: React.FC = () => {
                     Defaults / Baseline
                 </h3>
                 <p className="text-sm text-gray-400 mb-4">
-                    Choose what "Reset" restores to by updating the baseline to your current content when you are satisfied with changes.
+                    Choose what &quot;Reset&quot; restores to by updating the baseline to your current content when you are satisfied with changes.
                 </p>
                 <div className="flex gap-3">
                     <button

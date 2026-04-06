@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { MessageCircle, Save, Info, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { getChatbotSettings, updateChatbotSettings } from '@/lib/api';
-import type { ChatbotSettings, ChatbotRule } from '@/types';
+import type { ChatbotSettings } from '@/types';
 
 const ChatbotForm: React.FC = () => {
   const [settings, setSettings] = useState<ChatbotSettings | null>(null);
@@ -35,7 +35,7 @@ const ChatbotForm: React.FC = () => {
       placeholdersArr = settings.placeholders;
     }
     // Use customQA directly
-    let customQA = Array.isArray(settings.customQA)
+    const customQA = Array.isArray(settings.customQA)
       ? settings.customQA.filter(q => q && typeof q === 'object' && q.question && q.reply)
       : [];
     const payload = {
@@ -141,7 +141,7 @@ const ChatbotForm: React.FC = () => {
             className="admin-button-secondary flex items-center gap-2"
             onClick={() => {
               const next = { ...(settings.placeholders || {}) } as Record<string, string>;
-              let base = 'placeholder';
+              const base = 'placeholder';
               let k = base;
               let i = 1;
               while (next[k] !== undefined) { k = `${base}_${i++}`; }

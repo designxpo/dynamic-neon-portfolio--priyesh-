@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Section from './Section';
 
 interface Testimonial {
@@ -51,7 +52,7 @@ export default function Testimonials() {
             <div key={t._id} className='border border-white/10 rounded-2xl p-6 shadow-sm bg-white/5 backdrop-blur-sm text-center'>
               {t.avatar && (
                 <div className='flex justify-center mb-3'>
-                  <img src={t.avatar} alt={t.name} className='w-16 h-16 rounded-full object-cover border border-white/20' />
+                  <Image src={t.avatar} alt={t.name} width={64} height={64} className='w-16 h-16 rounded-full object-cover border border-white/20' />
                 </div>
               )}
               <p className='text-gray-300 italic clamp-3'>
@@ -94,7 +95,7 @@ export default function Testimonials() {
             </button>
 
             <div className='flex items-center gap-3 mb-3'>
-              {selected.avatar && <img src={selected.avatar} alt={selected.name} className='w-10 h-10 rounded-full object-cover' />}
+              {selected.avatar && <Image src={selected.avatar} alt={selected.name} width={40} height={40} className='w-10 h-10 rounded-full object-cover' />}
               <div>
                 <h4 className='font-semibold'>{selected.name}</h4>
                 <span className='text-xs text-gray-400'>{selected.role}</span>

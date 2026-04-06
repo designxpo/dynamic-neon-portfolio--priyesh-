@@ -1,10 +1,11 @@
 // @ts-nocheck
 "use client";
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { RawHeroData } from '@/types';
 import { getRawHeroData, updateHeroData, convertFileToBase64 } from '@/lib/api';
 import { v4 as uuidv4 } from 'uuid';
-import { Upload, X, Plus, Trash2, User, Briefcase, Link, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Plus, Trash2 } from 'lucide-react';
 import Loader from '@/components/Loader';
 
 const HeroForm: React.FC = () => {
@@ -115,9 +116,11 @@ const HeroForm: React.FC = () => {
             {/* Profile image upload and preview section */}
             <div className="admin-card flex gap-6 items-center">
                 <div className="relative group">
-                    <img
+                    <Image
                         src={formData.profileImage.url}
                         alt="Profile Preview"
+                        width={128}
+                        height={128}
                         className="w-32 h-32 rounded-full object-cover border-2 border-white/20"
                     />
                     <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { HeroData } from '../types';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface HeroProps {
   data: HeroData;
@@ -13,14 +14,13 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
   const [loopNum, setLoopNum] = useState(0);
   const [typingSpeed, setTypingSpeed] = useState(120);
   // Use admin-configured animation words, fallback to default
-  const words = Array.isArray(data.titleWords) && data.titleWords.length > 0
-    ? data.titleWords
-    : ['Designer', 'Developer'];
+  const words = useMemo(() =>
+    Array.isArray(data.titleWords) && data.titleWords.length > 0 ? data.titleWords : ['Designer', 'Developer'],
+  [data.titleWords]);
   // Use admin-configured prefix, fallback to first word of title or 'UI/UX'
   const prefix = data.titlePrefix || (data.title ? data.title.split(' ')[0] : 'UI/UX');
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
     const handleType = () => {
       const i = loopNum % words.length;
       const fullText = words[i];
@@ -44,7 +44,7 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
       });
       setTypingSpeed(isDeleting ? 60 : 120);
     };
-    timer = setTimeout(handleType, typingSpeed);
+    const timer = setTimeout(handleType, typingSpeed);
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, loopNum, typingSpeed, words]);
   const ref = useRef(null);
@@ -135,9 +135,11 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <div className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 xl:w-96 xl:h-96 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-              <img
+              <Image
                 src={data.profileImage?.url || '/images/profile.png'}
                 alt={data.profileImage?.alternativeText || 'Profile Picture'}
+                width={384}
+                height={384}
                 className="w-full h-full object-cover"
               />
             </div>

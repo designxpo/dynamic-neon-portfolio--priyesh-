@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import Section from './Section';
 import { Blog } from '../types';
 
@@ -15,14 +16,12 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
   const rowRef = useRef<HTMLDivElement>(null);
   const manualControlTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isHoverRef = useRef<boolean>(false);
-  const [isHover, setIsHover] = useState(false);
+  const [, setIsHover] = useState(false);
   const [cardTotalWidth, setCardTotalWidth] = useState<number>(380); // fallback: 360 card + 20 gap
   const ITEMS_PER_PAGE = 3; // matches desktop layout
 
-  if (!data || data.length === 0) return null;
-
-  const shouldAnimate = data.length > ITEMS_PER_PAGE;
-  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+  const shouldAnimate = data && data.length > ITEMS_PER_PAGE;
+  const totalPages = data ? Math.ceil(data.length / ITEMS_PER_PAGE) : 0;
 
   // Function to reset back to auto-scroll after inactivity
   const resetToAutoScroll = () => {
@@ -45,14 +44,16 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
   };
 
   useEffect(() => {
+    if (!data || data.length === 0) return;
     if (useManualControl && scrollRef.current && shouldAnimate) {
       const scrollAmount = currentIndex * ITEMS_PER_PAGE * cardTotalWidth;
       scrollRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
     }
-  }, [currentIndex, useManualControl, shouldAnimate, cardTotalWidth]);
+  }, [currentIndex, useManualControl, shouldAnimate, cardTotalWidth, data]);
 
   // Measure card width + gap dynamically to avoid magic numbers
   useEffect(() => {
+    if (!data || data.length === 0) return;
     const measure = () => {
       const row = rowRef.current;
       if (!row) return;
@@ -74,7 +75,7 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [data.length]);
+  }, [data]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -84,6 +85,8 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
       }
     };
   }, []);
+
+  if (!data || data.length === 0) return null;
 
   const handlePrevious = () => {
     setUseManualControl(true);
@@ -250,9 +253,11 @@ const BlogCard: React.FC<{ post: Blog }> = ({ post }) => {
     <article className="group bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl overflow-hidden hover:bg-white/[0.06] hover:border-brand-purple/50 hover:shadow-lg hover:shadow-brand-purple/10 transition-all duration-300 hover:scale-[1.02] flex flex-col flex-shrink-0 w-[340px] lg:w-[360px]">
       {post.thumbnail?.url && (
         <div className="relative w-full h-40 overflow-hidden bg-gradient-to-br from-purple-900/20 to-black/40">
-          <img
+          <Image
             src={post.thumbnail.url}
             alt={post.thumbnail.alternativeText || post.title}
+            width={400}
+            height={300}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60" />

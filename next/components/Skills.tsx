@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Skill } from '../types';
 import Section from './Section';
@@ -24,8 +25,6 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
     return null;
   }
 
-  // Render each skill only once
-  const duplicatedSkills = data;
   const scrollSkills = shouldScroll ? Array(10).fill(data).flat() : data;
 
   const marqueeVariants = {
@@ -46,7 +45,7 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
     <Section title="My Skills" id="skills">
       <div className="max-w-6xl mx-auto text-center">
         <p className="text-lg text-gray-400 mb-16" style={{ fontFamily: 'Inter, sans-serif' }}>
-          I'm proficient in a variety of modern technologies for web and application development.
+          I&apos;m proficient in a variety of modern technologies for web and application development.
         </p>
         <div className="relative w-full overflow-hidden" ref={skillsContainerRef}>
           <motion.div
@@ -63,15 +62,19 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
               >
                 <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
                   {skill.image?.url ? (
-                    <img
+                    <Image
                       src={skill.image.url}
                       alt={skill.name}
+                      width={48}
+                      height={48}
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
-                    <img
+                    <Image
                       src={typeof skill.icon === 'string' ? (skill.icon as string) : ''}
                       alt={skill.name}
+                      width={48}
+                      height={48}
                       className="max-w-full max-h-full object-contain"
                       onError={(e) => {
                         // hide broken image if icon string isn't a valid URL

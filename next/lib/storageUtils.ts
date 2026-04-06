@@ -5,7 +5,7 @@ export const getStorageUsage = (): { used: number; total: number; percentage: nu
     
     try {
         // Calculate used space
-        for (let key in localStorage) {
+        for (const key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
                 used += localStorage[key].length + key.length;
             }
@@ -14,7 +14,6 @@ export const getStorageUsage = (): { used: number; total: number; percentage: nu
         // Try to estimate total available space
         try {
             const testKey = 'storage_test';
-            const testValue = 'x'.repeat(1024); // 1KB test
             let testSize = 1024;
             
             // Binary search for available space (rough estimate)

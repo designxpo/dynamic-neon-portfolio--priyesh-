@@ -28,15 +28,6 @@ async function updateService(id: string, service: Partial<Service>) {
     return await res.json();
 }
 
-async function deleteService(id: string) {
-    const res = await fetch(API_URL, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-    });
-    if (!res.ok) throw new Error('Failed to delete service');
-    return await res.json();
-}
 
 const ServicesForm: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);

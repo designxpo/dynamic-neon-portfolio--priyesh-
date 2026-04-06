@@ -29,7 +29,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Validation failed', fields: errors }, { status: 400 });
     }
     // Normalize payload, ignore client-side id
-    const { id: _clientId, order, description, current, ...rest } = body || {};
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, order, description, current, ...rest } = body || {};
     const doc: any = {
       ...rest,
       description: (description ?? '').toString(),
