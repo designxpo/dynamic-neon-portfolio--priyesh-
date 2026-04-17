@@ -224,6 +224,10 @@ export interface SeoMeta {
   metaTitle: string;
   metaKeywords: string; // comma-separated keywords for simplicity
   metaDescription: string;
+  canonicalUrl?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
 }
 
 export type SEOConfig = Record<SectionKey, SeoMeta>;

@@ -112,6 +112,28 @@ const SEOForm: React.FC = () => {
                 <label className="admin-label">Meta Keywords</label>
                 <input type="text" className="admin-input" value={seo[key].metaKeywords} onChange={(e) => handleChange(key, 'metaKeywords', e.target.value)} placeholder="design, ui, ux, product" />
               </div>
+
+              <div className="pt-3 mt-3 border-t border-white/10">
+                <p className="text-xs text-gray-500 mb-3">Social & canonical (optional — defaults to meta values)</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="admin-label">Canonical URL</label>
+                    <input type="url" className="admin-input" value={seo[key].canonicalUrl || ''} onChange={(e) => handleChange(key, 'canonicalUrl', e.target.value)} placeholder="https://www.priyeshmishra.com" />
+                  </div>
+                  <div>
+                    <label className="admin-label">OG Title</label>
+                    <input type="text" className="admin-input" value={seo[key].ogTitle || ''} onChange={(e) => handleChange(key, 'ogTitle', e.target.value)} placeholder="Leave blank to reuse Meta Title" />
+                  </div>
+                  <div>
+                    <label className="admin-label">OG Description</label>
+                    <textarea rows={2} className="admin-textarea" value={seo[key].ogDescription || ''} onChange={(e) => handleChange(key, 'ogDescription', e.target.value)} placeholder="Leave blank to reuse Meta Description" />
+                  </div>
+                  <div>
+                    <label className="admin-label">OG Image URL</label>
+                    <input type="text" className="admin-input" value={seo[key].ogImage || ''} onChange={(e) => handleChange(key, 'ogImage', e.target.value)} placeholder="/images/profile.png or https://... (1200x630 recommended)" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         ))}
