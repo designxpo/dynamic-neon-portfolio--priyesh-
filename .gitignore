@@ -53,3 +53,4 @@ next/.env.local
 /package.json
 /package-lock.json
 
+next/tsconfig.tsbuildinfo

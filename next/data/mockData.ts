@@ -4,10 +4,12 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 export const mockHeroData: Omit<RawHeroData, 'profileImage'> = {
-    subtitle: 'UI/UX Designer',
+    subtitle: 'UI/UX Designer & Performance Marketing Expert',
     name: 'Priyesh Mishra',
-    title: 'UI/UX Designer & SMM Strategist',
-    shortBio: "Priyesh Mishra is a passionate UI/UX Designer with 3+ years of experience crafting impactful digital experiences for SaaS, Fintech, eCommerce, and Spiritual brands. He blends creativity with strategy to build visually engaging, high-performing products and helps brands grow through smart storytelling.",
+    title: 'UI/UX Designer, Developer & Performance Marketing Expert',
+    titlePrefix: 'UI/UX',
+    titleWords: ['Designer', 'Developer', 'Marketing Expert'],
+    shortBio: "Priyesh Mishra is a UI/UX designer, developer, and performance marketing expert with 3+ years of experience crafting high-converting digital experiences for SaaS, Fintech, eCommerce, and Spiritual brands. He blends product design, growth strategy, and data-driven campaigns to help brands scale with smart storytelling.",
     ctaButtonText: "View My Work",
     ctaButtonLink: "#works",
     // New optional secondary CTA defaults
