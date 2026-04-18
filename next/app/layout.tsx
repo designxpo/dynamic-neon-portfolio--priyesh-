@@ -85,7 +85,9 @@ export async function generateMetadata(): Promise<Metadata> {
       ...defaults,
       title: seo.metaTitle || DEFAULT_TITLE,
       description: seo.metaDescription || DEFAULT_DESCRIPTION,
-      keywords: Array.isArray(seo.keywords) ? seo.keywords.join(', ') : (seo.keywords || DEFAULT_KEYWORDS),
+      keywords: Array.isArray(seo.metaKeywords)
+        ? seo.metaKeywords.join(', ')
+        : (seo.metaKeywords || seo.keywords || DEFAULT_KEYWORDS),
       icons: seo.favicon ? { icon: seo.favicon } : defaults.icons,
       alternates: { canonical },
       openGraph: {
@@ -105,12 +107,19 @@ export async function generateMetadata(): Promise<Metadata> {
 const personJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
+  '@id': `${SITE_URL}/#person`,
   name: 'Priyesh Mishra',
+  alternateName: ['Priyesh', 'Priyesh Mishra Designer', 'Priyesh Mishra UI/UX'],
+  givenName: 'Priyesh',
+  familyName: 'Mishra',
   url: SITE_URL,
   image: `${SITE_URL}/images/profile.png`,
   jobTitle: ['UI/UX Designer', 'UI/UX Developer', 'Performance Marketing Expert'],
   description: DEFAULT_DESCRIPTION,
   sameAs: [
+    'https://linkedin.com/in/priyeshmishra16',
+    'https://instagram.com/designxpo.in',
+    'https://twitter.com/mepriyeshm',
     'https://priyeshmishra1602.medium.com',
   ],
   knowsAbout: [
@@ -175,6 +184,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(professionalServiceJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            '@id': `${SITE_URL}/#website`,
+            url: SITE_URL,
+            name: 'Priyesh Mishra',
+            description: DEFAULT_DESCRIPTION,
+            publisher: { '@id': `${SITE_URL}/#person` },
+            inLanguage: 'en',
+          }) }}
         />
       </head>
       <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans scroll-smooth`}>

@@ -85,9 +85,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
           <div className="relative">
             <Image
               src="/images/pmlogo.png"
-              alt="Logo"
-              width={64}
-              height={64}
+              alt="Priyesh Mishra Logo"
+              width={572}
+              height={160}
+              sizes="229px"
               className="h-16 w-auto"
             />
           </div>
