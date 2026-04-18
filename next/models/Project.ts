@@ -11,6 +11,9 @@ export interface IProject extends Document {
   technologies?: string[];
   liveUrl?: string;
   sourceUrl?: string;
+  outcome?: string;       // e.g., "Increased sign-ups by 40%"
+  clientName?: string;    // visible or anonymized ("Series-A SaaS startup")
+  timeline?: string;      // e.g., "6 weeks" / "Q1 2025"
   createdAt: Date;
 }
 
@@ -28,7 +31,10 @@ const ProjectSchema: Schema = new Schema({
   technologies: [{ type: String }],
   liveUrl: { type: String },
   sourceUrl: { type: String },
+  outcome: { type: String, default: '' },
+  clientName: { type: String, default: '' },
+  timeline: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
-});
+}, { strict: false });
 
 export default mongoose.models.Project || mongoose.model<any>('Project', ProjectSchema);

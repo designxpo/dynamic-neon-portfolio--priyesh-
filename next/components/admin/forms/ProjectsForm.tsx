@@ -276,6 +276,26 @@ const ProjectsForm: React.FC = () => {
                             <label className="admin-label">Technologies (comma-separated)</label>
                             <input type="text" value={(currentItem.technologies || []).join(', ')} onChange={e => setCurrentItem(p => p ? { ...p, technologies: e.target.value.split(',').map(s => s.trim()) } : null)} className="admin-input" placeholder="React, TypeScript, Node.js" />
                         </div>
+                        <div className="admin-card">
+                            <h5 className="text-sm font-semibold text-white mb-3">Sales context (strongly recommended)</h5>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="admin-label">Outcome / Result</label>
+                                    <input type="text" value={currentItem.outcome || ''} onChange={e => setCurrentItem(p => p ? { ...p, outcome: e.target.value } : null)} className="admin-input" placeholder="Increased sign-ups by 40% in 3 months" />
+                                    <p className="mt-1 text-xs text-gray-500">The single most important field for winning clients. Lead with a number.</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="admin-label">Client</label>
+                                        <input type="text" value={currentItem.clientName || ''} onChange={e => setCurrentItem(p => p ? { ...p, clientName: e.target.value } : null)} className="admin-input" placeholder="Acme Fintech (or 'Series-A SaaS startup')" />
+                                    </div>
+                                    <div>
+                                        <label className="admin-label">Timeline</label>
+                                        <input type="text" value={currentItem.timeline || ''} onChange={e => setCurrentItem(p => p ? { ...p, timeline: e.target.value } : null)} className="admin-input" placeholder="6 weeks" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="admin-label flex items-center gap-2"><ExternalLink size={14} /> Live URL</label>

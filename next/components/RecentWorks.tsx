@@ -67,6 +67,21 @@ const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void
         {project.descriptionShort}
       </p>
 
+      {project.outcome && (
+        <div className="mb-3 inline-flex items-start gap-2 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2.5 py-1.5 text-[11px] md:text-xs">
+          <span className="font-semibold">Result:</span>
+          <span className="text-emerald-200">{project.outcome}</span>
+        </div>
+      )}
+
+      {(project.clientName || project.timeline) && (
+        <p className="text-[11px] md:text-xs text-gray-500 mb-3">
+          {project.clientName && <span>{project.clientName}</span>}
+          {project.clientName && project.timeline && <span className="mx-1.5">·</span>}
+          {project.timeline && <span>{project.timeline}</span>}
+        </p>
+      )}
+
       {(project.descriptionLong || (project.descriptionShort && project.descriptionShort.length > 140)) && (
         <button
           type="button"

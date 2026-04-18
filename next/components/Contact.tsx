@@ -25,6 +25,10 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
     contactNumber: '',
     message: ''
   });
+  // Honeypot — real humans leave it empty; bots fill every field
+  const [website, setWebsite] = useState('');
+  // Record when the form was rendered — bots typically submit in <1 s
+  const [renderedAt] = useState<number>(() => Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [backendReachable, setBackendReachable] = useState<'unknown' | 'ok' | 'down'>('unknown');
@@ -98,7 +102,9 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
         },
         body: JSON.stringify({
           ...formData,
-          contactNumber: `${formData.countryCode} ${formData.contactNumber}`
+          contactNumber: `${formData.countryCode} ${formData.contactNumber}`,
+          website, // honeypot — always empty for humans
+          elapsedMs: Date.now() - renderedAt,
         }),
       });
 
@@ -152,6 +158,19 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
         {/* Contact Form */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 md:p-8 mb-8 md:mb-12 max-w-2xl w-full mx-auto text-left">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Honeypot field — hidden from humans, bots fill it and get rejected */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+              <label htmlFor="website">Website (leave empty)</label>
+              <input
+                type="text"
+                id="website"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="sr-only">Name</label>

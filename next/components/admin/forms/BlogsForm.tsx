@@ -23,7 +23,7 @@ const BlogsForm: React.FC = () => {
     // };
 const fetchblogs = async () => {
     try {
-        const blogItems = await fetch('/api/blogs').then(res => res.json());
+        const blogItems = await fetch('/api/blogs?all=1').then(res => res.json());
         setBlogs(blogItems);
     } catch (error) {
         console.error('Error loading blogs:', error);
@@ -44,7 +44,14 @@ const fetchblogs = async () => {
             publishedAt: new Date().toISOString().split('T')[0],
             url: '',
             excerpt: '',
-            thumbnail: undefined
+            thumbnail: undefined,
+            published: false, // start as draft — toggle on when ready to publish
+            slug: '',
+            metaTitle: '',
+            metaDescription: '',
+            metaKeywords: '',
+            ogImage: '',
+            canonicalUrl: '',
         });
         setIsModalOpen(true);
     };
@@ -145,7 +152,12 @@ const handleSave = async () => {
                                 <FileText size={20} />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-white line-clamp-2">{blog.title}</p>
+                                <div className="flex items-start gap-2">
+                                    <p className="font-semibold text-white line-clamp-2 flex-1">{blog.title}</p>
+                                    {!blog.published && (
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full border bg-yellow-500/15 text-yellow-300 border-yellow-500/30 flex-shrink-0">Draft</span>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-3 text-xs text-gray-400 mt-2">
                                     <div className="flex items-center gap-1"><User size={12} /><span>{blog.author}</span></div>
                                     <div className="flex items-center gap-1"><Calendar size={12} /><span>{new Date(blog.publishedAt).toLocaleDateString()}</span></div>
@@ -200,10 +212,62 @@ const handleSave = async () => {
                         <label className="admin-label">Content</label>
                         <textarea rows={8} value={currentItem?.content || ''} onChange={e => setCurrentItem(p => ({...p, content: e.target.value}))} className="admin-textarea" placeholder="Full blog content..." />
                     </div>
-                    <div>
-                        <label className="admin-label flex items-center gap-2"><Calendar size={16} /> Published Date</label>
-                        <input type="date" className="admin-input" value={(() => { const v = currentItem?.publishedAt || ''; if (!v) return ''; return v.length > 10 ? new Date(v).toISOString().split('T')[0] : v; })()} onChange={e => setCurrentItem(p => ({ ...p, publishedAt: e.target.value }))} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="admin-label flex items-center gap-2"><Calendar size={16} /> Published Date</label>
+                            <input type="date" className="admin-input" value={(() => { const v = currentItem?.publishedAt || ''; if (!v) return ''; return v.length > 10 ? new Date(v).toISOString().split('T')[0] : v; })()} onChange={e => setCurrentItem(p => ({ ...p, publishedAt: e.target.value }))} />
+                        </div>
+                        <div>
+                            <label className="admin-label">Status</label>
+                            <div className="flex items-center gap-3 h-[42px]">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="accent-electric-blue"
+                                        checked={!!currentItem?.published}
+                                        onChange={(e) => setCurrentItem(p => ({ ...p, published: e.target.checked }))}
+                                    />
+                                    <span className={`text-sm font-medium ${currentItem?.published ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                                        {currentItem?.published ? 'Published' : 'Draft'}
+                                    </span>
+                                </label>
+                                <p className="text-xs text-gray-500">Drafts are hidden from the public site.</p>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* SEO — per-post for ranking long-tail keywords */}
+                    <div className="admin-card">
+                        <h5 className="text-sm font-semibold text-white mb-3">SEO (optional — boosts ranking)</h5>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="admin-label">Slug</label>
+                                <input type="text" value={currentItem?.slug || ''} onChange={e => setCurrentItem(p => ({...p, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')}))} className="admin-input" placeholder="my-post-url" />
+                                <p className="mt-1 text-xs text-gray-500">Lower-case, hyphenated. Used in the post's URL.</p>
+                            </div>
+                            <div>
+                                <label className="admin-label">Meta Title</label>
+                                <input type="text" value={currentItem?.metaTitle || ''} onChange={e => setCurrentItem(p => ({...p, metaTitle: e.target.value}))} className="admin-input" placeholder="50–60 chars. Leave blank to reuse title." maxLength={70} />
+                            </div>
+                            <div>
+                                <label className="admin-label">Meta Description</label>
+                                <textarea rows={2} value={currentItem?.metaDescription || ''} onChange={e => setCurrentItem(p => ({...p, metaDescription: e.target.value}))} className="admin-textarea" placeholder="150–160 chars. Leave blank to reuse excerpt." maxLength={180} />
+                            </div>
+                            <div>
+                                <label className="admin-label">Meta Keywords</label>
+                                <input type="text" value={currentItem?.metaKeywords || ''} onChange={e => setCurrentItem(p => ({...p, metaKeywords: e.target.value}))} className="admin-input" placeholder="design, ui ux, performance marketing" />
+                            </div>
+                            <div>
+                                <label className="admin-label">OG Image URL</label>
+                                <input type="text" value={currentItem?.ogImage || ''} onChange={e => setCurrentItem(p => ({...p, ogImage: e.target.value}))} className="admin-input" placeholder="/images/og/... (1200×630 recommended)" />
+                            </div>
+                            <div>
+                                <label className="admin-label">Canonical URL</label>
+                                <input type="url" value={currentItem?.canonicalUrl || ''} onChange={e => setCurrentItem(p => ({...p, canonicalUrl: e.target.value}))} className="admin-input" placeholder="https://www.priyeshmishra.com/blog/my-post" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                         <button onClick={() => setIsModalOpen(false)} className="admin-button-secondary">Cancel</button>
                         <button onClick={handleSave} className="admin-button-primary">Save Post</button>

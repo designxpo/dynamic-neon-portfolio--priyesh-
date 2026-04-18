@@ -2,27 +2,21 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Blog from '@/models/Blog';
 
-export async function GET() {
+export async function GET(req: Request) {
   await connectDB();
-  console.log('Fetching all blog posts from database');
+  const url = new URL(req.url);
+  // Admin can pass ?all=1 to see drafts too; public calls get published-only
+  const includeAll = url.searchParams.get('all') === '1';
+  const filter: any = includeAll ? {} : { published: { $ne: false } };
   const start = Date.now();
-  const blogs = await Blog.find({}, {
-    title: 1,
-    content: 1,
-    author: 1,
-    createdAt: 1,
-    url: 1,
-    thumbnail: 1,
-    excerpt: 1,
-    _id: 1
-  }).sort({ createdAt: -1 }).lean();
-  const mappedBlogs = blogs.map((blog) => ({
+  const blogs = await Blog.find(filter).sort({ createdAt: -1 }).lean();
+  const mappedBlogs = blogs.map((blog: any) => ({
     id: blog._id?.toString(),
     ...blog,
-    publishedAt: blog.createdAt?.toISOString() || '',
+    publishedAt: blog.publishedAt || blog.createdAt?.toISOString() || '',
   }));
   const duration = Date.now() - start;
-  console.log(`[API] /blogs GET took ${duration}ms`);
+  console.log(`[API] /blogs GET took ${duration}ms (filter=${includeAll ? 'all' : 'published'})`);
   return NextResponse.json(mappedBlogs);
 }
 

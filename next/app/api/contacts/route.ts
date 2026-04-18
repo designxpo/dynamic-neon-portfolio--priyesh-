@@ -4,13 +4,19 @@ export const revalidate = 0;
 export const runtime = 'nodejs';
 import { connectDB } from '../../../lib/db/mongoose';
 import { sendMail } from '../../../lib/email';
-import Contact from '../../../models/Contact';
+import Contact, { CONTACT_STATUSES } from '../../../models/Contact';
 import SiteConfig from '../../../models/SiteConfig';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, contactNumber, message } = body || {};
+    const { name, email, contactNumber, message, website, elapsedMs } = body || {};
+
+    // Spam filter: honeypot filled OR form submitted in < 1.5s (bots fill & submit instantly)
+    if (website || (typeof elapsedMs === 'number' && elapsedMs < 1500)) {
+      // Fake success so bots don't retry; just silently drop it
+      return NextResponse.json({ message: 'Contact form submitted successfully' }, { status: 201 });
+    }
 
     if (!name || !email || !contactNumber || !message) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -87,9 +93,37 @@ export async function GET(request: Request) {
   try {
     await connectDB();
     const url = new URL(request.url);
+
+    // CSV export — returns all submissions as CSV
+    if (url.searchParams.get('format') === 'csv') {
+      const items = await Contact.find({}).sort({ submittedAt: -1 }).lean();
+      const header = ['Submitted At', 'Name', 'Email', 'Phone', 'Status', 'Message', 'Notes'];
+      const csvEscape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const rows = items.map((i: any) => [
+        i.submittedAt ? new Date(i.submittedAt).toISOString() : '',
+        i.name || '',
+        i.email || '',
+        i.contactNumber || '',
+        i.status || 'new',
+        i.message || '',
+        i.notes || '',
+      ].map(csvEscape).join(','));
+      const csv = [header.join(','), ...rows].join('\n');
+      return new NextResponse(csv, {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="contact-submissions-${new Date().toISOString().slice(0, 10)}.csv"`,
+        },
+      });
+    }
+
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || url.searchParams.get('pageSize') || '10', 10) || 10));
+    const statusFilter = url.searchParams.get('status');
     const query: any = {};
+    if (statusFilter && (CONTACT_STATUSES as readonly string[]).includes(statusFilter)) {
+      query.status = statusFilter;
+    }
     const total = await Contact.countDocuments(query);
     const items = await Contact.find(query)
       .sort({ submittedAt: -1 })
@@ -100,6 +134,32 @@ export async function GET(request: Request) {
     return NextResponse.json({ items, total, page, pageSize, totalPages });
   } catch (err) {
     console.error('Error fetching contacts:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    const body = await request.json().catch(() => ({}));
+    const update: any = {};
+    if (body.status && (CONTACT_STATUSES as readonly string[]).includes(body.status)) {
+      update.status = body.status;
+    }
+    if (typeof body.notes === 'string') {
+      update.notes = body.notes.slice(0, 5000);
+    }
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+    }
+    await connectDB();
+    const updated = await Contact.findByIdAndUpdate(id, update, { new: true });
+    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ ok: true, item: updated });
+  } catch (err) {
+    console.error('Error updating contact:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

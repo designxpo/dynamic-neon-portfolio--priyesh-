@@ -90,6 +90,9 @@ export interface Project {
   technologies?: string[];
   liveUrl?: string;
   sourceUrl?: string;
+  outcome?: string;
+  clientName?: string;
+  timeline?: string;
 }
 
 export interface RawProject {
@@ -104,6 +107,9 @@ export interface RawProject {
     technologies?: string[];
     liveUrl?: string;
     sourceUrl?: string;
+    outcome?: string;
+    clientName?: string;
+    timeline?: string;
 }
 
 export interface Experience {
@@ -199,6 +205,14 @@ export interface BlogData {
   url?: string; // external link (e.g., Medium)
   thumbnail?: Image; // card image
   excerpt?: string; // short description shown on the card
+  // Lifecycle + SEO
+  published?: boolean; // draft if false, live if true
+  slug?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  ogImage?: string;
+  canonicalUrl?: string;
 }
 
 export interface Blog extends BlogData {
