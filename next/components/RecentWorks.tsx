@@ -140,6 +140,19 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   // Reset visible count when filter changes
   useEffect(() => { setVisibleCount(4); }, [filter]);
 
+  // Lock body scroll + ESC-to-close while modal is open
+  useEffect(() => {
+    if (!selected) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelected(null); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [selected]);
+
   return (
     <Section title="My Recent Works" id="works">
       <div className="container mx-auto px-4 md:px-8">
@@ -151,21 +164,25 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
         </div>
 
         {/* Category Filter Bar */}
-        <div className="flex justify-center mb-12 md:mb-16">
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 bg-gradient-to-r from-white/5 to-white/10 border border-white/20 rounded-full p-1 sm:p-2 backdrop-blur-sm shadow-lg max-w-full overflow-x-auto">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setFilter(category)}
-                className={`px-2 sm:px-4 md:px-6 py-1 sm:py-2 md:py-3 text-xs sm:text-xs md:text-sm lg:text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${filter === category
-                    ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30'
-                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                  }`}
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                {category}
-              </button>
-            ))}
+        <div className="mb-12 md:mb-16 flex justify-center">
+          <div className="relative max-w-full w-full md:w-auto">
+            {/* Right-edge fade to indicate more content on mobile */}
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-dark-bg to-transparent md:hidden rounded-r-full" />
+            <div className="flex flex-nowrap items-center gap-2 sm:gap-3 md:gap-4 bg-gradient-to-r from-white/5 to-white/10 border border-white/20 rounded-full p-1 sm:p-2 backdrop-blur-sm shadow-lg overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory md:justify-center md:flex-wrap">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setFilter(category)}
+                  className={`shrink-0 snap-start px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 text-xs sm:text-xs md:text-sm lg:text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${filter === category
+                      ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30'
+                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -209,42 +226,67 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
       {/* Read More Modal */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="project-modal-title"
           onClick={() => setSelected(null)}
         >
           <div
-            className="relative w-full max-w-2xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl p-0 text-white overflow-hidden"
+            className="relative w-full max-w-2xl bg-[#0f0a24]/95 border border-white/10 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[88dvh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Cover image */}
-            {selected.coverImage?.url && (
-              <div className="relative w-full h-48 md:h-56 overflow-hidden">
-                <Image src={selected.coverImage.url} alt={selected.coverImage.alternativeText || selected.title} width={672} height={224} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-              </div>
-            )}
-            <div className="p-6">
-              <h3 className="text-lg md:text-xl font-semibold mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>{selected.title}</h3>
-              <p className="text-sm leading-relaxed text-gray-300" style={{ fontFamily: 'Inter, sans-serif' }}>
-                {selected.descriptionLong || selected.descriptionShort}
-              </p>
+            {/* Drag pill (mobile bottom-sheet affordance) */}
+            <div className="sm:hidden pt-2 pb-1 flex justify-center shrink-0">
+              <span aria-hidden className="h-1.5 w-10 rounded-full bg-white/25" />
+            </div>
 
-              <div className="mt-5 flex items-center gap-3">
-                {hasAnyLink(selected.liveUrl) && (
-                  <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-brand-purple text-white px-3 py-2 rounded-lg hover:bg-brand-purple-light transition-all text-xs">
-                    Visit live
-                    <ExternalLinkIcon />
-                  </a>
-                )}
-                {hasAnyLink(selected.sourceUrl) && (
-                  <a href={selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/20 px-3 py-2 rounded-lg hover:bg-white/10 transition-all text-xs">
-                    View source
-                    <GitHubIcon />
-                  </a>
-                )}
-                <button onClick={()=>setSelected(null)} className="ml-auto text-xs text-gray-400 hover:text-white">Close</button>
+            {/* Close button — sticky, always reachable */}
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              aria-label="Close project details"
+              className="absolute top-3 right-3 z-10 w-9 h-9 inline-flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 border border-white/15 text-white backdrop-blur-md transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
+            {/* Scrollable content */}
+            <div
+              className="overflow-y-auto overscroll-contain flex-1"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {selected.coverImage?.url && (
+                <div className="relative w-full h-48 md:h-56 overflow-hidden shrink-0">
+                  <Image src={selected.coverImage.url} alt={selected.coverImage.alternativeText || selected.title} width={672} height={224} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                </div>
+              )}
+              <div
+                className="p-6 pb-[calc(env(safe-area-inset-bottom)+6rem)] sm:pb-6"
+              >
+                <h3 id="project-modal-title" className="text-lg md:text-xl font-semibold mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>{selected.title}</h3>
+                <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {selected.descriptionLong || selected.descriptionShort}
+                </p>
+
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  {hasAnyLink(selected.liveUrl) && (
+                    <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-brand-purple text-white px-3 py-2 rounded-lg hover:bg-brand-purple-light transition-all text-xs">
+                      Visit live
+                      <ExternalLinkIcon />
+                    </a>
+                  )}
+                  {hasAnyLink(selected.sourceUrl) && (
+                    <a href={selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/20 px-3 py-2 rounded-lg hover:bg-white/10 transition-all text-xs">
+                      View source
+                      <GitHubIcon />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>

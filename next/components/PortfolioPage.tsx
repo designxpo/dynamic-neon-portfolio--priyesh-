@@ -375,22 +375,30 @@ const PortfolioPage = () => {
                 {/* Testimonials Modal */}
                 {selectedTestimonial && (
                     <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                        className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
                         role="dialog"
                         aria-modal="true"
                         onClick={() => setSelectedTestimonial(null)}
                     >
                         <div
-                            className="relative w-full max-w-xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl p-6 text-white"
+                            className="relative w-full max-w-xl bg-[#0f0a24]/95 border border-white/10 backdrop-blur-xl text-white flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[88dvh] overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
+                            <div className="sm:hidden pt-2 pb-1 flex justify-center shrink-0">
+                              <span aria-hidden className="h-1.5 w-10 rounded-full bg-white/25" />
+                            </div>
                             <button
-                                aria-label="Close"
-                                className="absolute top-3 right-3 rounded-md bg-white/10 hover:bg-white/20 border border-white/10 px-2 py-1 text-sm"
+                                type="button"
+                                aria-label="Close testimonial"
+                                className="absolute top-3 right-3 z-10 w-9 h-9 inline-flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 border border-white/15 text-white backdrop-blur-md transition-colors"
                                 onClick={() => setSelectedTestimonial(null)}
                             >
-                                ✕
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
                             </button>
+                            <div className="overflow-y-auto overscroll-contain flex-1 p-6 pb-[calc(env(safe-area-inset-bottom)+5rem)] sm:pb-6" style={{ WebkitOverflowScrolling: 'touch' }}>
 
                             <div className="flex items-center gap-3 mb-3">
                                 {selectedTestimonial.avatar && (
@@ -408,7 +416,8 @@ const PortfolioPage = () => {
                                 </div>
                             </div>
 
-                            <p className="text-sm leading-relaxed text-gray-300">“{selectedTestimonial.message}”</p>
+                            <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line">“{selectedTestimonial.message}”</p>
+                            </div>
                         </div>
                     </div>
                 )}

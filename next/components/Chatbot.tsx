@@ -491,7 +491,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999]" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
+    <div className="fixed bottom-3 right-3 md:bottom-4 md:right-4 z-[9999]" style={{ fontFamily: 'Inter, Poppins, sans-serif' }}>
       {/* Toggle button */}
       <AnimatePresence initial={false} mode="sync">
         {open ? (
@@ -676,7 +676,7 @@ export default function Chatbot() {
             whileTap={prefersReducedMotion ? undefined : { scale: 1.02 }}
             exit={{ opacity: 0, scale: 0.9, y: 8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
-            className="group relative select-none w-14 h-14 md:w-16 md:h-16 rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
+            className="group relative select-none w-12 h-12 md:w-16 md:h-16 rounded-[18px] md:rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
             style={{ transformOrigin: 'bottom right' }}
           >
             {/* Outer neon aura with breathing glow */}

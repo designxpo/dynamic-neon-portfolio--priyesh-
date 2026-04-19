@@ -187,6 +187,18 @@ div[id] {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Hide scrollbar utility (horizontal chip/filter rails) */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Admin Form Styles - Glassmorphism Dark Mode */
 .admin-input,
 .admin-textarea,

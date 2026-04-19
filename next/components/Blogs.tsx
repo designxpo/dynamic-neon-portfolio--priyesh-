@@ -250,7 +250,7 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
 
 const BlogCard: React.FC<{ post: Blog }> = ({ post }) => {
   return (
-    <article className="group bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl overflow-hidden hover:bg-white/[0.06] hover:border-brand-purple/50 hover:shadow-lg hover:shadow-brand-purple/10 transition-all duration-300 hover:scale-[1.02] flex flex-col flex-shrink-0 w-[340px] lg:w-[360px]">
+    <article className="group bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl overflow-hidden hover:bg-white/[0.06] hover:border-brand-purple/50 hover:shadow-lg hover:shadow-brand-purple/10 transition-all duration-300 hover:scale-[1.02] flex flex-col flex-shrink-0 w-full max-w-full lg:w-[360px]">
       {post.thumbnail?.url && (
         <div className="relative w-full h-40 overflow-hidden bg-gradient-to-br from-purple-900/20 to-black/40">
           <Image

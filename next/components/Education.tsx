@@ -1,5 +1,5 @@
-// @ts-nocheck
 import React from 'react';
+import { GraduationCap } from 'lucide-react';
 import { Education as EducationType } from '../types';
 import Section from './Section';
 
@@ -8,45 +8,61 @@ interface EducationProps {
 }
 
 const Education: React.FC<EducationProps> = ({ data }) => {
-  console.log('[Education Component] Rendering with data:', data);
-  console.log('[Education Component] Data length:', data?.length);
-  console.log('[Education Component] First item:', data?.[0]);
-  
-  if (!data || data.length === 0) {
-    console.warn('[Education Component] No data provided!');
-    return null;
-  }
-  
+  if (!data || data.length === 0) return null;
+
   return (
     <Section title="My Education" id="education">
       <div className="max-w-3xl mx-auto">
-        <div className="relative border-l-2 border-brand-purple/30">
-          {data.map((edu, index) => {
-            console.log(`[Education ${index}] degree="${edu.degree}", institution="${edu.institution}"`);
-            return (
-            <div key={index} className="mb-10 ml-6">
-              <span className="absolute flex items-center justify-center w-6 h-6 bg-brand-purple rounded-full -left-3 ring-8 ring-brand-purple/20 shadow-xl shadow-brand-purple/60">
-                 <svg className="w-2.5 h-2.5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                   <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4Z"/>
-                 </svg>
+        <ol className="relative">
+          {/* Vertical timeline line */}
+          <span
+            aria-hidden
+            className="absolute left-5 md:left-6 top-2 bottom-2 w-px bg-gradient-to-b from-indigo-500/10 via-indigo-500/40 to-indigo-500/10"
+          />
+
+          {data.map((edu, index) => (
+            <li
+              key={index}
+              className="relative pl-16 md:pl-20 pb-8 md:pb-10 last:pb-0"
+            >
+              {/* Icon node (outer ring + inner circle) */}
+              <span
+                aria-hidden
+                className="absolute left-0 top-0 w-12 h-12 rounded-full bg-indigo-500/15 ring-1 ring-indigo-500/20 flex items-center justify-center"
+              >
+                <span className="w-8 h-8 rounded-full bg-indigo-500 shadow-[0_6px_20px_-4px_rgba(99,102,241,0.65)] flex items-center justify-center">
+                  <GraduationCap className="w-4 h-4 text-white" strokeWidth={2} />
+                </span>
               </span>
-              <div className="p-4 md:p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
-                    <h3 className="text-lg md:text-xl font-semibold text-white">
-                      {edu.degree || '[NO DEGREE]'}
-                    </h3>
-                    <span className="bg-brand-purple/20 text-brand-purple-light text-xs md:text-sm font-medium px-2.5 py-0.5 rounded-full self-start sm:self-auto">{edu.startYear} - {edu.endYear}</span>
+
+              {/* Content card */}
+              <div className="rounded-xl bg-white/5 border border-white/10 backdrop-blur-lg p-4 md:p-6">
+                <h3
+                  className="text-base md:text-lg font-semibold text-white leading-snug"
+                  style={{ fontFamily: 'Poppins, sans-serif' }}
+                >
+                  {edu.degree}
+                </h3>
+
+                <div className="mt-2 inline-flex items-center rounded-full bg-indigo-500/15 px-2.5 py-1 text-[11px] md:text-xs font-medium text-indigo-300 ring-1 ring-indigo-500/25">
+                  {edu.startYear} - {edu.endYear}
                 </div>
-                <p className="text-sm md:text-base font-normal text-gray-400 mb-2">
-                  {edu.institution || '[NO INSTITUTION]'}
-                </p>
-                 <p className="text-xs md:text-sm text-gray-400">{edu.description}</p>
+
+                {edu.institution && (
+                  <p className="mt-3 text-sm md:text-base text-gray-300">
+                    {edu.institution}
+                  </p>
+                )}
+
+                {edu.description && (
+                  <p className="mt-2 text-xs md:text-sm text-gray-400 leading-relaxed whitespace-pre-line">
+                    {edu.description}
+                  </p>
+                )}
               </div>
-            </div>
-          )})}
-
-
-        </div>
+            </li>
+          ))}
+        </ol>
       </div>
     </Section>
   );
