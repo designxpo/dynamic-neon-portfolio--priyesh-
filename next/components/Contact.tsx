@@ -143,7 +143,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
   };
 
   return (
-    <Section title="Get In Touch" id="contact">
+    <Section title="Work With Me" id="contact">
       <div className="max-w-4xl xl:max-w-6xl mx-auto text-center">
         <h3 className="text-xl md:text-2xl xl:text-3xl font-bold mb-4">{safeData.heading}</h3>
         <p className="text-base md:text-lg text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto">{safeData.description}</p>

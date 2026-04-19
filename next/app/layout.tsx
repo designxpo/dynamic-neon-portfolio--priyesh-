@@ -127,14 +127,44 @@ const personJsonLd = {
     'UI Design',
     'UX Design',
     'Product Design',
+    'UX Strategy',
+    'Product Management',
     'Web Development',
+    'Next.js',
+    'Supabase',
     'Performance Marketing',
-    'Growth Marketing',
+    'Meta Ads',
+    'Google Ads',
+    'WhatsApp Automation',
     'Conversion Rate Optimization',
     'Brand Identity',
     'Social Media Strategy',
     'Design Systems',
   ],
+  alumniOf: {
+    '@type': 'CollegeOrUniversity',
+    name: 'Galgotias University',
+  },
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'New Delhi',
+    addressRegion: 'DL',
+    addressCountry: 'IN',
+  },
+  worksFor: {
+    '@type': 'Organization',
+    name: 'Scaletrix.AI',
+    url: 'https://scaletrix.ai',
+  },
+  hasOccupation: {
+    '@type': 'Occupation',
+    name: 'Product Design Consultant & UX Strategist',
+    occupationLocation: {
+      '@type': 'City',
+      name: 'New Delhi',
+    },
+    skills: 'UX Strategy, Product Design, WhatsApp Automation, Performance Marketing, Next.js',
+  },
 };
 
 const professionalServiceJsonLd = {
@@ -214,6 +244,40 @@ gtag('config', '${GA_ID}');`,
             description: DEFAULT_DESCRIPTION,
             publisher: { '@id': `${SITE_URL}/#person` },
             inLanguage: 'en',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+              },
+              'query-input': 'required name=search_term_string',
+            },
+          }) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            '@id': 'https://mindbird.ai/#app',
+            name: 'Mindbird.ai',
+            url: 'https://mindbird.ai',
+            applicationCategory: 'BusinessApplication',
+            applicationSubCategory: 'Marketing Automation',
+            operatingSystem: 'Web',
+            description:
+              'WhatsApp sales automation platform for D2C and SaaS brands — CTWA campaigns, chat flows, and conversion tracking.',
+            creator: { '@id': `${SITE_URL}/#person` },
+            contributor: { '@id': `${SITE_URL}/#person` },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Scaletrix.AI',
+              url: 'https://scaletrix.ai',
+            },
+            offers: {
+              '@type': 'Offer',
+              category: 'SaaS',
+            },
           }) }}
         />
       </head>

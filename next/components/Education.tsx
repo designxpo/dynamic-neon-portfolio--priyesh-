@@ -11,7 +11,7 @@ const Education: React.FC<EducationProps> = ({ data }) => {
   if (!data || data.length === 0) return null;
 
   return (
-    <Section title="My Education" id="education">
+    <Section title="Education" id="education">
       <div className="max-w-3xl mx-auto">
         <ol className="relative">
           {/* Vertical timeline line */}

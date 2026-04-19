@@ -79,7 +79,7 @@ const Services: React.FC<ServicesProps> = ({ data }) => {
   }, []);
 
   return (
-    <Section title="My Quality Services" id="services">
+    <Section title="Services & Expertise" id="services">
       {/* Subtitle */}
       <div className="text-center mb-16">
         <p className="text-gray-400 text-lg max-w-2xl mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>

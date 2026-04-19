@@ -154,7 +154,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   }, [selected]);
 
   return (
-    <Section title="My Recent Works" id="works">
+    <Section title="Recent Work" id="works">
       <div className="container mx-auto px-4 md:px-8">
         {/* Subtitle */}
         <div className="text-center mb-12 md:mb-16">

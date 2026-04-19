@@ -113,7 +113,7 @@ const Blogs: React.FC<BlogsProps> = ({ data }) => {
   const repeatedItems = [...data, ...data, ...data];
 
   return (
-    <Section title="Recent Blog Posts" id="blog">
+    <Section title="Writing & Thoughts" id="blog">
       <div className="max-w-6xl mx-auto">
         <div className="relative">
           {/* For desktop: show continuous scroll if more than 3 items */}

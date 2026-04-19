@@ -11,7 +11,7 @@ const Experience: React.FC<ExperienceProps> = ({ data }) => {
   if (!data || data.length === 0) return null;
 
   return (
-    <Section title="My Experience" id="experience">
+    <Section title="Work Experience" id="experience">
       <div className="max-w-3xl mx-auto">
         <ol className="relative">
           {/* Vertical timeline line */}

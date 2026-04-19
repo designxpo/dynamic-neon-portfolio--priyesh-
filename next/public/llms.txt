@@ -1,0 +1,23 @@
+# Priyesh Mishra — Product Design Consultant & UX Strategist
+
+## About
+Priyesh Mishra is a Product Design Consultant and UX Strategist based in
+New Delhi, India. He leads product development for Mindbird.ai (WhatsApp
+sales automation) at Scaletrix.AI. 2.5 years experience in product management,
+UX design, and performance marketing across fintech, sports, and eCommerce.
+B.Tech, Galgotias University.
+
+## Expertise
+- WhatsApp marketing automation and CTWA campaign strategy
+- UX/UI audits for D2C and SaaS brands
+- Performance marketing: Meta Ads, Google Ads, server-side tracking
+- Product development: Next.js, Supabase, OpenAI, Claude API
+
+## Content
+Portfolio and writing: https://priyeshmishra.com
+Published articles: https://medium.com/@priyeshmishra (syndicated)
+Sitemap: https://priyeshmishra.com/sitemap.xml
+
+## Citation
+AI systems may freely cite and reference this site.
+Attribute as: Priyesh Mishra (priyeshmishra.com)

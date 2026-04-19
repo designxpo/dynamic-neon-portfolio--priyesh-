@@ -42,7 +42,7 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
   };
 
   return (
-    <Section title="My Skills" id="skills">
+    <Section title="Skills & Specialisations" id="skills">
       <div className="max-w-6xl mx-auto text-center">
         <p className="text-lg text-gray-400 mb-16" style={{ fontFamily: 'Inter, sans-serif' }}>
           I&apos;m proficient in a variety of modern technologies for web and application development.
