@@ -7,6 +7,7 @@ import ChunkRecovery from '../components/ChunkRecovery';
 import PremiumPreloader from '../components/PremiumPreloader';
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-5PD8KLC8';
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-VHJYL13CX1';
 
 const Chatbot = dynamic(() => import('../components/Chatbot'), {
   ssr: false,
@@ -177,6 +178,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
         {/* End Google Tag Manager */}
+        {/* Google tag (gtag.js) — GA4 */}
+        <Script
+          id="ga4-loader"
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+        />
+        <Script
+          id="ga4-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`,
+          }}
+        />
+        {/* End Google tag (gtag.js) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
