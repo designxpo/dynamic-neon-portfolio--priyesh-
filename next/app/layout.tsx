@@ -18,9 +18,9 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '700', '800'], variable: '--font-poppins' });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
-const DEFAULT_TITLE = 'Priyesh Mishra — UI/UX Designer & Performance Marketing Expert';
-const DEFAULT_DESCRIPTION = 'Priyesh Mishra is a UI/UX designer, developer, and performance marketing expert crafting high-converting digital products, brand experiences, and data-driven growth campaigns.';
-const DEFAULT_KEYWORDS = 'Priyesh Mishra, UI/UX Designer, UI/UX Developer, Performance Marketing Expert, Performance Marketer, Growth Marketing, Digital Marketing, Product Designer, Web Designer, Frontend Developer, Brand Designer, Social Media Strategist, Conversion Optimization, SaaS Design, Fintech Design, Portfolio';
+const DEFAULT_TITLE = 'Priyesh Mishra — UI/UX Designer, Developer & Performance Marketing Expert';
+const DEFAULT_DESCRIPTION = 'Priyesh Mishra is a New Delhi–based UI/UX designer, developer, and performance marketing expert with 3+ years of experience crafting high-converting digital products, SaaS dashboards, fintech apps, and growth campaigns for brands across SaaS, D2C, and spiritual verticals.';
+const DEFAULT_KEYWORDS = 'Priyesh Mishra, Priyesh Mishra Designer, Priyesh Mishra UI UX, Priyesh Mishra Portfolio, Priyesh Mishra New Delhi, UI/UX Designer, UI/UX Developer, UI UX Designer India, Performance Marketing Expert, Performance Marketer, Growth Marketing, Digital Marketing, Product Designer, Web Designer, Frontend Developer, Brand Designer, Social Media Strategist, Conversion Optimization, SaaS Design, Fintech Design, Designxpo, Scaletrix, Mindbird';
 
 export async function generateMetadata(): Promise<Metadata> {
   const defaults: Metadata = {
@@ -195,10 +195,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* Google Tag Manager */}
+        {/* Preload LCP hero image */}
+        <link rel="preload" as="image" href="/images/profile.png" />
+        {/* Google Tag Manager — lazyOnload to keep off the critical path */}
         <Script
           id="gtm-init"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -207,16 +209,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','${GTM_ID}');`,
           }}
         />
-        {/* End Google Tag Manager */}
-        {/* Google tag (gtag.js) — GA4 */}
+        {/* Google tag (gtag.js) — GA4, deferred */}
         <Script
           id="ga4-loader"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         />
         <Script
           id="ga4-init"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -224,7 +225,6 @@ gtag('js', new Date());
 gtag('config', '${GA_ID}');`,
           }}
         />
-        {/* End Google tag (gtag.js) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
@@ -252,6 +252,21 @@ gtag('config', '${GA_ID}');`,
               },
               'query-input': 'required name=search_term_string',
             },
+          }) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: 'Works', item: `${SITE_URL}/#works` },
+              { '@type': 'ListItem', position: 3, name: 'Services', item: `${SITE_URL}/#services` },
+              { '@type': 'ListItem', position: 4, name: 'Experience', item: `${SITE_URL}/#experience` },
+              { '@type': 'ListItem', position: 5, name: 'Blog', item: `${SITE_URL}/blog` },
+              { '@type': 'ListItem', position: 6, name: 'Contact', item: `${SITE_URL}/#contact` },
+            ],
           }) }}
         />
         <script
@@ -294,7 +309,7 @@ gtag('config', '${GA_ID}');`,
         {/* End Google Tag Manager (noscript) */}
         {/* Dev helper to auto-recover from transient chunk load errors */}
         <ChunkRecovery />
-        <PremiumPreloader waitForEventName="portfolio:ready" durationMs={2000}>
+        <PremiumPreloader waitForEventName="portfolio:ready" durationMs={700}>
           {children}
           {/* Floating chatbot - client-side only */}
           <Chatbot />

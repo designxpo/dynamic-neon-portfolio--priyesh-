@@ -75,7 +75,8 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
               width={716}
               height={200}
               priority
-              sizes="(min-width: 1280px) 286px, (min-width: 1024px) 229px, (min-width: 768px) 172px, 143px"
+              quality={95}
+              sizes="(min-width: 1280px) 360px, (min-width: 1024px) 288px, (min-width: 768px) 216px, 180px"
               className="h-10 md:h-12 lg:h-16 xl:h-20 w-auto"
             />
           </button>

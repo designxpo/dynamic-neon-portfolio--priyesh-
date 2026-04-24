@@ -1,7 +1,5 @@
-// @ts-nocheck
 "use client";
-import React, { useMemo, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface AnimatedSectionProps {
   children: React.ReactNode;
@@ -9,32 +7,35 @@ interface AnimatedSectionProps {
 }
 
 const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children, id }) => {
-  const ref = useRef(null);
-  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-  const isInView = useInView(ref, {
-    once: true,
-    amount: isMobile ? 0.1 : 0.2 // Less strict on mobile for better UX
-  });
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
 
-  const sectionVariants = useMemo(() => ({
-    hidden: { opacity: 0, y: isMobile ? 30 : 50 }, // Smaller animation on mobile
-    visible: { opacity: 1, y: 0 },
-  }), [isMobile]);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setVisible(true);
+            io.disconnect();
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
 
   return (
-    <motion.div
-      id={id}
-      ref={ref}
-      variants={sectionVariants}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-      transition={{
-        duration: isMobile ? 0.4 : 0.6, // Faster on mobile
-        ease: 'easeOut'
-      }}
-    >
+    <div id={id} ref={ref} className={`reveal-up ${visible ? 'is-visible' : ''}`}>
       {children}
-    </motion.div>
+    </div>
   );
 };
 

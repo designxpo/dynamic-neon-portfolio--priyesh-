@@ -18,7 +18,7 @@ export default {
       colors: {
         // Match previous CDN Tailwind config used in index.html
         'dark-bg': '#1A152A',
-        'brand-purple': '#6C63FF',
+        'brand-purple': '#5B52E0',
         'brand-purple-light': '#a78bfa',
         'brand-accent': '#00C4FF',
         // Additional palette used across the app

@@ -68,7 +68,7 @@ export default function Testimonials() {
                   Read more
                 </button>
               )}
-              <h4 className='font-semibold mt-3 text-white'>{t.name}</h4>
+              <h3 className='font-semibold mt-3 text-white text-base'>{t.name}</h3>
               <span className='text-sm text-gray-500'>{t.role}</span>
             </div>
           ))}
@@ -97,7 +97,7 @@ export default function Testimonials() {
             <div className='flex items-center gap-3 mb-3'>
               {selected.avatar && <Image src={selected.avatar} alt={selected.name} width={40} height={40} className='w-10 h-10 rounded-full object-cover' />}
               <div>
-                <h4 className='font-semibold'>{selected.name}</h4>
+                <h3 className='font-semibold text-base'>{selected.name}</h3>
                 <span className='text-xs text-gray-400'>{selected.role}</span>
               </div>
             </div>

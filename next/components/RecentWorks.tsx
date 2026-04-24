@@ -41,6 +41,8 @@ const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void
               href={project.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`View source of ${project.title}`}
+              title={`View source of ${project.title}`}
               className="p-2 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-brand-purple border border-white/20 hover:border-brand-purple transition-all duration-300 hover:scale-110"
             >
               <GitHubIcon />
@@ -51,6 +53,8 @@ const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`Open live case study of ${project.title}`}
+              title={`Open live case study of ${project.title}`}
               className="p-2 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-brand-purple border border-white/20 hover:border-brand-purple transition-all duration-300 hover:scale-110"
             >
               <ExternalLinkIcon />
