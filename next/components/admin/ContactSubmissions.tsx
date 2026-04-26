@@ -19,11 +19,11 @@ interface ContactSubmission {
 }
 
 const STATUS_OPTIONS: { value: Status; label: string; pill: string }[] = [
-  { value: 'new',         label: 'New',         pill: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
-  { value: 'contacted',   label: 'Contacted',   pill: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' },
-  { value: 'in-progress', label: 'In Progress', pill: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
-  { value: 'won',         label: 'Won',         pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
-  { value: 'lost',        label: 'Lost',        pill: 'bg-rose-500/15 text-rose-300 border-rose-500/30' },
+  { value: 'new',         label: 'New',         pill: 'bg-blue-500/15 text-blue-300 border border-blue-500/30' },
+  { value: 'contacted',   label: 'Contacted',   pill: 'bg-amber-500/15 text-amber-300 border border-amber-500/30' },
+  { value: 'in-progress', label: 'In Progress', pill: 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30' },
+  { value: 'won',         label: 'Won',         pill: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' },
+  { value: 'lost',        label: 'Lost',        pill: 'bg-rose-500/15 text-rose-300 border border-rose-500/30' },
 ];
 
 const pillFor = (s: Status = 'new') =>

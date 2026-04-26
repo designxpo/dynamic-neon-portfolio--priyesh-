@@ -225,7 +225,7 @@ const ProjectsForm: React.FC = () => {
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); handleCategoriesModalClose(); }} title={currentItem?._id && projects.some(p => p._id === currentItem._id) ? 'Edit Project' : 'Add Project'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); handleCategoriesModalClose(); }} title={currentItem?._id && projects.some(p => p._id === currentItem._id) ? 'Edit Project' : 'Add Project'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div>

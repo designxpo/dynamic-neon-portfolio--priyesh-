@@ -173,7 +173,7 @@ const handleSave = async () => {
                 ))}
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id ? 'Edit Blog Post' : 'Add Blog Post'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id ? 'Edit Blog Post' : 'Add Blog Post'}>
                 <div className="space-y-6">
                     <div>
                         <label className="admin-label">Title</label>

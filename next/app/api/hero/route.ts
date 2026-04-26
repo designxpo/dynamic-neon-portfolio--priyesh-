@@ -12,6 +12,7 @@ export async function GET() {
       title: '',
       titlePrefix: '',
       titleWords: [],
+      titlePairs: [],
       subtitle: '',
       shortBio: '',
       profileImage: { url: '', alternativeText: '' },
@@ -28,6 +29,7 @@ export async function GET() {
     // Ensure typing animation fields always exist
     if (typeof hero.titlePrefix === 'undefined') hero.titlePrefix = '';
     if (!Array.isArray(hero.titleWords)) hero.titleWords = [];
+    if (!Array.isArray(hero.titlePairs)) hero.titlePairs = [];
   }
   return NextResponse.json(hero);
 }

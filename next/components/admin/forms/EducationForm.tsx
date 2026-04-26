@@ -109,7 +109,7 @@ const EducationForm: React.FC = () => {
                 ))}
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && educations.some(e => e.id === currentItem.id) ? 'Edit Education' : 'Add Education'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && educations.some(e => e.id === currentItem.id) ? 'Edit Education' : 'Add Education'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div><label className="admin-label">Degree</label><input type="text" value={currentItem.degree} onChange={e => setCurrentItem(p => p ? {...p, degree: e.target.value} : null)} className="admin-input" placeholder="e.g., Bachelor of Computer Science" /></div>

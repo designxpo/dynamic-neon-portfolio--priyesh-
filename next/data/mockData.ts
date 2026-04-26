@@ -9,6 +9,11 @@ export const mockHeroData: Omit<RawHeroData, 'profileImage'> = {
     title: 'UI/UX Designer, Developer & Performance Marketing Expert',
     titlePrefix: 'UI/UX',
     titleWords: ['Designer', 'Developer', 'Marketing Expert'],
+    titlePairs: [
+        { prefix: 'UI/UX', word: 'Designer' },
+        { prefix: 'Web', word: 'Developer' },
+        { prefix: 'Performance', word: 'Marketing Expert' },
+    ],
     shortBio: "Priyesh Mishra is a UI/UX designer, developer, and performance marketing expert with 3+ years of experience crafting high-converting digital experiences for SaaS, Fintech, eCommerce, and Spiritual brands. He blends product design, growth strategy, and data-driven campaigns to help brands scale with smart storytelling.",
     ctaButtonText: "View My Work",
     ctaButtonLink: "#works",

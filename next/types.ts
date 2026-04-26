@@ -26,6 +26,11 @@ export interface Stat {
   value: string;
 }
 
+export interface TitlePair {
+  prefix: string;
+  word: string;
+}
+
 export interface HeroData {
   name: string;
   title: string;
@@ -40,6 +45,9 @@ export interface HeroData {
   // Typing animation fields
   titlePrefix?: string;
   titleWords?: string[];
+  // New: paired (prefix, word) entries that cycle together. If present and
+  // non-empty, takes precedence over titlePrefix/titleWords.
+  titlePairs?: TitlePair[];
 }
 
 export interface RawHeroData {
@@ -57,6 +65,7 @@ export interface RawHeroData {
   // Typing animation fields
   titlePrefix?: string;
   titleWords?: string[];
+  titlePairs?: TitlePair[];
 }
 
 export interface Service {

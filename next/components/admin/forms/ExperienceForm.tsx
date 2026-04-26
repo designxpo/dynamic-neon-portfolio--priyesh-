@@ -130,7 +130,7 @@ const ExperienceForm: React.FC = () => {
                 ))}
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && experiences.some(e => e.id === currentItem.id) ? 'Edit Experience' : 'Add Experience'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && experiences.some(e => e.id === currentItem.id) ? 'Edit Experience' : 'Add Experience'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div><label className="admin-label">Position Title</label><input type="text" value={currentItem.positionTitle} onChange={e => setCurrentItem(p => p ? {...p, positionTitle: e.target.value} : null)} className="admin-input" placeholder="e.g., Senior Developer" /></div>

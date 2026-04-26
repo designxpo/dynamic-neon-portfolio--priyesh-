@@ -70,12 +70,11 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
               aria-label={`${botName} — scroll to top`}
             >
             <Image
-              src="/images/pmlogo.png"
+              src="/images/pmlogo.svg"
               alt="Priyesh Mishra — UI/UX Designer & Performance Marketing Expert Logo"
               width={716}
               height={200}
               priority
-              quality={95}
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 288px, (min-width: 768px) 216px, 180px"
               className="h-10 md:h-12 lg:h-16 xl:h-20 w-auto"
             />

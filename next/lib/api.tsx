@@ -312,6 +312,11 @@ const toHeroData = (raw: RawHeroData): HeroData => ({
     // Typing animation fields
     titlePrefix: raw.titlePrefix || '',
     titleWords: Array.isArray(raw.titleWords) ? raw.titleWords : [],
+    titlePairs: Array.isArray(raw.titlePairs)
+        ? raw.titlePairs
+            .map((p: any) => ({ prefix: String(p?.prefix ?? ''), word: String(p?.word ?? '') }))
+            .filter((p) => p.word.trim().length > 0)
+        : [],
 });
 const toContactData = (raw: RawContactData): ContactData => ({ ...raw, socialLinks: (raw.socialLinks || []).map(toSocialLink) });
 const toProject = (raw: RawProject): Project => ({

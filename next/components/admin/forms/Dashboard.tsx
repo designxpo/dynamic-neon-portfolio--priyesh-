@@ -1,46 +1,45 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { getDb } from '@/lib/db';
-import { Zap, Rocket, Award, Star, FileText } from 'lucide-react';
+import { Zap, Rocket, Award, Star, FileText, ChevronRight } from 'lucide-react';
 
 interface DashboardProps {
     setActiveTab: (tab: string) => void;
 }
 
-const StatCard: React.FC<{ title: string; value: number; onClick: () => void; icon: React.ReactNode }> = ({ title, value, onClick, icon }) => (
-    <div 
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:scale-105"
+const StatCard: React.FC<{
+    title: string;
+    value: number;
+    onClick: () => void;
+    icon: React.ReactNode;
+}> = ({ title, value, onClick, icon }) => (
+    <button
+        type="button"
         onClick={onClick}
+        className="admin-card text-left w-full group cursor-pointer"
+        style={{ border: '1px solid transparent' }}
     >
-        {/* Glassmorphism card */}
-        <div className="relative z-10 backdrop-blur-xl bg-white/5 border border-white/10 p-8 rounded-2xl shadow-2xl hover:bg-white/10 hover:border-electric-blue/50 transition-all duration-500">
-            {/* Glow effect on hover */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute inset-0 bg-gradient-to-br from-electric-blue/20 to-deep-violet/20 blur-xl"></div>
+        <div className="flex items-start justify-between mb-5">
+            <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center"
+                style={{ background: 'var(--admin-accent-soft)', color: 'var(--admin-accent)' }}
+            >
+                {icon}
             </div>
-            
-            {/* Content */}
-            <div className="relative z-10">
-                {/* Icon */}
-                <div className="mb-4 opacity-60 group-hover:opacity-100 transition-opacity duration-300 text-electric-blue">
-                    {icon}
-                </div>
-                
-                {/* Value */}
-                <div className="text-5xl font-bold text-white mb-2 group-hover:text-electric-blue transition-colors duration-300">
-                    {value}
-                </div>
-                
-                {/* Title */}
-                <div className="text-sm text-gray-400 uppercase tracking-wider font-medium">
-                    {title}
-                </div>
-            </div>
-            
-            {/* Bottom accent line */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-electric-blue/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <ChevronRight
+                size={18}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                style={{ color: 'var(--admin-text-muted)' }}
+            />
         </div>
-    </div>
+
+        <div className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--admin-text)' }}>
+            {value}
+        </div>
+        <div className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+            {title}
+        </div>
+    </button>
 );
 
 const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
@@ -64,52 +63,58 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     }, []);
 
     return (
-        <div className="space-y-8">
-            {/* Welcome Section */}
-            <div className="relative">
-                <h2 className="text-5xl font-bold text-white mb-4">
-                    Make Things <span className="gradient-text-electric">Simple!</span>
-                </h2>
-                <p className="text-gray-400 text-lg leading-relaxed max-w-3xl">
-                    Welcome to your central hub for managing all the content on your portfolio website. 
-                    Click on a card below to jump to a section, or use the sidebar navigation.
-                </p>
-                
-                {/* Decorative line */}
-                <div className="mt-6 h-px bg-gradient-to-r from-transparent via-electric-blue/30 to-transparent"></div>
+        <div className="space-y-6">
+            {/* Welcome banner */}
+            <div className="admin-card flex items-center justify-between gap-6 flex-wrap">
+                <div>
+                    <h2 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--admin-text)' }}>
+                        Welcome back, Priyesh
+                    </h2>
+                    <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+                        Manage every section of your portfolio from one place. Click a card to jump to that section.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('projects')}
+                    className="admin-button"
+                >
+                    Edit Projects
+                    <ChevronRight size={16} />
+                </button>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-                <StatCard 
-                    title="Services" 
-                    value={stats.services} 
+            {/* Stats grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+                <StatCard
+                    title="Services"
+                    value={stats.services}
                     onClick={() => setActiveTab('services')}
-                    icon={<Zap size={40} strokeWidth={1.5} />}
+                    icon={<Zap size={22} strokeWidth={1.75} />}
                 />
-                <StatCard 
-                    title="Projects" 
-                    value={stats.projects} 
+                <StatCard
+                    title="Projects"
+                    value={stats.projects}
                     onClick={() => setActiveTab('projects')}
-                    icon={<Rocket size={40} strokeWidth={1.5} />}
+                    icon={<Rocket size={22} strokeWidth={1.75} />}
                 />
-                <StatCard 
-                    title="Skills" 
-                    value={stats.skills} 
+                <StatCard
+                    title="Skills"
+                    value={stats.skills}
                     onClick={() => setActiveTab('skills')}
-                    icon={<Award size={40} strokeWidth={1.5} />}
+                    icon={<Award size={22} strokeWidth={1.75} />}
                 />
-                <StatCard 
-                    title="Testimonials" 
-                    value={stats.testimonials} 
+                <StatCard
+                    title="Testimonials"
+                    value={stats.testimonials}
                     onClick={() => setActiveTab('testimonials')}
-                    icon={<Star size={40} strokeWidth={1.5} />}
+                    icon={<Star size={22} strokeWidth={1.75} />}
                 />
-                <StatCard 
-                    title="Blog Posts" 
-                    value={stats.blogs} 
+                <StatCard
+                    title="Blog Posts"
+                    value={stats.blogs}
                     onClick={() => setActiveTab('blogs')}
-                    icon={<FileText size={40} strokeWidth={1.5} />}
+                    icon={<FileText size={22} strokeWidth={1.75} />}
                 />
             </div>
         </div>

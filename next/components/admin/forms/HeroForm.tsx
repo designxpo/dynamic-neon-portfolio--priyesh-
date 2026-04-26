@@ -13,6 +13,10 @@ const HeroForm: React.FC = () => {
         name: '',
         titlePrefix: '',
         titleWords: ['Designer', 'Developer'],
+        titlePairs: [
+            { prefix: 'UI/UX', word: 'Designer' },
+            { prefix: 'Web', word: 'Developer' },
+        ],
         shortBio: '',
         profileImage: { url: '', alternativeText: '' },
         ctaButtonText: '',
@@ -46,6 +50,38 @@ const HeroForm: React.FC = () => {
             ...prev,
             titleWords: value.split(',').map((w) => w.trim()).filter((w) => w),
         }));
+    };
+
+    const handlePairChange = (index: number, key: 'prefix' | 'word', value: string) => {
+        setFormData((prev) => {
+            const pairs = Array.isArray(prev.titlePairs) ? [...prev.titlePairs] : [];
+            pairs[index] = { ...(pairs[index] || { prefix: '', word: '' }), [key]: value };
+            return { ...prev, titlePairs: pairs };
+        });
+    };
+
+    const addPair = () => {
+        setFormData((prev) => ({
+            ...prev,
+            titlePairs: [...(Array.isArray(prev.titlePairs) ? prev.titlePairs : []), { prefix: '', word: '' }],
+        }));
+    };
+
+    const removePair = (index: number) => {
+        setFormData((prev) => ({
+            ...prev,
+            titlePairs: (Array.isArray(prev.titlePairs) ? prev.titlePairs : []).filter((_, i) => i !== index),
+        }));
+    };
+
+    const movePair = (index: number, dir: -1 | 1) => {
+        setFormData((prev) => {
+            const pairs = Array.isArray(prev.titlePairs) ? [...prev.titlePairs] : [];
+            const target = index + dir;
+            if (target < 0 || target >= pairs.length) return prev;
+            [pairs[index], pairs[target]] = [pairs[target], pairs[index]];
+            return { ...prev, titlePairs: pairs };
+        });
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,31 +207,123 @@ const HeroForm: React.FC = () => {
                 />
             </div>
             <div className="admin-card">
-                <label htmlFor="titlePrefix" className="admin-label">Title Prefix (static part)</label>
-                <input
-                    type="text"
-                    name="titlePrefix"
-                    id="titlePrefix"
-                    autoComplete="off"
-                    value={formData.titlePrefix || ''}
-                    onChange={handleChange}
-                    className="admin-input"
-                    placeholder="e.g., UI/UX"
-                />
+                <div className="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                        <label className="admin-label">Title Animation Pairs</label>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Each pair shows as <span className="text-gray-300">Prefix</span> + animated <span className="text-gray-300">Word</span>.
+                            Pairs cycle in order — the prefix swaps each time the word finishes.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={addPair}
+                        className="admin-button-secondary flex items-center gap-2 shrink-0"
+                    >
+                        <Plus size={16} /> Add pair
+                    </button>
+                </div>
+
+                <div className="space-y-3">
+                    {(Array.isArray(formData.titlePairs) ? formData.titlePairs : []).map((pair, index) => (
+                        <div
+                            key={index}
+                            className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end p-3 rounded-lg border border-white/10 bg-white/5"
+                        >
+                            <div>
+                                <label className="admin-label text-xs">Prefix #{index + 1}</label>
+                                <input
+                                    type="text"
+                                    autoComplete="off"
+                                    value={pair.prefix || ''}
+                                    onChange={(e) => handlePairChange(index, 'prefix', e.target.value)}
+                                    className="admin-input"
+                                    placeholder="e.g., UI/UX"
+                                />
+                            </div>
+                            <div>
+                                <label className="admin-label text-xs">Animated word</label>
+                                <input
+                                    type="text"
+                                    autoComplete="off"
+                                    value={pair.word || ''}
+                                    onChange={(e) => handlePairChange(index, 'word', e.target.value)}
+                                    className="admin-input"
+                                    placeholder="e.g., Designer"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => movePair(index, -1)}
+                                    disabled={index === 0}
+                                    className="admin-button-secondary px-2.5 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    aria-label="Move up"
+                                    title="Move up"
+                                >↑</button>
+                                <button
+                                    type="button"
+                                    onClick={() => movePair(index, 1)}
+                                    disabled={index === (formData.titlePairs?.length || 0) - 1}
+                                    className="admin-button-secondary px-2.5 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    aria-label="Move down"
+                                    title="Move down"
+                                >↓</button>
+                                <button
+                                    type="button"
+                                    onClick={() => removePair(index)}
+                                    className="admin-button-danger px-2.5 py-2"
+                                    aria-label="Remove pair"
+                                    title="Remove pair"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {(!Array.isArray(formData.titlePairs) || formData.titlePairs.length === 0) && (
+                        <p className="text-xs text-gray-500 italic">
+                            No pairs yet — add at least one. The legacy single-prefix + words below will be used as a fallback.
+                        </p>
+                    )}
+                </div>
             </div>
-            <div className="admin-card">
-                <label htmlFor="titleWords" className="admin-label">Typing Animation Words (comma separated)</label>
-                <input
-                    type="text"
-                    name="titleWords"
-                    id="titleWords"
-                    autoComplete="off"
-                    value={Array.isArray(formData.titleWords) ? formData.titleWords.join(', ') : ''}
-                    onChange={handleTitleWordsChange}
-                    className="admin-input"
-                    placeholder="e.g., Designer, Developer"
-                />
-            </div>
+
+            {/* Legacy single-prefix + comma-separated words. Kept as a fallback
+                when no pairs are defined, so existing data keeps working. */}
+            <details className="admin-card">
+                <summary className="cursor-pointer text-sm text-gray-300 select-none">
+                    Legacy fallback (used only when no pairs are set)
+                </summary>
+                <div className="mt-4 space-y-4">
+                    <div>
+                        <label htmlFor="titlePrefix" className="admin-label">Title Prefix (static part)</label>
+                        <input
+                            type="text"
+                            name="titlePrefix"
+                            id="titlePrefix"
+                            autoComplete="off"
+                            value={formData.titlePrefix || ''}
+                            onChange={handleChange}
+                            className="admin-input"
+                            placeholder="e.g., UI/UX"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="titleWords" className="admin-label">Typing Animation Words (comma separated)</label>
+                        <input
+                            type="text"
+                            name="titleWords"
+                            id="titleWords"
+                            autoComplete="off"
+                            value={Array.isArray(formData.titleWords) ? formData.titleWords.join(', ') : ''}
+                            onChange={handleTitleWordsChange}
+                            className="admin-input"
+                            placeholder="e.g., Designer, Developer"
+                        />
+                    </div>
+                </div>
+            </details>
             <div className="admin-card">
                 <label htmlFor="shortBio" className="admin-label">Short Bio / Description</label>
                 <textarea

@@ -170,7 +170,7 @@ const ServicesForm: React.FC = () => {
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem && services.some(s => s.id === currentItem.id) ? 'Edit Service' : 'Add Service'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem && services.some(s => s.id === currentItem.id) ? 'Edit Service' : 'Add Service'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div>

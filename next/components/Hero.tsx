@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { HeroData } from '../types';
+import { HeroData, TitlePair } from '../types';
 
 interface HeroProps {
   data: HeroData;
@@ -12,15 +12,26 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
   const [loopNum, setLoopNum] = useState(0);
   const [typingSpeed, setTypingSpeed] = useState(120);
 
-  const words = useMemo(() =>
-    Array.isArray(data.titleWords) && data.titleWords.length > 0 ? data.titleWords : ['Designer', 'Developer'],
-  [data.titleWords]);
-  const prefix = data.titlePrefix || (data.title ? data.title.split(' ')[0] : 'UI/UX');
+  // Build the (prefix, word) cycle. New `titlePairs` field wins; otherwise
+  // fall back to the legacy single-prefix + words array, then to defaults.
+  const pairs: TitlePair[] = useMemo(() => {
+    const cleanPairs = Array.isArray(data.titlePairs)
+      ? data.titlePairs.filter((p) => p && typeof p.word === 'string' && p.word.trim().length > 0)
+      : [];
+    if (cleanPairs.length > 0) return cleanPairs;
+    const fallbackPrefix = data.titlePrefix || (data.title ? data.title.split(' ')[0] : 'UI/UX');
+    const fallbackWords = Array.isArray(data.titleWords) && data.titleWords.length > 0
+      ? data.titleWords
+      : ['Designer', 'Developer'];
+    return fallbackWords.map((w) => ({ prefix: fallbackPrefix, word: w }));
+  }, [data.titlePairs, data.titlePrefix, data.titleWords, data.title]);
+
+  const currentPair = pairs[loopNum % pairs.length] || { prefix: '', word: '' };
+  const prefix = currentPair.prefix;
 
   useEffect(() => {
     const handleType = () => {
-      const i = loopNum % words.length;
-      const fullText = words[i];
+      const fullText = currentPair.word;
       setTypedText(prev => {
         if (!isDeleting) {
           const updated = fullText.substring(0, prev.length + 1);
@@ -41,7 +52,7 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
     };
     const timer = setTimeout(handleType, typingSpeed);
     return () => clearTimeout(timer);
-  }, [typedText, isDeleting, loopNum, typingSpeed, words]);
+  }, [typedText, isDeleting, loopNum, typingSpeed, currentPair.word]);
 
   return (
     <section id="home" className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-purple-900/20 relative overflow-hidden">
@@ -66,7 +77,13 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
               style={{ animationDelay: '0.4s' }}
             >
               <span className="sr-only">{data.name} — </span>
-              <span className="text-white">{prefix} </span>
+              <span
+                key={prefix}
+                className="text-white inline-block animate-prefix-swap"
+              >
+                {prefix}
+              </span>
+              {prefix ? ' ' : ''}
               <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">
                 {typedText}
                 <span className="animate-blink">|</span>

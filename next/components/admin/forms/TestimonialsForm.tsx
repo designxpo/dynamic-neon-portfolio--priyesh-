@@ -156,7 +156,7 @@ const handleDelete = async (testimonialId: string) => {
                 </div>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && testimonials.some(t => t.id === currentItem.id) ? 'Edit Testimonial' : 'Add Testimonial'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && testimonials.some(t => t.id === currentItem.id) ? 'Edit Testimonial' : 'Add Testimonial'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div><label className="admin-label">Client Name</label><input type="text" value={currentItem.clientName} onChange={e => setCurrentItem(p => p ? { ...p, clientName: e.target.value } : null)} className="admin-input" placeholder="e.g., John Smith" /></div>

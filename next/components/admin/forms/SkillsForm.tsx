@@ -139,7 +139,7 @@ const SkillsForm: React.FC = () => {
                 ))}
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && skills.some(s => s.id === currentItem.id) ? 'Edit Skill' : 'Add Skill'}>
+            <Modal variant="drawer" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentItem?.id && skills.some(s => s.id === currentItem.id) ? 'Edit Skill' : 'Add Skill'}>
                 {currentItem && (
                     <div className="space-y-6">
                         <div><label className="admin-label">Skill Name</label><input type="text" value={currentItem.name} onChange={e => setCurrentItem(p => p ? {...p, name: e.target.value} : null)} className="admin-input" placeholder="e.g., React, Python, AWS" /></div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Project } from '../types';
@@ -119,6 +120,9 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
   const [selected, setSelected] = useState<Project | null>(null);
   const [visibleCount, setVisibleCount] = useState(4);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Only show categories that have at least one project
   const derivedCats = Array.from(new Set(
@@ -227,13 +231,15 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Read More Modal */}
-      {selected && (() => {
+      {/* Read More Modal — rendered via portal so `position: fixed` is relative
+          to the viewport, not the AnimatedSection ancestor (which sets
+          `will-change: transform` and would otherwise become its containing block). */}
+      {selected && mounted && typeof document !== 'undefined' && (() => {
         const modalCats = (selected.categories && selected.categories.length
           ? selected.categories
           : (selected.category ? [selected.category] : []));
         const hasFooterCTAs = hasAnyLink(selected.liveUrl) || hasAnyLink(selected.sourceUrl);
-        return (
+        return createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4"
           role="dialog"
@@ -378,7 +384,8 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
         );
       })()}
     </Section>

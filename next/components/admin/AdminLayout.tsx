@@ -31,6 +31,25 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiv
     settings: 'Settings',
   };
 
+  const tabSubtitles: { [key: string]: string } = {
+    dashboard: 'Overview of your portfolio content',
+    hero: 'Edit the homepage hero section',
+    services: 'Manage the services you offer',
+    projects: 'Curate your portfolio projects',
+    experience: 'Update your professional history',
+    education: 'Manage your education entries',
+    skills: 'Edit your skills and tools',
+    testimonials: 'Manage client testimonials',
+    blogs: 'Write and publish blog posts',
+    seo: 'Per-section SEO metadata',
+    contact: 'Contact details and notification settings',
+    'contact-submissions': 'Inbound messages from your contact form',
+    categories: 'Project category list and ordering',
+    metadata: 'Site-wide metadata and Open Graph',
+    chatbot: 'Configure the on-site assistant',
+    settings: 'Account and admin preferences',
+  };
+
   const currentDate = new Date().toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
@@ -63,72 +82,102 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiv
     return () => { cancelled = true; };
   }, []);
 
-  return (
-    <div className="flex h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0d0d1f] to-[#1a0a2e] font-sans relative overflow-hidden text-white">
-      {/* Background accents */}
-      <div
-        className="absolute inset-0 opacity-30 bg-no-repeat"
-        style={{
-          backgroundImage:
-            "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')"
-        }}
-      />
-      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-electric-blue/10 rounded-full blur-[100px] animate-pulse"></div>
-      <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-deep-violet/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-      <div className="absolute top-2/3 left-1/2 w-[300px] h-[300px] bg-cyan-500/5 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+  const pageTitle = tabTitles[activeTab] || 'Dashboard';
+  const pageSubtitle = tabSubtitles[activeTab] || '';
 
-      {/* Sidebar */}
+  return (
+    <div className="admin-shell flex h-screen overflow-hidden">
       <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <header className="backdrop-blur-xl bg-white/5 border-b border-white/10 px-8 py-4 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-sm">
-              <span className="text-gray-500">Home</span>
-              <span className="text-gray-600">/</span>
-              <span className="text-electric-blue font-medium">{tabTitles[activeTab] || 'Dashboard'}</span>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header
+          className="px-8 py-5 flex-shrink-0"
+          style={{
+            background: 'var(--admin-surface)',
+            borderBottom: '1px solid var(--admin-border-soft)',
+          }}
+        >
+          <div className="flex items-start justify-between gap-6">
+            <div className="min-w-0">
+              {/* Breadcrumbs */}
+              <div className="flex items-center gap-2 text-xs mb-1.5" style={{ color: 'var(--admin-text-muted)' }}>
+                <span>Admin</span>
+                <span aria-hidden>/</span>
+                <span style={{ color: 'var(--admin-accent)', fontWeight: 600 }}>{pageTitle}</span>
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--admin-text)' }}>
+                {pageTitle === 'Dashboard' ? 'Portfolio Dashboard' : pageTitle}
+              </h1>
+              {pageSubtitle && (
+                <p className="text-sm mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
+                  {pageSubtitle}
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-6">
-              <div className="text-sm text-gray-400">{currentDate}</div>
-              <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-electric-blue to-deep-violet flex items-center justify-center text-white font-bold text-sm">PM</div>
-                <span className="text-sm text-gray-300">Admin</span>
+
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="text-sm hidden md:block" style={{ color: 'var(--admin-text-muted)' }}>
+                {currentDate}
+              </div>
+              <div
+                className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-full"
+                style={{ background: 'var(--admin-surface-soft)' }}
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs"
+                  style={{ background: 'var(--admin-accent)', color: '#0B1020' }}
+                >
+                  PM
+                </div>
+                <span className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>Admin</span>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-8" style={{ overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 72px)', maxHeight: 'calc(100vh - 72px)' }}>
+        {/* Main scroll area */}
+        <main
+          className="flex-1 px-6 md:px-8 py-6 md:py-8"
+          style={{ overflowY: 'auto', overflowX: 'hidden', background: 'var(--admin-bg)' }}
+        >
           {(offline || (aiStatus && !aiStatus.configured) || aiError) && (
-            <div className="max-w-7xl mx-auto mb-4">
+            <div className="max-w-7xl mx-auto mb-4 space-y-2">
               {aiError && (
-                <div className="admin-card bg-rose-500/10 border-rose-500/30 text-rose-300 mb-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <span>
-                      Could not determine AI provider status. The chatbot will fall back to local answers.
-                    </span>
-                    <a href="/api/chat/provider" target="_blank" rel="noopener noreferrer" className="admin-button">View Status</a>
-                  </div>
+                <div
+                  className="admin-card flex items-center justify-between gap-4"
+                  style={{
+                    background: 'rgba(248, 113, 113, 0.08)',
+                    boxShadow: 'none',
+                    border: '1px solid rgba(248, 113, 113, 0.22)',
+                  }}
+                >
+                  <span style={{ color: '#FCA5A5' }}>
+                    Could not determine AI provider status. The chatbot will fall back to local answers.
+                  </span>
+                  <a href="/api/chat/provider" target="_blank" rel="noopener noreferrer" className="admin-button">View Status</a>
                 </div>
               )}
               {aiStatus && !aiStatus.configured && (
-                <div className="admin-card bg-purple-500/10 border-purple-500/30 text-purple-200">
-                  <div className="flex items-center justify-between gap-4">
-                    <span>
-                      AI provider not configured — the chatbot will use local rule-based responses. Configure keys in <code>next/.env.local</code> (OpenAI, Azure OpenAI, or Gemini).
-                    </span>
-                    <a href="/api/chat/provider" target="_blank" rel="noopener noreferrer" className="admin-button">Setup Guide</a>
-                  </div>
+                <div
+                  className="admin-card flex items-center justify-between gap-4"
+                  style={{
+                    background: 'rgba(129, 140, 248, 0.08)',
+                    boxShadow: 'none',
+                    border: '1px solid rgba(129, 140, 248, 0.22)',
+                  }}
+                >
+                  <span style={{ color: 'var(--admin-text-soft)' }}>
+                    AI provider not configured — the chatbot will use local rule-based responses. Configure keys in <code>next/.env.local</code> (OpenAI, Azure OpenAI, or Gemini).
+                  </span>
+                  <a href="/api/chat/provider" target="_blank" rel="noopener noreferrer" className="admin-button">Setup Guide</a>
                 </div>
               )}
             </div>
           )}
-          <div className="max-w-7xl mx-auto h-full">
-            <div className="backdrop-blur-xl bg-white/5 rounded-3xl shadow-2xl border border-white/10 p-10 relative overflow-visible">
-              <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-electric-blue/50 to-transparent"></div>
-              <div className="relative z-10">{children}</div>
-            </div>
+
+          <div className="max-w-7xl mx-auto">
+            {children}
           </div>
         </main>
       </div>
