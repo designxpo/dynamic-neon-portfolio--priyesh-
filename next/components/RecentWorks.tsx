@@ -228,16 +228,21 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
       </div>
 
       {/* Read More Modal */}
-      {selected && (
+      {selected && (() => {
+        const modalCats = (selected.categories && selected.categories.length
+          ? selected.categories
+          : (selected.category ? [selected.category] : []));
+        const hasFooterCTAs = hasAnyLink(selected.liveUrl) || hasAnyLink(selected.sourceUrl);
+        return (
         <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="project-modal-title"
           onClick={() => setSelected(null)}
         >
           <div
-            className="relative w-full max-w-2xl bg-[#0f0a24]/95 border border-white/10 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[88dvh]"
+            className="relative w-full max-w-3xl bg-[#0f0a24]/95 border border-white/10 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[88dvh] shadow-2xl shadow-brand-purple/10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag pill (mobile bottom-sheet affordance) */}
@@ -245,18 +250,36 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
               <span aria-hidden className="h-1.5 w-10 rounded-full bg-white/25" />
             </div>
 
-            {/* Close button — sticky, always reachable */}
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              aria-label="Close project details"
-              className="absolute top-3 right-3 z-10 w-9 h-9 inline-flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 border border-white/15 text-white backdrop-blur-md transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            {/* Sticky Header */}
+            <div className="shrink-0 flex items-start gap-3 px-5 sm:px-6 py-4 border-b border-white/10 bg-[#0f0a24]/95 backdrop-blur-xl">
+              <div className="min-w-0 flex-1">
+                <h3
+                  id="project-modal-title"
+                  className="text-base sm:text-lg md:text-xl font-semibold leading-tight pr-2"
+                  style={{ fontFamily: 'Poppins, sans-serif' }}
+                >
+                  {selected.title}
+                </h3>
+                {(selected.clientName || selected.timeline) && (
+                  <p className="mt-1 text-[11px] sm:text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {selected.clientName && <span>{selected.clientName}</span>}
+                    {selected.clientName && selected.timeline && <span className="mx-1.5">·</span>}
+                    {selected.timeline && <span>{selected.timeline}</span>}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                aria-label="Close project details"
+                className="shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 border border-white/15 text-white/90 hover:text-white transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
 
             {/* Scrollable content */}
             <div
@@ -264,38 +287,100 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
               style={{ WebkitOverflowScrolling: 'touch' }}
             >
               {selected.coverImage?.url && (
-                <div className="relative w-full h-48 md:h-56 overflow-hidden shrink-0">
-                  <Image src={selected.coverImage.url} alt={selected.coverImage.alternativeText || selected.title} width={672} height={224} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="relative w-full aspect-[16/9] max-h-[42vh] overflow-hidden shrink-0 bg-black/40">
+                  <Image
+                    src={selected.coverImage.url}
+                    alt={selected.coverImage.alternativeText || selected.title}
+                    width={1024}
+                    height={576}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               )}
-              <div
-                className="p-6 pb-[calc(env(safe-area-inset-bottom)+6rem)] sm:pb-6"
-              >
-                <h3 id="project-modal-title" className="text-lg md:text-xl font-semibold mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>{selected.title}</h3>
-                <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <div className="p-5 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+6rem)] sm:pb-6 space-y-5">
+                {/* Categories */}
+                {modalCats.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {modalCats.map((cat) => (
+                      <span
+                        key={cat}
+                        className="text-[11px] sm:text-xs bg-brand-purple/20 text-brand-purple-light px-2.5 py-1 rounded-full border border-brand-purple/30 font-medium"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Outcome callout */}
+                {selected.outcome && (
+                  <div className="flex items-start gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 px-3 py-2.5 text-xs sm:text-sm">
+                    <span className="font-semibold text-emerald-300 shrink-0">Result:</span>
+                    <span className="leading-relaxed">{selected.outcome}</span>
+                  </div>
+                )}
+
+                {/* Description */}
+                <p
+                  className="text-sm sm:text-[15px] leading-relaxed text-gray-300 whitespace-pre-line"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
                   {selected.descriptionLong || selected.descriptionShort}
                 </p>
 
-                <div className="mt-5 flex flex-wrap items-center gap-3">
-                  {hasAnyLink(selected.liveUrl) && (
-                    <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-brand-purple text-white px-3 py-2 rounded-lg hover:bg-brand-purple-light transition-all text-xs">
-                      Visit live
-                      <ExternalLinkIcon />
-                    </a>
-                  )}
-                  {hasAnyLink(selected.sourceUrl) && (
-                    <a href={selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/20 px-3 py-2 rounded-lg hover:bg-white/10 transition-all text-xs">
-                      View source
-                      <GitHubIcon />
-                    </a>
-                  )}
-                </div>
+                {/* Tech stack */}
+                {selected.technologies && selected.technologies.length > 0 && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Tech stack
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selected.technologies.map((tech) => (
+                        <span
+                          key={tech}
+                          className="text-xs bg-white/5 text-gray-200 px-2.5 py-1 rounded-md border border-white/15 font-medium"
+                          style={{ fontFamily: 'Inter, sans-serif' }}
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Sticky Footer with CTAs */}
+            {hasFooterCTAs && (
+              <div className="shrink-0 flex flex-wrap items-center gap-3 px-5 sm:px-6 py-3.5 border-t border-white/10 bg-[#0f0a24]/95 backdrop-blur-xl">
+                {hasAnyLink(selected.liveUrl) && (
+                  <a
+                    href={selected.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-brand-purple-light transition-all text-xs sm:text-sm font-medium"
+                  >
+                    Visit live
+                    <ExternalLinkIcon />
+                  </a>
+                )}
+                {hasAnyLink(selected.sourceUrl) && (
+                  <a
+                    href={selected.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 border border-white/20 px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-xs sm:text-sm font-medium"
+                  >
+                    View source
+                    <GitHubIcon />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
-      )}
+        );
+      })()}
     </Section>
   );
 };

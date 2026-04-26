@@ -54,3 +54,6 @@ next/.env.local
 /package-lock.json
 
 next/tsconfig.tsbuildinfo
+
+# Tooling
+.claude/
