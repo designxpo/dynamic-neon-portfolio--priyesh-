@@ -9,6 +9,7 @@ import {
   createSessionToken,
   buildSessionCookie,
   isAuthenticated,
+  ADMIN_SECRET_CONFIGURED,
 } from '../../../../lib/adminAuth';
 
 /** GET /api/admin/login — check if the request carries a valid session. */
@@ -35,6 +36,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
+  const isProd = process.env.NODE_ENV === 'production';
+
+  // Refuse to issue sessions in production without a real signing secret,
+  // otherwise session tokens are forgeable with the public fallback secret.
+  if (isProd && !ADMIN_SECRET_CONFIGURED) {
+    console.error('[login] ADMIN_SECRET is not set in production; refusing to authenticate.');
+    return NextResponse.json({ error: 'Server authentication is not configured' }, { status: 503 });
+  }
+
+  // Bootstrap password: in production there is NO default — ADMIN_PASSWORD must be set.
+  // In development we keep the convenient "admin" default.
+  const bootstrapPassword = process.env.ADMIN_PASSWORD || (isProd ? '' : 'admin');
+  const matchesBootstrap = (candidate: string) => bootstrapPassword !== '' && candidate === bootstrapPassword;
+
   let valid = false;
 
   if (process.env.MONGODB_URI) {
@@ -48,8 +63,7 @@ export async function POST(req: NextRequest) {
         valid = verifyPassword(password, stored);
       } else {
         // Bootstrap path: no hash in DB yet — compare against ADMIN_PASSWORD env var
-        const initial = process.env.ADMIN_PASSWORD || 'admin';
-        valid = password === initial;
+        valid = matchesBootstrap(password);
         if (valid) {
           // Persist the hash so future logins use it
           (cfg as any).adminPasswordHash = hashPassword(password);
@@ -59,13 +73,11 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error('[login] DB error:', err);
       // Fallback: allow login with ADMIN_PASSWORD env var so admin isn't locked out
-      const fallback = process.env.ADMIN_PASSWORD || 'admin';
-      valid = password === fallback;
+      valid = matchesBootstrap(password);
     }
   } else {
     // No DB — use env var only
-    const fallback = process.env.ADMIN_PASSWORD || 'admin';
-    valid = password === fallback;
+    valid = matchesBootstrap(password);
   }
 
   if (!valid) {

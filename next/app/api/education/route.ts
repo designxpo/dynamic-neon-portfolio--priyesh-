@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Education from '@/models/Education';
+import { requireAdmin } from '@/lib/adminAuth';
+import { badObjectId } from '@/lib/objectId';
 
 // GET all educations (sorted by order)
 export async function GET() {
@@ -45,6 +47,7 @@ export async function GET() {
 
 // CREATE new education
 export async function POST(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const body = await request.json();
   const payload = {
@@ -58,12 +61,14 @@ export async function POST(request: Request) {
 
 // UPDATE education by _id
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const body = await request.json();
   const { _id, ...update } = body;
   if (!_id) {
     return NextResponse.json({ error: 'Missing _id in payload' }, { status: 400 });
   }
+  const bad = badObjectId(_id); if (bad) return bad;
   const payload = {
     ...update,
     degree: update.degree || (update as any).course,
@@ -78,10 +83,12 @@ export async function PUT(request: Request) {
 
 // DELETE education by _id
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const { searchParams } = new URL(request.url);
   const _id = searchParams.get('_id');
   if (!_id) return NextResponse.json({ error: 'Missing _id' }, { status: 400 });
+  const bad = badObjectId(_id); if (bad) return bad;
   const deleted = await Education.findByIdAndDelete(_id);
   if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json({ success: true });

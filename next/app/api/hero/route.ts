@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Hero from '@/models/Hero';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
   await connectDB();
@@ -35,6 +36,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   try {
     const data = await req.json();
@@ -47,6 +49,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   try {
     const data = await req.json();
@@ -57,7 +60,8 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   await (Hero as any).deleteMany({}).exec();
   return NextResponse.json({ success: true });

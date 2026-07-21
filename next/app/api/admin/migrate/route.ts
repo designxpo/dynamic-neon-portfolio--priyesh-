@@ -8,6 +8,7 @@ export const runtime = 'nodejs';
 
 import { connectDB } from '../../../../lib/db/mongoose';
 import SiteConfig from '../../../../models/SiteConfig';
+import { isAuthenticated } from '../../../../lib/adminAuth';
 
 interface MigrationRequest {
   action: 'backup' | 'restore' | 'clear' | 'status';
@@ -15,15 +16,27 @@ interface MigrationRequest {
   data?: any;
 }
 
-const MIGRATION_PASSWORD = process.env.MIGRATION_PASSWORD || 'migration-secret-2024';
+// No insecure default — a migration password MUST be configured explicitly,
+// or the caller must present a valid admin session.
+const MIGRATION_PASSWORD = process.env.MIGRATION_PASSWORD;
 
 export async function POST(req: NextRequest) {
   try {
     const { action, password, data }: MigrationRequest = await req.json();
 
-    // Security check
-    if (password !== MIGRATION_PASSWORD) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Security check: allow a signed-in admin, otherwise require a configured
+    // migration password that matches. This endpoint can wipe/restore all data,
+    // so it must never be reachable with a hardcoded fallback secret.
+    if (!isAuthenticated(req)) {
+      if (!MIGRATION_PASSWORD) {
+        return NextResponse.json(
+          { error: 'Migration not configured. Set MIGRATION_PASSWORD or sign in as admin.' },
+          { status: 503 }
+        );
+      }
+      if (password !== MIGRATION_PASSWORD) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     if (!process.env.MONGODB_URI) {

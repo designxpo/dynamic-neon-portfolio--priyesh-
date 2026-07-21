@@ -96,21 +96,23 @@ const SEOForm: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {(Object.keys(sectionLabels) as SectionKey[]).map((key) => (
+        {(Object.keys(sectionLabels) as SectionKey[]).map((key) => {
+          const s = (seo[key] || {}) as any;
+          return (
           <div className="admin-card" key={key}>
             <h4 className="text-lg font-semibold text-white mb-4">{sectionLabels[key]}</h4>
             <div className="space-y-4">
               <div>
                 <label className="admin-label">Meta Title</label>
-                <input type="text" className="admin-input" value={seo[key].metaTitle} onChange={(e) => handleChange(key, 'metaTitle', e.target.value)} placeholder="e.g., Projects — Case Studies" />
+                <input type="text" className="admin-input" value={s.metaTitle || ''} onChange={(e) => handleChange(key, 'metaTitle', e.target.value)} placeholder="e.g., Projects — Case Studies" />
               </div>
               <div>
                 <label className="admin-label">Meta Description</label>
-                <textarea rows={3} className="admin-textarea" value={seo[key].metaDescription} onChange={(e) => handleChange(key, 'metaDescription', e.target.value)} placeholder="A concise summary for search engines..." />
+                <textarea rows={3} className="admin-textarea" value={s.metaDescription || ''} onChange={(e) => handleChange(key, 'metaDescription', e.target.value)} placeholder="A concise summary for search engines..." />
               </div>
               <div>
                 <label className="admin-label">Meta Keywords</label>
-                <input type="text" className="admin-input" value={seo[key].metaKeywords} onChange={(e) => handleChange(key, 'metaKeywords', e.target.value)} placeholder="design, ui, ux, product" />
+                <input type="text" className="admin-input" value={s.metaKeywords || ''} onChange={(e) => handleChange(key, 'metaKeywords', e.target.value)} placeholder="design, ui, ux, product" />
               </div>
 
               <div className="pt-3 mt-3 border-t border-white/10">
@@ -118,25 +120,26 @@ const SEOForm: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="admin-label">Canonical URL</label>
-                    <input type="url" className="admin-input" value={seo[key].canonicalUrl || ''} onChange={(e) => handleChange(key, 'canonicalUrl', e.target.value)} placeholder="https://www.priyeshmishra.com" />
+                    <input type="url" className="admin-input" value={s.canonicalUrl || ''} onChange={(e) => handleChange(key, 'canonicalUrl', e.target.value)} placeholder="https://www.priyeshmishra.com" />
                   </div>
                   <div>
                     <label className="admin-label">OG Title</label>
-                    <input type="text" className="admin-input" value={seo[key].ogTitle || ''} onChange={(e) => handleChange(key, 'ogTitle', e.target.value)} placeholder="Leave blank to reuse Meta Title" />
+                    <input type="text" className="admin-input" value={s.ogTitle || ''} onChange={(e) => handleChange(key, 'ogTitle', e.target.value)} placeholder="Leave blank to reuse Meta Title" />
                   </div>
                   <div>
                     <label className="admin-label">OG Description</label>
-                    <textarea rows={2} className="admin-textarea" value={seo[key].ogDescription || ''} onChange={(e) => handleChange(key, 'ogDescription', e.target.value)} placeholder="Leave blank to reuse Meta Description" />
+                    <textarea rows={2} className="admin-textarea" value={s.ogDescription || ''} onChange={(e) => handleChange(key, 'ogDescription', e.target.value)} placeholder="Leave blank to reuse Meta Description" />
                   </div>
                   <div>
                     <label className="admin-label">OG Image URL</label>
-                    <input type="text" className="admin-input" value={seo[key].ogImage || ''} onChange={(e) => handleChange(key, 'ogImage', e.target.value)} placeholder="/images/profile.png or https://... (1200x630 recommended)" />
+                    <input type="text" className="admin-input" value={s.ogImage || ''} onChange={(e) => handleChange(key, 'ogImage', e.target.value)} placeholder="/images/profile.png or https://... (1200x630 recommended)" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {message && (

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '../../../lib/db';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
   try {
@@ -22,6 +23,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     await dbConnect();
     const Service = (await import('../../../models/Service')).default;
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     await dbConnect();
     const Service = (await import('../../../models/Service')).default;
@@ -51,6 +54,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     await dbConnect();
     const Service = (await import('../../../models/Service')).default;

@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import ChatbotSettings from '@/models/ChatbotSettings';
+import { requireAdmin } from '@/lib/adminAuth';
 
 // POST /api/chatbot
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const body = await req.json();
@@ -55,7 +57,7 @@ export async function GET() {
   try {
     await connectDB();
     // Always return the most recently updated settings document
-    let settings = await ChatbotSettings.findOne({}, {}, { sort: { updatedAt: -1 } }).lean();
+    let settings: any = await ChatbotSettings.findOne({}, {}, { sort: { updatedAt: -1 } }).lean();
     if (!settings) {
       const created = await ChatbotSettings.create({
         enabled: true,
@@ -79,6 +81,7 @@ export async function GET() {
 
 // PUT /api/chatbot
 export async function PUT(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const body = await req.json();

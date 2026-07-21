@@ -2,6 +2,9 @@ import React from 'react';
 import { connectDB } from '@/lib/db/mongoose';
 import Blog from '@/models/Blog';
 import HomeClient from './HomeClient';
+import HomeSeoContent from '../components/HomeSeoContent';
+import HideOnReady from '../components/HideOnReady';
+import { getPortfolioContent } from '@/lib/content';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
 
@@ -92,7 +95,7 @@ function buildFaqSchema() {
 }
 
 export default async function HomePage() {
-  const blogs = await getBlogs();
+  const [blogs, content] = await Promise.all([getBlogs(), getPortfolioContent()]);
   const blogSchemas = buildBlogPostingSchemas(blogs);
   const faqSchema = buildFaqSchema();
 
@@ -109,6 +112,11 @@ export default async function HomePage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
+      {/* Server-rendered, crawlable content in the initial HTML; yields to the
+          interactive app once it mounts (see HideOnReady). */}
+      <HideOnReady>
+        <HomeSeoContent data={content} />
+      </HideOnReady>
       <HomeClient />
     </>
   );

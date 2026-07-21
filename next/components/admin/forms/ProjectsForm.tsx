@@ -178,7 +178,11 @@ const ProjectsForm: React.FC = () => {
                             <tr key={project._id}>
                                 <td>
                                     <div className="flex items-center gap-4">
-                                        <Image src={project.coverImage.url} alt={project.title} width={64} height={48} className="w-16 h-12 object-cover rounded-lg border border-white/10" />
+                                        {project.coverImage?.url ? (
+                                            <Image src={project.coverImage.url} alt={project.title} width={64} height={48} className="w-16 h-12 object-cover rounded-lg border border-white/10" />
+                                        ) : (
+                                            <div className="w-16 h-12 rounded-lg border border-white/10 bg-white/5" />
+                                        )}
                                         <div>
                                             <p className="font-semibold text-white">{project.title}</p>
                                             <p className="text-xs text-gray-500 line-clamp-1">{project.descriptionShort}</p>
