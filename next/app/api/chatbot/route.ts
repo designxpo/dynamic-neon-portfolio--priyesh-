@@ -57,7 +57,7 @@ export async function GET() {
   try {
     await connectDB();
     // Always return the most recently updated settings document
-    let settings = await ChatbotSettings.findOne({}, {}, { sort: { updatedAt: -1 } }).lean();
+    let settings: any = await ChatbotSettings.findOne({}, {}, { sort: { updatedAt: -1 } }).lean();
     if (!settings) {
       const created = await ChatbotSettings.create({
         enabled: true,

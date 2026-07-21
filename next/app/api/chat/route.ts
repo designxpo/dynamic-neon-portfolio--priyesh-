@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 import { connectDB } from '../../../lib/db/mongoose';
 import SiteConfig from '../../../models/SiteConfig';
+import ChatbotSettings from '../../../models/ChatbotSettings';
 import { mockContactData, mockEducationsData, mockExperiencesData, mockHeroData, mockProjectsData, mockServicesData, mockSkillsData, mockTestimonialsData } from '../../../data/mockData';
 
 type LLMProvider = 'openai' | 'azure-openai' | 'gemini';
@@ -258,8 +259,23 @@ ${context}
       if (process.env.MONGODB_URI) {
         await connectDB();
         const cfg = await SiteConfig.getSingleton();
-        const bot = (cfg as any)?.chatbot || {};
-        const rules: any[] = Array.isArray(bot?.rules) ? bot.rules : [];
+        // Rules/booking live in the ChatbotSettings collection — that's what the
+        // admin editor and the live widget read/write. (SiteConfig.chatbot.rules is
+        // never populated by the editor, so reading it here matched nothing.)
+        // Map the customQA/matchMode shape onto the rule shape this matcher expects.
+        const botDoc: any = await ChatbotSettings.findOne({}, {}, { sort: { updatedAt: -1 } }).lean();
+        const bot: any = botDoc || {};
+        const rules: any[] = Array.isArray(botDoc?.customQA)
+          ? botDoc.customQA.map((q: any) => ({
+              enabled: q?.enabled,
+              reply: q?.reply,
+              regex: q?.regex,
+              caseSensitive: false,
+              question: q?.question,
+              keywords: q?.keywords,
+              match: q?.matchMode || 'any',
+            }))
+          : [];
         if (Array.isArray(rules) && rules.length > 0) {
           const caseText = (s: string, caseSensitive?: boolean) => caseSensitive ? s : s.toLowerCase();
           const safeStr = (v: any) => (typeof v === 'string' ? v : '');
@@ -277,7 +293,9 @@ ${context}
               .replace(/\{\s*path\s*\}/gi, pagePath || '')
               .replace(/\{\s*bookingUrl\s*\}/gi, bookingUrl)
               .replace(/\{\s*contactLink\s*\}/gi, contactLink);
-            const ph: Record<string,string> = (bot?.placeholders && typeof bot.placeholders === 'object') ? bot.placeholders : {};
+            const ph: Record<string,string> = Array.isArray(bot?.placeholders)
+              ? Object.fromEntries((bot.placeholders as any[]).filter((p) => p?.key).map((p) => [p.key, safeStr(p?.value)]))
+              : ((bot?.placeholders && typeof bot.placeholders === 'object') ? bot.placeholders : {});
             const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             let out = base;
             for (const k of Object.keys(ph)) {
