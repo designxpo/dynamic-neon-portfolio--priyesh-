@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Experience from '@/models/Experience';
+import { requireAdmin } from '@/lib/adminAuth';
+import { badObjectId } from '@/lib/objectId';
 
 // GET all experiences (sorted by order)
 export async function GET() {
@@ -11,6 +13,7 @@ export async function GET() {
 
 // CREATE new experience with basic validation
 export async function POST(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     await connectDB();
     const body = await request.json();
@@ -48,12 +51,14 @@ export async function POST(request: Request) {
 
 // UPDATE experience by _id
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const body = await request.json();
   const { _id, ...update } = body;
   if (!_id) {
     return NextResponse.json({ error: 'Missing _id in payload' }, { status: 400 });
   }
+  const bad = badObjectId(_id); if (bad) return bad;
   // If current is true and endYear isn't provided, enforce 'Present'
   if (update?.current === true && (!update.endYear || String(update.endYear).trim() === '')) {
     (update as any).endYear = 'Present';
@@ -67,10 +72,12 @@ export async function PUT(request: Request) {
 
 // DELETE experience by _id
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const { searchParams } = new URL(request.url);
   const _id = searchParams.get('_id');
   if (!_id) return NextResponse.json({ error: 'Missing _id' }, { status: 400 });
+  const bad = badObjectId(_id); if (bad) return bad;
   const deleted = await Experience.findByIdAndDelete(_id);
   if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json({ success: true });

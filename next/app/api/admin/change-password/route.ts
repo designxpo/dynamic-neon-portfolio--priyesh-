@@ -41,9 +41,10 @@ export async function POST(req: NextRequest) {
     if (stored) {
       valid = verifyPassword(currentPassword, stored);
     } else {
-      // Bootstrap: compare against env var
-      const initial = process.env.ADMIN_PASSWORD || 'admin';
-      valid = currentPassword === initial;
+      // Bootstrap: compare against env var. No production default — ADMIN_PASSWORD
+      // must be set; in development we keep the convenient "admin" default.
+      const initial = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'admin');
+      valid = initial !== '' && currentPassword === initial;
     }
 
     if (!valid) {

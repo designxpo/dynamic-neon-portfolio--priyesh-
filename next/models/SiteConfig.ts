@@ -57,7 +57,7 @@ export interface SiteConfigDoc extends mongoose.Document {
   dataVersion?: number;
 }
 
-function buildDefaults() {
+export function buildDefaults() {
   return {
     hero: { ...mockHeroData, profileImage: { url: '/images/profile.png', alternativeText: 'Priyesh Mishra' } },
     services: mockServicesData,

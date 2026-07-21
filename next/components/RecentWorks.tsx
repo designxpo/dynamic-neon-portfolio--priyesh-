@@ -17,13 +17,17 @@ const hasAnyLink = (url?: string) => !!url && url.trim().length > 0;
 const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void }> = ({ project, onReadMore }) => (
   <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full h-full">
     <div className="relative overflow-hidden aspect-video">
-      <Image
-        src={project.coverImage.url}
-        alt={project.coverImage.alternativeText || project.title}
-        width={400}
-        height={300}
-        className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-      />
+      {project.coverImage?.url ? (
+        <Image
+          src={project.coverImage.url}
+          alt={project.coverImage?.alternativeText || project.title}
+          width={400}
+          height={300}
+          className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+        />
+      ) : (
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-brand-purple/30 to-black/50" />
+      )}
   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
     </div>
 

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const runtime = 'nodejs';
 import { connectDB } from '../../../../lib/db/mongoose';
-import SiteConfig from '../../../../models/SiteConfig';
+import SiteConfig, { buildDefaults } from '../../../../models/SiteConfig';
 import { isAuthenticated } from '../../../../lib/adminAuth';
 
 function pickContentSnapshot(obj: any) {
@@ -81,11 +81,10 @@ export async function PUT(req: NextRequest) {
         await cfg.save();
         return NextResponse.json({ ok: true, mode, source: 'baseline' });
       }
-      // Fallback: rebuild defaults by creating a temp doc from model defaults
-      // We call getSingleton only once; to get defaults, construct a new model instance
-      const DefaultModel = (cfg.constructor as any);
-      const temp = new DefaultModel();
-      const defaults = pickContentSnapshot(temp.toObject());
+      // Fallback: restore the real seed content (hero, services, projects, etc.).
+      // NOTE: `new Model()` only yields empty schema defaults, which would blank the
+      // site — buildDefaults() returns the actual mock content the label promises.
+      const defaults = pickContentSnapshot(buildDefaults());
       assignContent(defaults);
       await cfg.save();
       return NextResponse.json({ ok: true, mode, source: 'defaults' });

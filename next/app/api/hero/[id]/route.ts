@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Hero from '@/models/Hero';
+import { requireAdmin } from '@/lib/adminAuth';
+import { badObjectId } from '@/lib/objectId';
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  const denied = requireAdmin(req); if (denied) return denied;
+  const bad = badObjectId(params.id); if (bad) return bad;
   await connectDB();
   const data = await req.json();
   const updated = await (Hero as any).findByIdAndUpdate(params.id, data, { new: true }).exec();
@@ -11,6 +15,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const denied = requireAdmin(req); if (denied) return denied;
+  const bad = badObjectId(params.id); if (bad) return bad;
   await connectDB();
   const deleted = await (Hero as any).findByIdAndDelete(params.id).exec();
   if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });

@@ -6,6 +6,7 @@
  * Session:          HMAC-SHA256 signed token stored in HttpOnly cookie
  */
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -26,6 +27,9 @@ const ADMIN_SECRET = (() => {
   }
   return s || 'portfolio-admin-fallback-secret-change-me';
 })();
+
+/** True only when a real ADMIN_SECRET is configured (not the insecure fallback). */
+export const ADMIN_SECRET_CONFIGURED = !!process.env.ADMIN_SECRET;
 
 // ─── Password hashing ────────────────────────────────────────────────────────
 
@@ -86,6 +90,18 @@ export function isAuthenticated(req: NextRequest | Request): boolean {
     ?? '';
   if (!cookie) return false;
   return verifySessionToken(decodeURIComponent(cookie));
+}
+
+/**
+ * Guard for mutating API routes. Returns a 401 NextResponse when the request
+ * is not authenticated, or null when it is. Usage at the top of a handler:
+ *   const denied = requireAdmin(req); if (denied) return denied;
+ */
+export function requireAdmin(req: NextRequest | Request): NextResponse | null {
+  if (!isAuthenticated(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return null;
 }
 
 function parseCookieHeader(header: string): Record<string, string> {

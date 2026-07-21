@@ -1,30 +1,19 @@
-import mongoose from 'mongoose';
+import { connectDB } from './db/mongoose';
 
-let isConnected = false;
-
+/**
+ * Backwards-compatible connection helper.
+ *
+ * Previously this tracked connection state with a module-level `isConnected`
+ * boolean that was never reset when the socket dropped — in serverless that
+ * meant a warm instance could believe it was connected while the underlying
+ * connection was dead, causing queries to buffer or fail. It now delegates to
+ * the single cached connection in ./db/mongoose, which checks
+ * `mongoose.connection.readyState` and reconnects when needed. This unifies
+ * connection management across every route (some used `dbConnect`, others
+ * `connectDB`).
+ */
 export async function dbConnect() {
-    if (isConnected) {
-        console.log('[DB] Already connected to MongoDB');
-        return;
-    }
-    const uri = process.env.MONGODB_URI;
-    console.log('[DB] Attempting to connect to MongoDB with URI:', uri);
-    if (!uri) {
-        console.error('[DB] MONGODB_URI not set in environment');
-        throw new Error('MONGODB_URI not set in environment');
-    }
-    try {
-        await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
-        isConnected = true;
-        console.log('[DB] Connected to MongoDB');
-    } catch (err) {
-        if (err.name === 'MongoNetworkTimeoutError') {
-            console.error('[DB] MongoDB network timeout:', err.message);
-        } else {
-            console.error('[DB] MongoDB connection error:', err);
-        }
-        throw new Error('Failed to connect to MongoDB: ' + err?.message);
-    }
+    await connectDB();
 }
 import { Database } from '../types';
 import {

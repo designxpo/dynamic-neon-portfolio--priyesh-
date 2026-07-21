@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import SEO from '@/models/SEO';
+import { requireAdmin } from '@/lib/adminAuth';
 
 // GET /api/seo           → returns all pages as a { [section]: meta } map
 // GET /api/seo?page=home  → returns a single section's meta
@@ -37,6 +38,7 @@ export async function GET(req: Request) {
 
 // PUT /api/seo?page=home
 export async function PUT(req: Request) {
+	const denied = requireAdmin(req); if (denied) return denied;
 	try {
 		await connectDB();
 		const { searchParams } = new URL(req.url);

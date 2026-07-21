@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Project from '@/models/Project';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
   const start = Date.now();
@@ -30,6 +31,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   const data = await req.json();
   console.log('Project data to be saved:', data);
