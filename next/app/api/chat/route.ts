@@ -3,6 +3,7 @@ export const runtime = 'nodejs';
 import { connectDB } from '../../../lib/db/mongoose';
 import SiteConfig from '../../../models/SiteConfig';
 import ChatbotSettings from '../../../models/ChatbotSettings';
+import { rateLimit } from '../../../lib/rateLimit';
 import { mockContactData, mockEducationsData, mockExperiencesData, mockHeroData, mockProjectsData, mockServicesData, mockSkillsData, mockTestimonialsData } from '../../../data/mockData';
 
 type LLMProvider = 'openai' | 'azure-openai' | 'gemini';
@@ -197,6 +198,9 @@ async function callGemini(systemPrompt: string, userQuestion: string, history: C
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit: chat calls hit a paid LLM, so cap per-IP bursts.
+  const limited = rateLimit(req, { key: 'chat', limit: 20, windowMs: 60_000 });
+  if (limited) return limited;
   try {
     const { question, snapshot, messages, visitor } = await req.json();
     const q = (question || '').toString().slice(0, 2000);

@@ -8,8 +8,12 @@ import Contact, { CONTACT_STATUSES } from '../../../models/Contact';
 import SiteConfig from '../../../models/SiteConfig';
 import ContactInfo from '../../../models/ContactInfo';
 import { requireAdmin } from '../../../lib/adminAuth';
+import { rateLimit } from '../../../lib/rateLimit';
 
 export async function POST(request: Request) {
+  // Rate limit submissions per IP to blunt spam floods (on top of the honeypot/timing trap).
+  const limited = rateLimit(request, { key: 'contact', limit: 5, windowMs: 10 * 60_000 });
+  if (limited) return limited;
   try {
     const body = await request.json();
     const { name, email, contactNumber, message, website, elapsedMs } = body || {};
