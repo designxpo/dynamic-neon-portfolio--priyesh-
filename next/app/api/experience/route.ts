@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Experience from '@/models/Experience';
+import { requireAdmin } from '@/lib/adminAuth';
 
 // GET all experiences (sorted by order)
 export async function GET() {
@@ -11,6 +12,7 @@ export async function GET() {
 
 // CREATE new experience with basic validation
 export async function POST(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     await connectDB();
     const body = await request.json();
@@ -48,6 +50,7 @@ export async function POST(request: Request) {
 
 // UPDATE experience by _id
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const body = await request.json();
   const { _id, ...update } = body;
@@ -67,6 +70,7 @@ export async function PUT(request: Request) {
 
 // DELETE experience by _id
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   await connectDB();
   const { searchParams } = new URL(request.url);
   const _id = searchParams.get('_id');

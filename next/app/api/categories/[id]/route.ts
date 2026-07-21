@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Category from '@/models/Category';
 import Project from '@/models/Project';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   const data = await req.json();
 
@@ -37,7 +39,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   return NextResponse.json(existing);
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   const deleted = await (Category as any).findByIdAndDelete(params.id);
   if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });

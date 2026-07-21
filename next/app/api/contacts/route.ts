@@ -6,6 +6,8 @@ import { connectDB } from '../../../lib/db/mongoose';
 import { sendMail } from '../../../lib/email';
 import Contact, { CONTACT_STATUSES } from '../../../models/Contact';
 import SiteConfig from '../../../models/SiteConfig';
+import ContactInfo from '../../../models/ContactInfo';
+import { requireAdmin } from '../../../lib/adminAuth';
 
 export async function POST(request: Request) {
   try {
@@ -41,8 +43,14 @@ export async function POST(request: Request) {
     let notifyAdmin = true;
     let notifyEmail: string | undefined = undefined;
     try {
-      const cfg = await SiteConfig.getSingleton();
-      const contactCfg: any = (cfg as any).contact || {};
+      // Notification settings live in the ContactInfo collection (that's where the
+      // admin Contact form saves them). Fall back to SiteConfig.contact for older
+      // installs that only ever wrote there.
+      let contactCfg: any = await ContactInfo.findOne({}).sort({ updatedAt: -1 }).lean();
+      if (!contactCfg) {
+        const cfg = await SiteConfig.getSingleton();
+        contactCfg = (cfg as any).contact || {};
+      }
       notifyUser = contactCfg.notifyUserOnSubmit ?? true;
       notifyAdmin = contactCfg.notifyAdminOnSubmit ?? true;
       notifyEmail = contactCfg.notifyEmail || contactCfg.email || process.env.CONTACT_NOTIFY_TO || process.env.SMTP_FROM || process.env.SMTP_USER;
@@ -90,6 +98,7 @@ function escapeHtml(str: string) {
 }
 
 export async function GET(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     await connectDB();
     const url = new URL(request.url);
@@ -139,6 +148,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
@@ -165,6 +175,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request); if (denied) return denied;
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get('id');

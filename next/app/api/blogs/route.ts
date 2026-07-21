@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Blog from '@/models/Blog';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET(req: Request) {
   await connectDB();
@@ -22,6 +23,7 @@ export async function GET(req: Request) {
 
 
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     console.log('Received new blog post request');
@@ -37,6 +39,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const data = await req.json();
@@ -51,6 +54,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const { id } = await req.json();

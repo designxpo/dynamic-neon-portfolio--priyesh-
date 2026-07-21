@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
 import mongoose from 'mongoose';
 import ContactInfo from '@/models/ContactInfo';
+import { requireAdmin } from '@/lib/adminAuth';
 
 // GET: Fetch all contact info
 export async function GET(req: Request) {
@@ -24,6 +25,7 @@ export async function GET(req: Request) {
 
 // POST: Create new contact info
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await dbConnect();
   try {
     console.log('Mongoose DB name:', mongoose.connection.name);
@@ -45,6 +47,7 @@ export async function POST(req: Request) {
 
 // DELETE: Delete contact info by ID
 export async function DELETE(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await dbConnect();
   try {
     const { searchParams } = new URL(req.url);

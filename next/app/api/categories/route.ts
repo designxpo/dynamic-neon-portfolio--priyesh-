@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Category from '@/models/Category';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
   await connectDB();
@@ -16,6 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   await connectDB();
   const data = await req.json();
   const category = new Category({

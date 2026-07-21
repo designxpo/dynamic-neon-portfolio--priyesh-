@@ -152,6 +152,7 @@ const HeroForm: React.FC = () => {
             {/* Profile image upload and preview section */}
             <div className="admin-card flex gap-6 items-center">
                 <div className="relative group">
+                    {formData.profileImage?.url ? (
                     <Image
                         src={formData.profileImage.url}
                         alt="Profile Preview"
@@ -159,6 +160,9 @@ const HeroForm: React.FC = () => {
                         height={128}
                         className="w-32 h-32 rounded-full object-cover border-2 border-white/20"
                     />
+                    ) : (
+                    <div className="w-32 h-32 rounded-full border-2 border-white/20 bg-white/5" />
+                    )}
                     <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Upload size={24} className="text-white" />
                     </div>

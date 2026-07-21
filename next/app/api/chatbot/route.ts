@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import ChatbotSettings from '@/models/ChatbotSettings';
+import { requireAdmin } from '@/lib/adminAuth';
 
 // POST /api/chatbot
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const body = await req.json();
@@ -79,6 +81,7 @@ export async function GET() {
 
 // PUT /api/chatbot
 export async function PUT(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const body = await req.json();

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import Testimonial from '@/models/Testimonial';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
   try {
@@ -30,6 +31,7 @@ export async function GET() {
 
 
 export async function POST(req: Request) {
+  const denied = requireAdmin(req); if (denied) return denied;
   try {
     await connectDB();
     const data = await req.json();
