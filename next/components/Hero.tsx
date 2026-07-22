@@ -104,7 +104,7 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
               {(() => {
                 const primaryHref = (data.ctaButtonLink === '#projects') ? '#works' : (data.ctaButtonLink || '#contact');
                 return (
-                  <a href={primaryHref} className="bg-brand-purple text-white px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm md:text-base font-medium">
+                  <a href={primaryHref} className="bg-brand-purple text-white px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple-light active:scale-[0.97] transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm md:text-base font-medium">
                     {data.ctaButtonText || 'Get In Touch'}
                   </a>
                 );
@@ -114,7 +114,7 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
                 const secondaryHref = secondaryLink === '#projects' ? '#works' : (secondaryLink || '#works');
                 const secondaryText = (data as any).secondaryCtaText || 'View My Work';
                 return (
-                  <a href={secondaryHref} className="border border-brand-purple text-brand-purple px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple hover:text-white transition-all duration-300 text-sm md:text-base font-medium">
+                  <a href={secondaryHref} className="border border-brand-purple text-brand-purple px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-brand-purple hover:text-white active:scale-[0.97] transition-all duration-300 text-sm md:text-base font-medium">
                     {secondaryText}
                   </a>
                 );

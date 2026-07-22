@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Skill } from '../types';
 import Section from './Section';
 
@@ -11,6 +11,7 @@ interface SkillsProps {
 
 const Skills: React.FC<SkillsProps> = ({ data }) => {
   const [shouldScroll, setShouldScroll] = React.useState(false);
+  const prefersReducedMotion = useReducedMotion();
   const skillsContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -25,7 +26,9 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
     return null;
   }
 
-  const scrollSkills = shouldScroll ? Array(10).fill(data).flat() : data;
+  // Respect reduced-motion: no infinite marquee, just a static (centered) row.
+  const animateMarquee = shouldScroll && !prefersReducedMotion;
+  const scrollSkills = animateMarquee ? Array(10).fill(data).flat() : data;
 
   const marqueeVariants = {
     animate: {
@@ -49,9 +52,9 @@ const Skills: React.FC<SkillsProps> = ({ data }) => {
         </p>
         <div className="relative w-full overflow-hidden" ref={skillsContainerRef}>
           <motion.div
-            className={`flex gap-12 ${!shouldScroll ? 'justify-center' : ''}`}
-            variants={shouldScroll ? marqueeVariants : undefined}
-            animate={shouldScroll ? "animate" : undefined}
+            className={`flex gap-12 ${!animateMarquee ? 'justify-center flex-wrap' : ''}`}
+            variants={animateMarquee ? marqueeVariants : undefined}
+            animate={animateMarquee ? "animate" : undefined}
           >
             {scrollSkills.map((skill, index) => (
               <div
