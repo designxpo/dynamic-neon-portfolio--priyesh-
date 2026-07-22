@@ -14,116 +14,120 @@ interface RecentWorksProps {
 // To hide the icons, leave the field blank in the Admin panel.
 const hasAnyLink = (url?: string) => !!url && url.trim().length > 0;
 
-const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void }> = ({ project, onReadMore }) => (
-  <div className="group relative block overflow-hidden rounded-xl shadow-xl bg-white/5 border border-white/20 backdrop-blur-sm hover:border-brand-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-purple/20 w-full h-full">
-    <div className="relative overflow-hidden aspect-video">
-      {project.coverImage?.url ? (
-        <Image
-          src={project.coverImage.url}
-          alt={project.coverImage?.alternativeText || project.title}
-          width={400}
-          height={300}
-          className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-        />
-      ) : (
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-brand-purple/30 to-black/50" />
-      )}
-  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-    </div>
+const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void }> = ({ project, onReadMore }) => {
+  const cats = (project.categories && project.categories.length
+    ? project.categories
+    : (project.category ? [project.category] : []));
 
-  <div className="p-4 md:p-6">
-  <div className="flex items-start justify-between mb-3">
-        <div className="flex flex-wrap gap-1">
-          {((project.categories && project.categories.length ? project.categories : (project.category ? [project.category] : []))).slice(0, 2).map((cat) => (
-            <span key={cat} className="text-xs bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full border border-brand-purple/30 font-medium">
-              {cat}
-            </span>
-          ))}
-        </div>
-  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {hasAnyLink(project.sourceUrl) && (
-            <a
-              href={project.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`View source of ${project.title}`}
-              title={`View source of ${project.title}`}
-              className="p-2 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-brand-purple border border-white/20 hover:border-brand-purple transition-all duration-300 hover:scale-110"
-            >
-              <GitHubIcon />
-            </a>
-          )}
-          {hasAnyLink(project.liveUrl) && (
-            <a
-              href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Open live case study of ${project.title}`}
-              title={`Open live case study of ${project.title}`}
-              className="p-2 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-brand-purple border border-white/20 hover:border-brand-purple transition-all duration-300 hover:scale-110"
-            >
-              <ExternalLinkIcon />
-            </a>
-          )}
-        </div>
+  return (
+    // Whole card is the click target (bigger, more predictable than a small link).
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onReadMore(project)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onReadMore(project); } }}
+      aria-label={`View case study: ${project.title}`}
+      className="group relative flex flex-col overflow-hidden rounded-xl bg-white/5 border border-white/15 backdrop-blur-sm cursor-pointer w-full h-full transition-all duration-300 hover:border-brand-purple/50 hover:shadow-xl hover:shadow-brand-purple/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/70"
+    >
+      <div className="relative overflow-hidden aspect-video shrink-0">
+        {project.coverImage?.url ? (
+          <Image
+            src={project.coverImage.url}
+            alt={project.coverImage?.alternativeText || project.title}
+            width={400}
+            height={225}
+            className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-brand-purple/30 to-black/50" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-70" />
+
+        {(hasAnyLink(project.sourceUrl) || hasAnyLink(project.liveUrl)) && (
+          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {hasAnyLink(project.sourceUrl) && (
+              <a
+                href={project.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`View source of ${project.title}`}
+                title={`View source of ${project.title}`}
+                className="p-2 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-brand-purple border border-white/20 transition-colors"
+              >
+                <GitHubIcon />
+              </a>
+            )}
+            {hasAnyLink(project.liveUrl) && (
+              <a
+                href={project.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Open live case study of ${project.title}`}
+                title={`Open live case study of ${project.title}`}
+                className="p-2 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-brand-purple border border-white/20 transition-colors"
+              >
+                <ExternalLinkIcon />
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
-      <h3 className="text-lg md:text-xl font-bold mb-2 text-white group-hover:text-brand-purple-light transition-colors duration-300 leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
-        {project.title}
-      </h3>
+      <div className="flex flex-col flex-1 p-4">
+        {cats.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {cats.slice(0, 2).map((cat) => (
+              <span key={cat} className="text-[11px] bg-brand-purple/20 text-brand-purple-light px-2.5 py-0.5 rounded-full border border-brand-purple/30 font-medium">
+                {cat}
+              </span>
+            ))}
+          </div>
+        )}
 
-      <p className="text-gray-300 text-xs md:text-sm mb-2 leading-relaxed clamp-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-        {project.descriptionShort}
-      </p>
+        <h3 className="text-base md:text-lg font-bold mb-1.5 text-white group-hover:text-brand-purple-light transition-colors duration-300 leading-snug line-clamp-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {project.title}
+        </h3>
 
-      {project.outcome && (
-        <div className="mb-3 inline-flex items-start gap-2 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2.5 py-1.5 text-[11px] md:text-xs">
-          <span className="font-semibold">Result:</span>
-          <span className="text-emerald-200">{project.outcome}</span>
-        </div>
-      )}
-
-      {(project.clientName || project.timeline) && (
-        <p className="text-[11px] md:text-xs text-gray-500 mb-3">
-          {project.clientName && <span>{project.clientName}</span>}
-          {project.clientName && project.timeline && <span className="mx-1.5">·</span>}
-          {project.timeline && <span>{project.timeline}</span>}
+        <p className="text-gray-400 text-xs mb-3 leading-relaxed line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+          {project.descriptionShort}
         </p>
-      )}
 
-      {(project.descriptionLong || (project.descriptionShort && project.descriptionShort.length > 140)) && (
-        <button
-          type="button"
-          onClick={() => onReadMore(project)}
-          className="text-[11px] md:text-xs text-gray-400 hover:text-white/90 underline decoration-transparent hover:decoration-white/80 transition-colors mb-3"
-          aria-label={`Read more about ${project.title}`}
-        >
-          Read more
-        </button>
-      )}
+        {project.outcome && (
+          <div className="mb-3 inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2 py-1 text-[11px]">
+            <span className="font-semibold shrink-0">Result:</span>
+            <span className="text-emerald-200 line-clamp-1">{project.outcome}</span>
+          </div>
+        )}
 
-      {project.technologies && (
-        <div className="flex flex-wrap gap-2">
-          {project.technologies.slice(0, 3).map((tech) => (
-            <span
-              key={tech}
-              className="text-xs bg-white/10 text-gray-200 px-3 py-1 rounded-md border border-white/20 font-medium"
-              style={{ fontFamily: 'Inter, sans-serif' }}
-            >
-              {tech}
-            </span>
-          ))}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+          {project.technologies && project.technologies.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 min-w-0">
+              {project.technologies.slice(0, 2).map((tech) => (
+                <span key={tech} className="text-[11px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-md border border-white/15 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {tech}
+                </span>
+              ))}
+              {project.technologies.length > 2 && (
+                <span className="text-[11px] text-gray-500 px-1 py-0.5">+{project.technologies.length - 2}</span>
+              )}
+            </div>
+          ) : <span />}
+          <span className="text-[11px] font-medium text-gray-400 group-hover:text-brand-purple-light transition-colors whitespace-nowrap shrink-0">
+            View →
+          </span>
         </div>
-      )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 
 const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
   const [selected, setSelected] = useState<Project | null>(null);
-  const [visibleCount, setVisibleCount] = useState(4);
+  const [visibleCount, setVisibleCount] = useState(6);
   const [mounted, setMounted] = useState(false);
   const dragControls = useDragControls();
   const prefersReducedMotion = useReducedMotion();
@@ -200,8 +204,8 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
           </div>
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 md:gap-6 lg:gap-8 xl:gap-10">
+        {/* Projects Grid — dense 3-up on desktop so more work is visible at a glance */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {filteredProjects.slice(0, visibleCount).map((project, index) => (
             <motion.div
               key={project.id}
@@ -221,7 +225,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
           <div className="flex justify-center mt-8">
             <button
               type="button"
-              onClick={() => setVisibleCount(v => v + 4)}
+              onClick={() => setVisibleCount(v => v + 6)}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-purple to-brand-purple/70 text-white border border-white/10 shadow-lg hover:shadow-brand-purple/30 hover:scale-[1.02] transition-all"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
