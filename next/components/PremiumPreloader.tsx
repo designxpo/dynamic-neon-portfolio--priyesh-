@@ -7,7 +7,7 @@ interface PremiumPreloaderProps {
   waitForEventName?: string;
 }
 
-export default function PremiumPreloader({ children, durationMs = 700, waitForEventName }: PremiumPreloaderProps) {
+export default function PremiumPreloader({ children, durationMs = 400, waitForEventName }: PremiumPreloaderProps) {
   const [done, setDone] = useState(false);
   const [removed, setRemoved] = useState(false);
   const [minElapsed, setMinElapsed] = useState(false);
