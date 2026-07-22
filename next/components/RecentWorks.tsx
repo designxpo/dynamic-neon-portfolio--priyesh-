@@ -127,7 +127,10 @@ const ProjectCard: React.FC<{ project: Project; onReadMore: (p: Project) => void
 const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [filter, setFilter] = useState('All');
   const [selected, setSelected] = useState<Project | null>(null);
-  const [visibleCount, setVisibleCount] = useState(6);
+  // One page = two full rows of the 3-up desktop grid, so rows never end with
+  // an orphan card. Keep initial / filter-reset / "Load more" all in step.
+  const PAGE_SIZE = 6;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mounted, setMounted] = useState(false);
   const dragControls = useDragControls();
   const prefersReducedMotion = useReducedMotion();
@@ -156,7 +159,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
     });
 
   // Reset visible count when filter changes
-  useEffect(() => { setVisibleCount(4); }, [filter]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filter]);
 
   // Lock body scroll + ESC-to-close while modal is open
   useEffect(() => {
@@ -225,7 +228,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
           <div className="flex justify-center mt-8">
             <button
               type="button"
-              onClick={() => setVisibleCount(v => v + 6)}
+              onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-purple to-brand-purple/70 text-white border border-white/10 shadow-lg hover:shadow-brand-purple/30 hover:scale-[1.02] transition-all"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
