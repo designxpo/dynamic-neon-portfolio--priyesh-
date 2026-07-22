@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Search, Palette, Rocket } from "lucide-react";
 
 const steps = [
@@ -40,6 +40,7 @@ const steps = [
 
 export default function Roadmap() {
   const [activeStep, setActiveStep] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -134,7 +135,7 @@ export default function Roadmap() {
                     scale: activeStep === index ? 1.1 : 1
                   }}
                   transition={{ duration: 0.8 }}
-                  whileHover={{ scale: 1.2, boxShadow: "0 0 40px rgba(108, 99, 255, 0.7)" }}
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.2, boxShadow: "0 0 40px rgba(108, 99, 255, 0.7)" }}
                 >
                   {step.icon}
                 </motion.div>

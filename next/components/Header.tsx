@@ -106,7 +106,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
           <a
             href="#contact"
             onClick={(e) => handleNavClick(e, 'contact')}
-            className="hidden md:inline-block bg-brand-purple text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm lg:text-base"
+            className="hidden md:inline-block bg-brand-purple text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-brand-purple-light active:scale-[0.97] transition-all duration-300 shadow-lg shadow-brand-purple/30 text-sm lg:text-base"
           >
             Contact Me
           </a>
@@ -142,7 +142,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
              <a
                href="#contact"
                onClick={(e) => handleNavClick(e, 'contact')}
-               className="bg-brand-purple text-white px-6 md:px-8 py-3 rounded-lg hover:bg-brand-purple-light transition-all duration-300 shadow-lg shadow-brand-purple/30 w-4/5 text-center mt-4 text-sm md:text-base"
+               className="bg-brand-purple text-white px-6 md:px-8 py-3 rounded-lg hover:bg-brand-purple-light active:scale-[0.97] transition-all duration-300 shadow-lg shadow-brand-purple/30 w-4/5 text-center mt-4 text-sm md:text-base"
              >
                 Contact Me
             </a>

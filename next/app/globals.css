@@ -554,8 +554,12 @@ div[id] {
   padding: 1.125rem 1.5rem;
   border-bottom: 1px solid var(--admin-border-soft);
   background: var(--admin-surface);
-  position: sticky;
-  top: 0;
+  /* NOTE: no `position: sticky` here. The header is a flex-shrink:0 sibling of
+     the scrolling .admin-drawer-body, so the flex layout already pins it to the
+     top. `position: sticky` was redundant AND triggered a Safari sticky-in-flex
+     rendering glitch that detached the header and let the first field render
+     over/above it. */
+  position: relative;
   z-index: 1;
 }
 .admin-drawer-body {
@@ -716,5 +720,58 @@ div[id] {
   .container {
     padding-left: 4rem;
     padding-right: 4rem;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Apple-design polish (press feedback, typography, accessibility prefs)
+   Added from the Apple design audit. Public-site scoped where possible.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* §1 Response — instant press feedback on touch-down, not just hover.
+   Applies to real buttons and button-like links (opted in via .press or the
+   primary CTA anchors that carry active:scale utilities). Admin buttons keep
+   their own :active rule (more specific), so they're unaffected. */
+@media (prefers-reduced-motion: no-preference) {
+  button:not(:disabled):active,
+  .press:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease-out;
+  }
+}
+
+/* §15 Typography — large display text wants negative tracking; it reads too
+   loose as it scales up. Body stays at 0 (set elsewhere). */
+h1 { letter-spacing: -0.02em; }
+h2 { letter-spacing: -0.015em; }
+
+/* §14 Reduced motion — freeze the infinite marquees (continuous ~0.2Hz loops
+   are a vestibular trigger). They only paused on hover before. */
+@media (prefers-reduced-motion: reduce) {
+  .testimonials-track,
+  .animate-scroll-smooth {
+    animation: none !important;
+  }
+}
+
+/* §14 Reduced transparency — don't rely on blur; drop backdrop-filter and lean
+   on the surfaces' own background color. */
+@media (prefers-reduced-transparency: reduce) {
+  [class*="backdrop-blur"],
+  .admin-modal-backdrop,
+  .admin-modal-backdrop--drawer {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .admin-drawer-panel,
+  .admin-drawer-header,
+  .admin-drawer-body { background: var(--admin-surface); }
+}
+
+/* §14 Increased contrast — give translucent chrome a defined, solid edge. */
+@media (prefers-contrast: more) {
+  [class*="backdrop-blur"] {
+    background-color: rgba(12, 10, 26, 0.96) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
   }
 }
