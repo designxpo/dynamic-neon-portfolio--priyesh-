@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useDragControls, useReducedMotion } from 'framer-motion';
 import { Project } from '../types';
 import Section from './Section';
 import { ExternalLinkIcon, GitHubIcon } from './icons/Icons';
@@ -125,6 +125,8 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
   const [selected, setSelected] = useState<Project | null>(null);
   const [visibleCount, setVisibleCount] = useState(4);
   const [mounted, setMounted] = useState(false);
+  const dragControls = useDragControls();
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -251,12 +253,30 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
           aria-labelledby="project-modal-title"
           onClick={() => setSelected(null)}
         >
-          <div
+          <motion.div
             className="relative w-full max-w-3xl bg-[#0f0a24]/95 border border-white/10 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[88dvh] shadow-2xl shadow-brand-purple/10"
             onClick={(e) => e.stopPropagation()}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.9 }}
+            /* §2/§5/§6 Swipe-down to dismiss. Drag starts only from the grabber
+               pill (dragListener off) so the scrollable body still scrolls.
+               Release velocity/offset past a threshold closes; else it springs back. */
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={(_e, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 600) setSelected(null);
+            }}
           >
-            {/* Drag pill (mobile bottom-sheet affordance) */}
-            <div className="sm:hidden pt-2 pb-1 flex justify-center shrink-0">
+            {/* Drag pill (mobile bottom-sheet affordance) — grabber for swipe-to-dismiss */}
+            <div
+              className="sm:hidden pt-2 pb-1 flex justify-center shrink-0 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: 'none' }}
+              onPointerDown={(e) => dragControls.start(e)}
+            >
               <span aria-hidden className="h-1.5 w-10 rounded-full bg-white/25" />
             </div>
 
@@ -387,7 +407,7 @@ const RecentWorks: React.FC<RecentWorksProps> = ({ data }) => {
                 )}
               </div>
             )}
-          </div>
+          </motion.div>
         </div>,
         document.body
         );
