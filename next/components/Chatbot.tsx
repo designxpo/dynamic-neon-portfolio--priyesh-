@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, useDragControls } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getDb, initDb } from '../lib/db';
 import type { Database, Experience, Education, Project, Service, RawSkill, Testimonial, Blog, ChatbotSettings } from '../types';
@@ -226,6 +226,7 @@ function escapeRegExp(s: string): string {
 export default function Chatbot() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const dragControls = useDragControls();
   const [db, setDb] = useState<Database | null>(null);
   const [input, setInput] = useState('');
   const [visitorName, setVisitorName] = useState<string>(() => {
@@ -503,6 +504,17 @@ export default function Chatbot() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.92, y: prefersReducedMotion ? 0 : 12 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.9 }}
+            /* §2/§5/§6 Swipe-to-dismiss: drag starts only from the grabber handle
+               (dragListener=false) so it never fights the message-list scroll.
+               Framer carries the release velocity into the snap-back / dismiss. */
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={(_e, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 600) closeChat();
+            }}
           >
             {/* Optional glow ripple on open for premium feel */}
             <AnimatePresence>
@@ -542,6 +554,16 @@ export default function Chatbot() {
             </AnimatePresence>
             {/* Content fade-in to avoid popping during scale animation */}
             <motion.div className="contents" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.08, duration: 0.2 }}>
+              {/* Grabber — swipe down to dismiss. Drag is bound here (dragListener
+                  is off on the panel) so the message list still scrolls normally. */}
+              <div
+                onPointerDown={(e) => dragControls.start(e)}
+                className="flex justify-center pt-2.5 pb-1 shrink-0 cursor-grab active:cursor-grabbing"
+                style={{ touchAction: 'none' }}
+                aria-hidden="true"
+              >
+                <span className="h-1 w-10 rounded-full bg-white/20" />
+              </div>
               {/* Side pop arrow */}
               <motion.div
                 aria-hidden

@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
   const botName = heroData?.name || 'Priyesh Mishra';
 
   return (
-  <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 bg-dark-bg/80 backdrop-blur-lg border-b border-gray-800' : 'py-3 md:py-4'}`}>
+  <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 bg-dark-bg/80 backdrop-blur-lg shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]' : 'py-3 md:py-4'}`}>
   <div className="container mx-auto px-4 md:px-8 flex items-center">
         {/* Left Section - Logo */}
         <div className="flex-1">
@@ -123,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
       </div>
 
       {/* Mobile Menu */}
-  <div className={`md:hidden absolute top-full left-0 w-full bg-dark-bg/95 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 border-t border-gray-800' : 'max-h-0'}`}>
+  <div className={`md:hidden absolute top-full left-0 w-full bg-dark-bg/95 backdrop-blur-lg border-t border-gray-800 origin-top transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${isMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
         <nav className="flex flex-col items-center space-y-4 py-6">
             {navLinks.map((link) => (
                 <a

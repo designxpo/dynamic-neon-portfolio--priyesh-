@@ -575,8 +575,10 @@ div[id] {
   border-radius: 3px;
 }
 @keyframes admin-drawer-in {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
+  /* §12 Materialize: the surface arrives (blur + slight scale clearing) rather
+     than just sliding, so it reads as a real material coming into focus. */
+  from { transform: translateX(100%) scale(0.98); filter: blur(6px); opacity: 0.4; }
+  to   { transform: translateX(0) scale(1);       filter: blur(0);   opacity: 1; }
 }
 @keyframes admin-fade-in {
   from { opacity: 0; }
