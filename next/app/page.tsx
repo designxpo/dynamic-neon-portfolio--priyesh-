@@ -3,7 +3,6 @@ import { connectDB } from '@/lib/db/mongoose';
 import Blog from '@/models/Blog';
 import HomeClient from './HomeClient';
 import HomeSeoContent from '../components/HomeSeoContent';
-import HideOnReady from '../components/HideOnReady';
 import { getPortfolioContent } from '@/lib/content';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
@@ -112,11 +111,13 @@ export default async function HomePage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      {/* Server-rendered, crawlable content in the initial HTML; yields to the
-          interactive app once it mounts (see HideOnReady). */}
-      <HideOnReady>
+      {/* Crawlable body content in the initial HTML for no-JS crawlers/social
+          scrapers. Wrapped in <noscript> so real (JS-enabled) users never see
+          it — the browser only renders it when JS is off, which removes the
+          on-load flash of plain content the timing-based approach caused. */}
+      <noscript>
         <HomeSeoContent data={content} />
-      </HideOnReady>
+      </noscript>
       <HomeClient />
     </>
   );
