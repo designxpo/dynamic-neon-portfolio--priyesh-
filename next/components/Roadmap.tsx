@@ -3,37 +3,47 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Search, Palette, Rocket } from "lucide-react";
+import { Search, Palette, Code2, Rocket } from "lucide-react";
 
 const steps = [
   {
     number: "1",
     icon: <Search className="text-2xl text-brand-purple" />,
-    title: "Research & Strategy",
+    title: "Discover & Strategy",
     points: [
-      "Understand the client's goals, audience, and market.",
-      "Conduct research, define scope, and create user personas.",
-      "Build a clear roadmap and timeline before design begins.",
+      "Understand your goals, audience, and market.",
+      "Define scope, map user journeys, and set success metrics.",
+      "Align on a clear roadmap and timeline before we build.",
     ],
   },
   {
     number: "2",
     icon: <Palette className="text-2xl text-brand-purple" />,
-    title: "Design & Development",
+    title: "Design",
     points: [
       "Craft wireframes and user flows focused on usability.",
-      "Design visually engaging, responsive interfaces.",
-      "Collaborate with developers for smooth implementation and pixel-perfect results.",
+      "Design engaging, responsive, on-brand interfaces.",
+      "Validate with prototypes before a line of code.",
     ],
   },
   {
     number: "3",
-    icon: <Rocket className="text-2xl text-brand-purple" />,
-    title: "Testing & Launch",
+    icon: <Code2 className="text-2xl text-brand-purple" />,
+    title: "Build & Develop",
     points: [
-      "Prototype, test, and refine based on user feedback.",
-      "Support during deployment and ensure a seamless launch.",
-      "Analyze post-launch insights for continuous improvement.",
+      "Engineer production-ready products in Next.js.",
+      "Websites, apps, dashboards, APIs, and integrations.",
+      "Clean, scalable, performance-first code.",
+    ],
+  },
+  {
+    number: "4",
+    icon: <Rocket className="text-2xl text-brand-purple" />,
+    title: "Test & Launch",
+    points: [
+      "Test, QA, and refine on real user feedback.",
+      "Deploy, monitor, and ensure a seamless launch.",
+      "Analyze post-launch data and iterate for growth.",
     ],
   },
 ];
@@ -51,7 +61,7 @@ export default function Roadmap() {
 
   return (
     <section className="w-full py-20 bg-dark-bg text-white relative overflow-hidden">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             My <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">Process</span>
@@ -64,15 +74,15 @@ export default function Roadmap() {
         <div className="relative">
           {/* Animated Connection Line: Desktop/Tablet (horizontal) */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"
+            className="absolute inset-0 w-full h-full pointer-events-none hidden lg:block"
             viewBox="0 0 1200 200"
             fill="none"
           >
             <defs>
               <linearGradient id="lineGradientH" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="transparent" />
-                <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="#6C63FF" />
-                <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="transparent" />
+                <stop offset={`${(activeStep + 1) * 25}%`} stopColor="#6C63FF" />
+                <stop offset={`${(activeStep + 1) * 25}%`} stopColor="transparent" />
               </linearGradient>
             </defs>
             <motion.path
@@ -89,15 +99,15 @@ export default function Roadmap() {
 
           {/* Animated Connection Line: Mobile (vertical) */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none md:hidden"
+            className="absolute inset-0 w-full h-full pointer-events-none lg:hidden"
             viewBox="0 0 200 1200"
             fill="none"
           >
             <defs>
               <linearGradient id="lineGradientV" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="transparent" />
-                <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="#6C63FF" />
-                <stop offset={`${(activeStep + 1) * 33.33}%`} stopColor="transparent" />
+                <stop offset={`${(activeStep + 1) * 25}%`} stopColor="#6C63FF" />
+                <stop offset={`${(activeStep + 1) * 25}%`} stopColor="transparent" />
               </linearGradient>
             </defs>
             <motion.path
@@ -112,8 +122,8 @@ export default function Roadmap() {
             />
           </svg>
 
-          {/* Steps */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+          {/* Steps — 4-up on desktop, 2×2 on tablet, stacked on mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-14 relative z-10">
             {steps.map((step, index) => (
               <motion.div
                 key={index}
@@ -124,7 +134,7 @@ export default function Roadmap() {
               >
                 {/* Background Number */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-8xl font-bold text-brand-purple/10">{step.number}</span>
+                  <span className="text-7xl font-bold text-brand-purple/10">{step.number}</span>
                 </div>
 
                 {/* Icon */}
