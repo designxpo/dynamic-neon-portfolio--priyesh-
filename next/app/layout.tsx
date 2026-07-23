@@ -50,11 +50,9 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: SITE_URL,
     },
-    icons: {
-      icon: '/images/favicon.png',
-      shortcut: '/images/favicon.png',
-      apple: '/images/favicon.png',
-    },
+    // Favicon comes from the app/icon.svg + app/icon.png file convention
+    // (SVG preferred by browsers, crisp and visible on dark tab bars). We omit
+    // a metadata.icons override so it doesn't point at a low-contrast raster.
     openGraph: {
       title: DEFAULT_TITLE,
       description: DEFAULT_DESCRIPTION,
@@ -89,7 +87,7 @@ export async function generateMetadata(): Promise<Metadata> {
       keywords: Array.isArray(seo.metaKeywords)
         ? seo.metaKeywords.join(', ')
         : (seo.metaKeywords || seo.keywords || DEFAULT_KEYWORDS),
-      icons: seo.favicon ? { icon: seo.favicon } : defaults.icons,
+      ...(seo.favicon ? { icons: { icon: seo.favicon } } : {}),
       alternates: { canonical },
       openGraph: {
         ...defaults.openGraph,

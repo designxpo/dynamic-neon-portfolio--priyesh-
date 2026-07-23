@@ -76,7 +76,11 @@ const Header: React.FC<HeaderProps> = ({ heroData }) => {
               height={200}
               priority
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 288px, (min-width: 768px) 216px, 180px"
-              className="h-10 md:h-12 lg:h-16 xl:h-20 w-auto"
+              /* The logo asset has a black background baked into the bitmap;
+                 mix-blend-screen knocks that black out against the dark nav so
+                 it no longer shows as a solid box. (Proper fix: a transparent
+                 logo export — see PR notes.) */
+              className="h-10 md:h-12 lg:h-16 xl:h-20 w-auto mix-blend-screen"
             />
           </button>
         </div>
