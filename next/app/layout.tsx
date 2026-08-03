@@ -193,8 +193,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* Preload LCP hero image */}
-        <link rel="preload" as="image" href="/images/profile.png" />
+        {/* Preload LCP hero image — the optimized WebP (16 KB), served directly
+            (unoptimized) by the Hero so this preload URL matches the fetched URL. */}
+        <link rel="preload" as="image" href="/images/profile.webp" type="image/webp" />
         {/* Google Tag Manager — lazyOnload to keep off the critical path */}
         <Script
           id="gtm-init"
