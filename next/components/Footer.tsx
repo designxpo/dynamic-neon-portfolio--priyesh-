@@ -17,6 +17,7 @@ const Footer: React.FC<FooterProps> = ({ heroData }) => {
                                                 <a href="/#works" className="hover:text-white transition-colors">Works</a>
                                                 <a href="/projects" className="hover:text-white transition-colors">Projects</a>
                                                 <a href="/blog" className="hover:text-white transition-colors">Blog</a>
+                                                <a href="/tools/project-cost-estimator" className="hover:text-white transition-colors">Cost Estimator</a>
                                                 <a href="/#services" className="hover:text-white transition-colors">Services</a>
                                                 <a href="/#faq" className="hover:text-white transition-colors">FAQ</a>
                                                 <a href="/#contact" className="hover:text-white transition-colors">Contact</a>
