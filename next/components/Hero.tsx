@@ -125,11 +125,15 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
           <div className="flex justify-center lg:justify-end order-1 lg:order-2 reveal-right is-visible" style={{ animationDelay: '0.2s' }}>
             <div className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 xl:w-96 xl:h-96 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
               <Image
-                src={data.profileImage?.url || '/images/profile.png'}
+                src={data.profileImage?.url || '/images/profile.webp'}
                 alt={data.profileImage?.alternativeText || 'Priyesh Mishra — UI/UX Designer'}
                 width={384}
                 height={384}
                 priority
+                // Default image is a pre-optimized 16 KB WebP (768×960) — serve it
+                // as-is so it matches the <head> preload and skips a redundant
+                // optimizer round-trip. Custom uploads still go through next/image.
+                unoptimized={!data.profileImage?.url}
                 sizes="(min-width: 1280px) 384px, (min-width: 1024px) 320px, (min-width: 768px) 288px, 256px"
                 className="w-full h-full object-cover"
               />
