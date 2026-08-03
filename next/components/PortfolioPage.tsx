@@ -10,6 +10,7 @@ import Experience from './Experience';
 import Education from './Education';
 import Skills from './Skills';
 import Blogs from './Blogs';
+import Faq from './Faq';
 import Contact from './Contact';
 import Footer from './Footer';
 import AnimatedSection from './AnimatedSection';
@@ -215,7 +216,7 @@ const PortfolioPage = () => {
     return (
         <div className="bg-gradient-to-br from-dark-bg to-purple-900/20 text-white font-sans leading-relaxed selection:bg-brand-purple selection:text-white">
             <Header heroData={portfolioData?.hero || null} />
-            <main>
+            <main id="main-content">
                 {/* Hero section - always show once loaded */}
                 {portfolioData?.hero && (
                     <AnimatedSection>
@@ -428,6 +429,11 @@ const PortfolioPage = () => {
                         <Blogs data={blogs} />
                     </AnimatedSection>
                 )}
+
+                {/* FAQ — visible Q&A for answer boxes / AI citations / voice */}
+                <AnimatedSection>
+                    <Faq />
+                </AnimatedSection>
 
                 {/* Contact section - ✅ Contact section - dynamic from MongoDB, fallback if missing */}
                 {sectionsLoaded.contact && (

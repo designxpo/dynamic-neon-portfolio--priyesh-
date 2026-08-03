@@ -4,6 +4,7 @@ import Blog from '@/models/Blog';
 import HomeClient from './HomeClient';
 import HomeSeoContent from '../components/HomeSeoContent';
 import { getPortfolioContent } from '@/lib/content';
+import { FAQS } from '@/data/faqs';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
 
@@ -13,35 +14,19 @@ const PERSON = {
   '@type': 'Person',
   name: 'Priyesh Mishra',
   url: SITE_URL,
+  image: `${SITE_URL}/images/profile.png`,
+  jobTitle: 'UI/UX Designer & Developer',
+  description:
+    'UI/UX designer, developer, and performance marketing expert crafting high-converting digital products and data-driven growth.',
+  sameAs: [
+    'https://linkedin.com/in/priyeshmishra16',
+    'https://instagram.com/designxpo.in',
+    'https://twitter.com/mepriyeshm',
+    'https://priyeshmishra1602.medium.com',
+  ],
 };
 
-const FAQS: Array<{ question: string; answer: string }> = [
-  {
-    question: 'What does Priyesh Mishra do?',
-    answer:
-      'Priyesh Mishra is a Product Design Consultant and UX Strategist who leads product development for Mindbird.ai at Scaletrix.AI. He works across UX/UI design, product strategy, and performance marketing for D2C and SaaS brands.',
-  },
-  {
-    question: 'What is Mindbird.ai?',
-    answer:
-      'Mindbird.ai is a WhatsApp sales automation platform built at Scaletrix.AI. Priyesh leads its product development, including UX, positioning, and integration with Meta Ads click-to-WhatsApp (CTWA) campaigns.',
-  },
-  {
-    question: 'What services does Priyesh Mishra offer?',
-    answer:
-      'UX/UI audits and product strategy for D2C and SaaS, WhatsApp marketing automation and CTWA campaign setup, performance marketing on Meta Ads and Google Ads with server-side tracking, and full-stack Next.js product development.',
-  },
-  {
-    question: 'Where is Priyesh Mishra based?',
-    answer:
-      'Priyesh Mishra is based in New Delhi, India, and works with clients and teams worldwide.',
-  },
-  {
-    question: 'What industries has Priyesh Mishra worked in?',
-    answer:
-      'Priyesh has 2.5 years of experience across fintech, sports, and eCommerce, covering product management, UX design, and performance marketing.',
-  },
-];
+// FAQS is imported from data/faqs.ts (shared with the visible <Faq> section).
 
 async function getBlogs(): Promise<any[]> {
   try {
@@ -82,6 +67,8 @@ function buildFaqSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    description: 'Frequently asked questions about Priyesh Mishra — services, technologies, location, and how to hire.',
+    inLanguage: 'en',
     mainEntity: FAQS.map((f) => ({
       '@type': 'Question',
       name: f.question,
@@ -93,13 +80,36 @@ function buildFaqSchema() {
   };
 }
 
+// WebPage with speakable (voice/LLM readiness) + a machine-readable dateModified.
+function buildWebPageSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: SITE_URL,
+    name: 'Priyesh Mishra — UI/UX Designer & Developer',
+    inLanguage: 'en',
+    dateModified: new Date().toISOString(),
+    primaryImageOfPage: `${SITE_URL}/images/profile.png`,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '#faq h3', '#faq p'],
+    },
+    about: { ...PERSON },
+  };
+}
+
 export default async function HomePage() {
   const [blogs, content] = await Promise.all([getBlogs(), getPortfolioContent()]);
   const blogSchemas = buildBlogPostingSchemas(blogs);
   const faqSchema = buildFaqSchema();
+  const webPageSchema = buildWebPageSchema();
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
