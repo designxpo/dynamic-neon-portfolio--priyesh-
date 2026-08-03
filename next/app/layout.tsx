@@ -295,6 +295,13 @@ gtag('config', '${GA_ID}');`,
         />
       </head>
       <body className={`${inter.variable} ${poppins.variable} bg-dark-bg font-sans scroll-smooth`}>
+        {/* Skip link — visible on focus; lets keyboard users and agents jump past the nav */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10000] focus:rounded-lg focus:bg-brand-purple focus:px-4 focus:py-2 focus:text-white focus:shadow-lg"
+        >
+          Skip to content
+        </a>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
