@@ -29,16 +29,6 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
   const currentPair = pairs[loopNum % pairs.length] || { prefix: '', word: '' };
   const prefix = currentPair.prefix;
 
-  // Complete, stable headline for the <h1> (SEO/AEO + a11y). The typing effect
-  // is rendered separately below as a decorative sub-line, so crawlers and
-  // screen readers get the full static title — not mid-word text like "AI Dev|".
-  const headline =
-    (data.title || '').trim() ||
-    [prefix, pairs.map((p) => p.word).join(', ')].filter(Boolean).join(' ');
-  const lead = (data.titlePrefix || prefix || '').trim();
-  const showLead = !!lead && headline.toLowerCase().startsWith(lead.toLowerCase());
-  const headlineRest = showLead ? headline.slice(lead.length).trim() : headline;
-
   useEffect(() => {
     const handleType = () => {
       const fullText = currentPair.word;
@@ -83,32 +73,22 @@ const Hero: React.FC<HeroProps> = ({ data }) => {
             </p>
 
             <h1
-              className="text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-4 leading-tight reveal-up is-visible"
+              className="text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 md:mb-10 leading-tight reveal-up is-visible"
               style={{ animationDelay: '0.4s' }}
             >
               <span className="sr-only">{data.name} — </span>
-              {showLead && <span className="text-white">{lead} </span>}
-              <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">
-                {headlineRest}
-              </span>
-            </h1>
-
-            {/* Decorative specialty ticker — intentionally NOT the heading, so the
-                complete static h1 above is what crawlers and screen readers read. */}
-            <p
-              aria-hidden="true"
-              className="text-base md:text-lg lg:text-xl font-semibold mb-6 md:mb-10 leading-tight reveal-up is-visible min-h-[1.5em]"
-              style={{ animationDelay: '0.5s' }}
-            >
-              <span key={prefix} className="text-white inline-block animate-prefix-swap">
+              <span
+                key={prefix}
+                className="text-white inline-block animate-prefix-swap"
+              >
                 {prefix}
               </span>
-              {prefix ? ' ' : ''}
+              {prefix ? ' ' : ''}
               <span className="bg-gradient-to-r from-brand-purple to-brand-purple-light bg-clip-text text-transparent">
                 {typedText}
                 <span className="animate-blink">|</span>
               </span>
-            </p>
+            </h1>
 
             <p
               className="text-xs md:text-sm lg:text-base text-gray-400 mb-6 md:mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed reveal-fade is-visible"
