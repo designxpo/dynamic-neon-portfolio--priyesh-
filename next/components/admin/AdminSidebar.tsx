@@ -4,7 +4,7 @@ import Image from 'next/image';
 import {
   LayoutDashboard, Target, Zap, Rocket, Briefcase, GraduationCap,
   Award, Star, FileText, Mail, Inbox, Settings, LogOut, Search,
-  MessageCircle, FileCog, Tags,
+  MessageCircle, FileCog, Tags, Calculator,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -60,6 +60,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
         { tab: 'services',   label: 'Services',     icon: <Zap size={18} strokeWidth={1.75} /> },
         { tab: 'projects',   label: 'Projects',     icon: <Rocket size={18} strokeWidth={1.75} /> },
         { tab: 'categories', label: 'Categories',   icon: <Tags size={18} strokeWidth={1.75} /> },
+        { tab: 'pricing',    label: 'Cost Estimator', icon: <Calculator size={18} strokeWidth={1.75} /> },
       ],
     },
     {

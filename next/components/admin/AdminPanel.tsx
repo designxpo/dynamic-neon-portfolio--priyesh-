@@ -18,6 +18,7 @@ import SEOForm from './forms/SEOForm';
 import ChatbotForm from './forms/ChatbotForm';
 import MetadataForm from './forms/MetadataForm';
 import CategoriesForm from './forms/CategoriesForm';
+import PricingForm from './forms/PricingForm';
 
 export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,6 +33,8 @@ export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
         return <ServicesForm />;
       case 'projects':
         return <ProjectsForm />;
+      case 'pricing':
+        return <PricingForm />;
       case 'categories':
         return <CategoriesForm />;
       case 'experience':
