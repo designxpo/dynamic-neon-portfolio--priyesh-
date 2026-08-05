@@ -105,6 +105,18 @@ function detect(req: Request, cfg: any) {
   return { detectedCountry: country || null, detectedRegion: region.code };
 }
 
+// A stored record created before the regions feature has no regions, so no
+// country can ever match → everyone sees base currency. Backfill the default
+// regions for display so regional pricing works without a manual admin save.
+function ensureRegions(cfg: any) {
+  if (!cfg) return cfg;
+  if (!Array.isArray(cfg.regions) || cfg.regions.length === 0) {
+    cfg.regions = DEFAULT_PRICING.regions;
+    if (!cfg.defaultRegion) cfg.defaultRegion = DEFAULT_PRICING.defaultRegion;
+  }
+  return cfg;
+}
+
 // GET /api/pricing — public. Returns the singleton config, seeding defaults once.
 export async function GET(req: Request) {
   try {
@@ -114,6 +126,7 @@ export async function GET(req: Request) {
       const created = await PricingConfig.create(DEFAULT_PRICING);
       cfg = created.toObject();
     }
+    ensureRegions(cfg);
     return NextResponse.json({ ...cfg, ...detect(req, cfg) });
   } catch (err: any) {
     // Never break the public tool on a DB hiccup — it falls back to defaults.
