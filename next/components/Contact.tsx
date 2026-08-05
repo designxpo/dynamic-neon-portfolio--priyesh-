@@ -23,6 +23,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
     email: '',
     countryCode: '+91',
     contactNumber: '',
+    location: '',
     message: ''
   });
   // Honeypot — real humans leave it empty; bots fill every field
@@ -111,7 +112,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
       if (response.ok) {
         setSubmitStatus('success');
         setErrorDetail(null);
-  setFormData({ name: '', email: '', countryCode: '+91', contactNumber: '', message: '' });
+  setFormData({ name: '', email: '', countryCode: '+91', contactNumber: '', location: '', message: '' });
       } else {
         // Attempt to read error for debugging and then set error state
         try {
@@ -133,7 +134,7 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
         localStorage.setItem(key, JSON.stringify([...existing, { ...formData, submittedAt: new Date().toISOString() }]));
         setSubmitStatus('success');
         setErrorDetail(null);
-  setFormData({ name: '', email: '', countryCode: '+91', contactNumber: '', message: '' });
+  setFormData({ name: '', email: '', countryCode: '+91', contactNumber: '', location: '', message: '' });
       } catch {
         setSubmitStatus('error');
       }
@@ -231,6 +232,20 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
                   placeholder="Phone Number"
                 />
               </div>
+            </div>
+            <div>
+              <label htmlFor="location" className="sr-only">Location</label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                autoComplete="address-level2"
+                maxLength={200}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors"
+                placeholder="Location — city &amp; country (optional)"
+              />
             </div>
             <div>
               <label htmlFor="message" className="sr-only">Message</label>

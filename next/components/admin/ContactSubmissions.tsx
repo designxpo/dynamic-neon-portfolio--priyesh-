@@ -1,7 +1,13 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import Section from '@/components/Section';
-import { Mail, Phone, Calendar, MessageSquare, Inbox, Trash2, Download, StickyNote } from 'lucide-react';
+import { Mail, Phone, Calendar, MessageSquare, Inbox, Trash2, Download, StickyNote, MapPin } from 'lucide-react';
+
+// Turn a 2-letter ISO country code into its flag emoji (e.g. "IN" → 🇮🇳).
+const flagEmoji = (cc?: string) =>
+  cc && /^[A-Za-z]{2}$/.test(cc)
+    ? cc.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+    : '';
 import { getApiBase } from '@/lib/apiBase';
 import Modal from '@/components/admin/common/Modal';
 
@@ -16,6 +22,8 @@ interface ContactSubmission {
   submittedAt: string;
   status?: Status;
   notes?: string;
+  location?: string;
+  detectedLocation?: { country?: string; region?: string; city?: string };
 }
 
 const STATUS_OPTIONS: { value: Status; label: string; pill: string }[] = [
@@ -216,6 +224,25 @@ const ContactSubmissions: React.FC = () => {
                             <Phone size={14} className="text-electric-blue" />
                             <span>{s.contactNumber}</span>
                           </a>
+                          {(() => {
+                            const det = [s.detectedLocation?.city, s.detectedLocation?.region, s.detectedLocation?.country].filter(Boolean).join(', ');
+                            if (!s.location && !det) return null;
+                            const cc = s.detectedLocation?.country;
+                            return (
+                              <div className="flex items-center gap-2 text-gray-300 text-sm md:col-span-2">
+                                <MapPin size={14} className="text-electric-blue flex-shrink-0" />
+                                <span className="truncate">
+                                  {s.location && <span className="text-white">{s.location}</span>}
+                                  {s.location && det && <span className="text-gray-500"> · </span>}
+                                  {det && (
+                                    <span title="Detected from IP" className="text-gray-400">
+                                      {flagEmoji(cc)} {det}{!s.location && <span className="text-gray-600"> (detected)</span>}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 text-sm text-gray-400">

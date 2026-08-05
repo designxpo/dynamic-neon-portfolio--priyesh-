@@ -14,6 +14,14 @@ const contactSchema = new Schema({
   },
   contactNumber: { type: String, required: true, trim: true },
   message: { type: String, required: true, trim: true },
+  // Self-reported location (optional field on the form).
+  location: { type: String, default: '', trim: true },
+  // Auto-detected from the visitor's IP (CDN geo headers) at submit time.
+  detectedLocation: {
+    country: { type: String, default: '' },
+    region: { type: String, default: '' },
+    city: { type: String, default: '' },
+  },
   submittedAt: { type: Date, default: Date.now },
   status: { type: String, enum: CONTACT_STATUSES, default: 'new' },
   notes: { type: String, default: '' },
