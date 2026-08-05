@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   if (limited) return limited;
   try {
     const body = await request.json();
-    const { name, email, contactNumber, message, website, elapsedMs } = body || {};
+    const { name, email, contactNumber, message, website, elapsedMs, location } = body || {};
 
     // Spam filter: honeypot filled OR form submitted in < 1.5s (bots fill & submit instantly)
     if (website || (typeof elapsedMs === 'number' && elapsedMs < 1500)) {
@@ -39,8 +39,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
+    // Auto-detect the sender's location from the CDN geo headers (Vercel /
+    // Cloudflare). Approximate (city/country from IP) — no raw IP is stored.
+    const safeDecode = (v: string) => { try { return decodeURIComponent(v); } catch { return v; } };
+    const detectedLocation = {
+      country: (request.headers.get('x-vercel-ip-country') || request.headers.get('cf-ipcountry') || '').toUpperCase(),
+      region: request.headers.get('x-vercel-ip-country-region') || '',
+      city: safeDecode(request.headers.get('x-vercel-ip-city') || ''),
+    };
+    const selfLocation = String(location || '').trim().slice(0, 200);
+
     await connectDB();
-    const saved = await Contact.create({ name, email, contactNumber, message });
+    const saved = await Contact.create({ name, email, contactNumber, message, location: selfLocation, detectedLocation });
+
+    // Human-readable "City, Region, COUNTRY" for the notification email.
+    const detectedStr = [detectedLocation.city, detectedLocation.region, detectedLocation.country]
+      .filter(Boolean)
+      .join(', ');
 
     // Load contact settings from DB to determine notification behavior
     let notifyUser = true;
@@ -75,10 +90,18 @@ export async function POST(request: Request) {
 
     // Admin notification
     if (notifyAdmin && notifyEmail) {
-      const subject = `New contact submission from ${name}`;
-      const text = `You received a new contact submission:\n\nName: ${name}\nEmail: ${email}\nPhone: ${contactNumber}\nMessage:\n${message}\n\n— ${siteName} website`;
+      const subject = `New contact submission from ${name}${detectedLocation.country ? ` (${detectedLocation.country})` : ''}`;
+      const locLine = selfLocation ? `\nLocation (stated): ${selfLocation}` : '';
+      const detLine = detectedStr ? `\nLocation (detected): ${detectedStr}` : '';
+      const text = `You received a new contact submission:\n\nName: ${name}\nEmail: ${email}\nPhone: ${contactNumber}${locLine}${detLine}\nMessage:\n${message}\n\n— ${siteName} website`;
+      const locRow = selfLocation
+        ? `\n              <tr><td style=\"padding:6px 0;\"><b>Location (stated):</b></td><td style=\"padding:6px 0;\">${escapeHtml(selfLocation)}</td></tr>`
+        : '';
+      const detRow = detectedStr
+        ? `\n              <tr><td style=\"padding:6px 0;\"><b>Location (detected):</b></td><td style=\"padding:6px 0;\">${escapeHtml(detectedStr)}</td></tr>`
+        : '';
       const html = `
-        <div style=\"font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #0f172a;\">\n          <h2 style=\"margin:0 0 12px;\">New contact submission</h2>\n          <table style=\"border-collapse:collapse; width:100%; margin:0 0 12px;\">\n            <tbody>\n              <tr><td style=\"padding:6px 0;\"><b>Name:</b></td><td style=\"padding:6px 0;\">${escapeHtml(name)}</td></tr>\n              <tr><td style=\"padding:6px 0;\"><b>Email:</b></td><td style=\"padding:6px 0;\">${escapeHtml(email)}</td></tr>\n              <tr><td style=\"padding:6px 0;\"><b>Phone:</b></td><td style=\"padding:6px 0;\">${escapeHtml(contactNumber)}</td></tr>\n            </tbody>\n          </table>\n          <div style=\"background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px;\">\n            <div style=\"font-weight:600; margin-bottom:8px;\">Message:</div>\n            <div style=\"white-space:pre-wrap;\">${escapeHtml(message)}</div>\n          </div>\n        </div>`;
+        <div style=\"font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #0f172a;\">\n          <h2 style=\"margin:0 0 12px;\">New contact submission</h2>\n          <table style=\"border-collapse:collapse; width:100%; margin:0 0 12px;\">\n            <tbody>\n              <tr><td style=\"padding:6px 0;\"><b>Name:</b></td><td style=\"padding:6px 0;\">${escapeHtml(name)}</td></tr>\n              <tr><td style=\"padding:6px 0;\"><b>Email:</b></td><td style=\"padding:6px 0;\">${escapeHtml(email)}</td></tr>\n              <tr><td style=\"padding:6px 0;\"><b>Phone:</b></td><td style=\"padding:6px 0;\">${escapeHtml(contactNumber)}</td></tr>${locRow}${detRow}\n            </tbody>\n          </table>\n          <div style=\"background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px;\">\n            <div style=\"font-weight:600; margin-bottom:8px;\">Message:</div>\n            <div style=\"white-space:pre-wrap;\">${escapeHtml(message)}</div>\n          </div>\n        </div>`;
       sendMail({ to: notifyEmail, subject, text, html }).then((res) => {
         if (!res.ok) console.error('Admin notification failed:', res);
       }).catch((e) => console.error('Admin notification error:', e));
@@ -110,13 +133,18 @@ export async function GET(request: Request) {
     // CSV export — returns all submissions as CSV
     if (url.searchParams.get('format') === 'csv') {
       const items = await Contact.find({}).sort({ submittedAt: -1 }).lean();
-      const header = ['Submitted At', 'Name', 'Email', 'Phone', 'Status', 'Message', 'Notes'];
+      const header = ['Submitted At', 'Name', 'Email', 'Phone', 'Location (stated)', 'Location (detected)', 'Country', 'Status', 'Message', 'Notes'];
       const csvEscape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const detected = (i: any) =>
+        [i?.detectedLocation?.city, i?.detectedLocation?.region, i?.detectedLocation?.country].filter(Boolean).join(', ');
       const rows = items.map((i: any) => [
         i.submittedAt ? new Date(i.submittedAt).toISOString() : '',
         i.name || '',
         i.email || '',
         i.contactNumber || '',
+        i.location || '',
+        detected(i),
+        i?.detectedLocation?.country || '',
         i.status || 'new',
         i.message || '',
         i.notes || '',
