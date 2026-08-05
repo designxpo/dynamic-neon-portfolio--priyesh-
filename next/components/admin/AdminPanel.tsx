@@ -7,7 +7,6 @@ import HeroForm from './forms/HeroForm';
 import ServicesForm from './forms/ServicesForm';
 import ProjectsForm from './forms/ProjectsForm';
 import ExperienceForm from './forms/ExperienceForm';
-import EducationForm from './forms/EducationForm';
 import SkillsForm from './forms/SkillsForm';
 import TestimonialsForm from './forms/TestimonialsForm';
 import ContactForm from './forms/ContactForm';
@@ -39,8 +38,6 @@ export default function AdminPanel({ onLogout }: { onLogout: () => void }) {
         return <CategoriesForm />;
       case 'experience':
         return <ExperienceForm />;
-      case 'education':
-        return <EducationForm />;
       case 'skills':
         return <SkillsForm />;
       case 'testimonials':
