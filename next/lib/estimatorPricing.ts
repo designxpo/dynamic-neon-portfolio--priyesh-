@@ -67,15 +67,24 @@ export type EstimatorSelection = {
 export const DEFAULT_PRICING: PricingConfig = {
   currencySymbol: '$',
   currencyCode: 'USD',
-  // Base is USD (multiplier 1). Multipliers below are approximate market/FX
-  // conversions from USD — tune them in the admin per your real regional rates.
+  // Base is the US/global anchor (USD, multiplier 1). Each region multiplier is
+  // calibrated to that market: FX × local market factor (NOT just FX). India
+  // prices well below FX parity; the Gulf and AU sit slightly above. Tune any of
+  // these in the admin to match your exact positioning.
   defaultRegion: 'base',
   regions: [
-    { code: 'IN', label: 'India', currencySymbol: '₹', currencyCode: 'INR', countries: ['IN'], multiplier: 45, roundTo: 1000 },
-    { code: 'EU', label: 'Europe', currencySymbol: '€', currencyCode: 'EUR', countries: ['DE', 'FR', 'ES', 'IT', 'NL', 'IE', 'PT', 'AT', 'BE', 'FI', 'GR', 'LU'], multiplier: 0.92, roundTo: 100 },
-    { code: 'GB', label: 'United Kingdom', currencySymbol: '£', currencyCode: 'GBP', countries: ['GB'], multiplier: 0.79, roundTo: 100 },
-    { code: 'AE', label: 'UAE / Gulf', currencySymbol: 'AED ', currencyCode: 'AED', countries: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'], multiplier: 3.67, roundTo: 500 },
-    { code: 'AU', label: 'Australia', currencySymbol: 'A$', currencyCode: 'AUD', countries: ['AU', 'NZ'], multiplier: 1.5, roundTo: 100 },
+    // ×38 ≈ FX ~83 × ~0.45 market factor — Indian professional rates run well below straight FX.
+    { code: 'IN', label: 'India', currencySymbol: '₹', currencyCode: 'INR', countries: ['IN'], multiplier: 38, roundTo: 1000 },
+    // ~parity with USD in EUR terms (EU agency rates track US closely).
+    { code: 'EU', label: 'Europe', currencySymbol: '€', currencyCode: 'EUR', countries: ['DE', 'FR', 'ES', 'IT', 'NL', 'IE', 'PT', 'AT', 'BE', 'FI', 'GR', 'LU'], multiplier: 0.95, roundTo: 100 },
+    // FX ~0.79 × ~1.1 UK premium.
+    { code: 'GB', label: 'United Kingdom', currencySymbol: '£', currencyCode: 'GBP', countries: ['GB'], multiplier: 0.88, roundTo: 100 },
+    // FX ~3.67 × ~1.05 Gulf premium.
+    { code: 'AE', label: 'UAE / Gulf', currencySymbol: 'AED ', currencyCode: 'AED', countries: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'], multiplier: 3.85, roundTo: 500 },
+    // FX ~1.5 × ~1.05.
+    { code: 'AU', label: 'Australia', currencySymbol: 'A$', currencyCode: 'AUD', countries: ['AU', 'NZ'], multiplier: 1.58, roundTo: 100 },
+    // FX ~1.37 (rates track US closely).
+    { code: 'CA', label: 'Canada', currencySymbol: 'C$', currencyCode: 'CAD', countries: ['CA'], multiplier: 1.37, roundTo: 100 },
   ],
   types: [
     { key: 'website', label: 'Website', blurb: 'Marketing / brand site', base: { min: 1500, max: 4000 }, weeks: { min: 2, max: 4 }, unit: 'pages' },
