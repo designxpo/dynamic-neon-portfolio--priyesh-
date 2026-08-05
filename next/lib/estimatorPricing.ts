@@ -29,9 +29,23 @@ export type DesignCfg = { key: string; label: string; hint: string; mult: number
 
 export type GrowthCfg = { id: string; label: string; hint: string; cost: Range; weeks: number };
 
+// A pricing region: a currency + which countries resolve to it + how base
+// (base-currency) costs are transformed for that market.
+export type RegionCfg = {
+  code: string; // unique id, e.g. "IN", "EU", "GB"
+  label: string; // e.g. "India"
+  currencySymbol: string; // e.g. "₹"
+  currencyCode: string; // e.g. "INR"
+  countries: string[]; // ISO-3166 alpha-2 codes mapped to this region, e.g. ["IN"]
+  multiplier: number; // base cost × multiplier → this region's cost
+  roundTo: number; // round displayed amounts to the nearest N (e.g. 1000 for INR)
+};
+
 export type PricingConfig = {
-  currencySymbol: string;
+  currencySymbol: string; // BASE currency (fallback for undetected countries)
   currencyCode: string;
+  regions: RegionCfg[];
+  defaultRegion: string; // region code (or "base") used when detection fails
   types: ProjectTypeCfg[];
   sizes: SizeCfg[];
   features: FeatureCfg[];
@@ -53,6 +67,25 @@ export type EstimatorSelection = {
 export const DEFAULT_PRICING: PricingConfig = {
   currencySymbol: '$',
   currencyCode: 'USD',
+  // Base is the US/global anchor (USD, multiplier 1). Each region multiplier is
+  // calibrated to that market: FX × local market factor (NOT just FX). India
+  // prices well below FX parity; the Gulf and AU sit slightly above. Tune any of
+  // these in the admin to match your exact positioning.
+  defaultRegion: 'base',
+  regions: [
+    // ×38 ≈ FX ~83 × ~0.45 market factor — Indian professional rates run well below straight FX.
+    { code: 'IN', label: 'India', currencySymbol: '₹', currencyCode: 'INR', countries: ['IN'], multiplier: 38, roundTo: 1000 },
+    // ~parity with USD in EUR terms (EU agency rates track US closely).
+    { code: 'EU', label: 'Europe', currencySymbol: '€', currencyCode: 'EUR', countries: ['DE', 'FR', 'ES', 'IT', 'NL', 'IE', 'PT', 'AT', 'BE', 'FI', 'GR', 'LU'], multiplier: 0.95, roundTo: 100 },
+    // FX ~0.79 × ~1.1 UK premium.
+    { code: 'GB', label: 'United Kingdom', currencySymbol: '£', currencyCode: 'GBP', countries: ['GB'], multiplier: 0.88, roundTo: 100 },
+    // FX ~3.67 × ~1.05 Gulf premium.
+    { code: 'AE', label: 'UAE / Gulf', currencySymbol: 'AED ', currencyCode: 'AED', countries: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'], multiplier: 3.85, roundTo: 500 },
+    // FX ~1.5 × ~1.05.
+    { code: 'AU', label: 'Australia', currencySymbol: 'A$', currencyCode: 'AUD', countries: ['AU', 'NZ'], multiplier: 1.58, roundTo: 100 },
+    // FX ~1.37 (rates track US closely).
+    { code: 'CA', label: 'Canada', currencySymbol: 'C$', currencyCode: 'CAD', countries: ['CA'], multiplier: 1.37, roundTo: 100 },
+  ],
   types: [
     { key: 'website', label: 'Website', blurb: 'Marketing / brand site', base: { min: 1500, max: 4000 }, weeks: { min: 2, max: 4 }, unit: 'pages' },
     { key: 'webapp', label: 'Web App', blurb: 'SaaS / dashboard product', base: { min: 6000, max: 15000 }, weeks: { min: 6, max: 12 }, unit: 'screens' },
@@ -170,9 +203,54 @@ export function estimate(cfg: PricingConfig, s: EstimatorSelection): EstimateRes
   };
 }
 
-/** Round to the nearest 100 so estimates read as ballparks, not false precision. */
-export function formatMoney(cfg: PricingConfig, n: number): string {
-  return cfg.currencySymbol + (Math.round(n / 100) * 100).toLocaleString('en-US');
+// ---- regions ---------------------------------------------------------------
+/** The base-currency pseudo-region (multiplier 1), used as the fallback. */
+export function baseRegion(cfg: PricingConfig): RegionCfg {
+  return {
+    code: 'base',
+    label: cfg.currencyCode || 'USD',
+    currencySymbol: cfg.currencySymbol || '$',
+    currencyCode: cfg.currencyCode || 'USD',
+    countries: [],
+    multiplier: 1,
+    roundTo: 100,
+  };
+}
+
+/** All selectable regions: the base region first, then admin-defined ones. */
+export function allRegions(cfg: PricingConfig): RegionCfg[] {
+  return [baseRegion(cfg), ...(cfg.regions || [])];
+}
+
+/** Look up a region by its code (falls back to the configured default, then base). */
+export function getRegion(cfg: PricingConfig, code?: string | null): RegionCfg {
+  const regions = allRegions(cfg);
+  return (
+    regions.find((r) => r.code === code) ||
+    regions.find((r) => r.code === cfg.defaultRegion) ||
+    regions[0]
+  );
+}
+
+/** Resolve a region from an ISO country code (falls back to the default region). */
+export function regionForCountry(cfg: PricingConfig, country?: string | null): RegionCfg {
+  const cc = (country || '').toUpperCase();
+  if (cc) {
+    const match = (cfg.regions || []).find((r) => r.countries.map((c) => c.toUpperCase()).includes(cc));
+    if (match) return match;
+  }
+  return getRegion(cfg, cfg.defaultRegion);
+}
+
+/** Convert a base-currency amount into a region's currency (multiplier + rounding). */
+export function applyRegion(region: RegionCfg, baseAmount: number): number {
+  const step = region.roundTo > 0 ? region.roundTo : 1;
+  return Math.round((baseAmount * region.multiplier) / step) * step;
+}
+
+/** Format a base-currency amount as a rounded string in the region's currency. */
+export function formatMoney(region: RegionCfg, baseAmount: number): string {
+  return region.currencySymbol + applyRegion(region, baseAmount).toLocaleString('en-US');
 }
 
 // ---- URL <-> selection (shareable estimates) -------------------------------

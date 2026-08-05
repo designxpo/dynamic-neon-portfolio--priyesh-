@@ -33,6 +33,33 @@ const Num = ({ label, value, onChange, step = '1', className = '' }) => (
   </label>
 );
 
+// Countries input: edits a comma-separated list but stores an array. Local raw
+// state so typing a comma isn't eaten; re-syncs if the array changes externally
+// (e.g. Reset to defaults).
+const CountriesField = ({ value, onChange, className = '' }) => {
+  const [raw, setRaw] = React.useState((value || []).join(', '));
+  const norm = (s) => s.split(',').map((x) => x.trim().toUpperCase()).filter(Boolean).join(',');
+  React.useEffect(() => {
+    if (norm(raw) !== (value || []).join(',')) setRaw((value || []).join(', '));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  return (
+    <label className={`block ${className}`}>
+      <span className="block text-[11px] font-medium text-gray-400 mb-1">Countries (ISO, comma)</span>
+      <input
+        type="text"
+        className="admin-input w-full"
+        value={raw}
+        placeholder="IN, US, GB"
+        onChange={(e) => {
+          setRaw(e.target.value);
+          onChange(e.target.value.split(',').map((c) => c.trim().toUpperCase()).filter(Boolean));
+        }}
+      />
+    </label>
+  );
+};
+
 const Row = ({ children, onRemove }) => (
   <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 flex flex-wrap gap-3 items-end">
     {children}
@@ -164,19 +191,57 @@ const PricingForm: React.FC = () => {
           <div className="text-sm text-gray-400">
             How the estimate is computed: <code className="text-gray-300">base × size × design</code>, plus each selected
             feature and growth add-on, then the rush multiplier. <strong className="text-gray-300">Cost</strong> values are in the
-            currency below; <strong className="text-gray-300">size</strong> and <strong className="text-gray-300">design</strong> are multipliers.
+            base currency below and auto-convert per visitor region; <strong className="text-gray-300">size</strong> and <strong className="text-gray-300">design</strong> are multipliers.
           </div>
         </div>
       </div>
 
-      {/* Currency + rush */}
-      <Section title="Currency & timeline" hint="Display currency and the rush (priority) multipliers.">
+      {/* Base currency + rush */}
+      <Section title="Base currency & timeline" hint="The base currency all costs below are entered in, plus the rush (priority) multipliers. Regional currencies convert from this.">
         <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 flex flex-wrap gap-3 items-end">
-          <Txt label="Currency symbol" value={cfg.currencySymbol} onChange={(v) => update({ currencySymbol: v })} className="w-24" />
-          <Txt label="Currency code" value={cfg.currencyCode} onChange={(v) => update({ currencyCode: v })} className="w-28" />
+          <Txt label="Base symbol" value={cfg.currencySymbol} onChange={(v) => update({ currencySymbol: v })} className="w-24" />
+          <Txt label="Base code" value={cfg.currencyCode} onChange={(v) => update({ currencyCode: v })} className="w-28" />
           <Num label="Rush cost ×" value={cfg.rushCostMult} step="0.05" onChange={(v) => update({ rushCostMult: v })} className="w-28" />
           <Num label="Rush weeks ×" value={cfg.rushWeeksMult} step="0.05" onChange={(v) => update({ rushWeeksMult: v })} className="w-28" />
         </div>
+      </Section>
+
+      {/* Regions & currencies */}
+      <Section
+        title="Regions & currencies"
+        hint="Show local currency + price by visitor country (auto-detected on Vercel). Multiplier converts a base cost into this region; Round to snaps the shown amount (e.g. 1000 for ₹). Countries = ISO codes, comma-separated."
+        addLabel="Add region"
+        onAdd={() => addItem('regions', { code: '', label: '', currencySymbol: '$', currencyCode: '', countries: [], multiplier: 1, roundTo: 100 })}
+      >
+        <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 flex flex-wrap gap-3 items-end mb-1">
+          <label className="block">
+            <span className="block text-[11px] font-medium text-gray-400 mb-1">Default region (country unknown)</span>
+            <select
+              className="admin-input"
+              value={cfg.defaultRegion || 'base'}
+              onChange={(e) => update({ defaultRegion: e.target.value })}
+            >
+              <option value="base">Base ({cfg.currencyCode || 'USD'})</option>
+              {cfg.regions.map((r, i) => (
+                <option key={i} value={r.code}>{(r.code || '??') + (r.label ? ' · ' + r.label : '')}</option>
+              ))}
+            </select>
+          </label>
+          <p className="text-xs text-gray-500 max-w-md">
+            Visitors from a country listed in a region see that currency automatically; everyone else sees the default.
+          </p>
+        </div>
+        {cfg.regions.map((r, i) => (
+          <Row key={i} onRemove={() => removeItem('regions', i)}>
+            <Txt label="Code" value={r.code} onChange={(v) => setItem('regions', i, { code: v })} className="w-20" />
+            <Txt label="Label" value={r.label} onChange={(v) => setItem('regions', i, { label: v })} className="w-32" />
+            <Txt label="Symbol" value={r.currencySymbol} onChange={(v) => setItem('regions', i, { currencySymbol: v })} className="w-20" />
+            <Txt label="Currency (ISO)" value={r.currencyCode} onChange={(v) => setItem('regions', i, { currencyCode: v })} className="w-24" />
+            <CountriesField value={r.countries} onChange={(arr) => setItem('regions', i, { countries: arr })} className="w-48" />
+            <Num label="Multiplier ×" value={r.multiplier} step="0.01" onChange={(v) => setItem('regions', i, { multiplier: v })} className="w-24" />
+            <Num label="Round to" value={r.roundTo} step="1" onChange={(v) => setItem('regions', i, { roundTo: v })} className="w-24" />
+          </Row>
+        ))}
       </Section>
 
       {/* Project types */}
