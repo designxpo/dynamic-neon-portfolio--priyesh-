@@ -105,7 +105,6 @@ const CostEstimator: React.FC = () => {
 
   const result = useMemo(() => estimate(config, sel), [config, sel]);
   const region = useMemo(() => getRegion(config, regionCode), [config, regionCode]);
-  const regions = useMemo(() => allRegions(config), [config]);
   const currentType = config.types.find((t) => t.key === sel.type) ?? config.types[0];
 
   const toggle = (key: 'features' | 'growth', id: string) =>
@@ -289,24 +288,7 @@ const CostEstimator: React.FC = () => {
         {/* ---- Result (sticky) ---- */}
         <aside className="lg:sticky lg:top-24">
           <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-brand-purple/20 to-white/[0.02] p-6 shadow-2xl">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs uppercase tracking-wider text-brand-purple-light">Estimated investment</p>
-              {regions.length > 1 && (
-                <select
-                  aria-label="Currency / region"
-                  value={regionCode}
-                  onChange={(e) => setRegionCode(e.target.value)}
-                  className="rounded-md border border-white/15 bg-black/30 text-xs text-gray-200 px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple"
-                >
-                  {regions.map((r) => (
-                    <option key={r.code} value={r.code} className="bg-dark-bg text-white">
-                      {r.currencyCode}
-                      {r.code !== 'base' && r.label ? ` · ${r.label}` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+            <p className="text-xs uppercase tracking-wider text-brand-purple-light">Estimated investment</p>
             <p className="mt-2 text-3xl md:text-4xl font-bold text-white leading-tight">
               {formatMoney(region, result.costMin)}
               <span className="text-gray-500 font-normal"> – </span>
