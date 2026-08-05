@@ -6,6 +6,21 @@ import { DEFAULT_PRICING } from '@/lib/estimatorPricing';
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
+// Older DB records (created before regions existed) can be missing array fields.
+// Backfill them so the editor never renders `undefined.map(...)` and crashes.
+const withDefaults = (c) => {
+  const cfg = { ...clone(DEFAULT_PRICING), ...(c || {}) };
+  // Absent arrays already inherit DEFAULT_PRICING via the spread above; this only
+  // repairs null / non-array values (an intentionally-saved [] is preserved).
+  for (const k of ['types', 'sizes', 'features', 'designLevels', 'growth', 'regions']) {
+    if (!Array.isArray(cfg[k])) cfg[k] = clone(DEFAULT_PRICING[k]);
+  }
+  if (!cfg.defaultRegion) cfg.defaultRegion = 'base';
+  if (!cfg.currencySymbol) cfg.currencySymbol = '$';
+  if (!cfg.currencyCode) cfg.currencyCode = 'USD';
+  return cfg;
+};
+
 // --- tiny labeled input helpers ---------------------------------------------
 const Txt = ({ label, value, onChange, placeholder, className = '' }) => (
   <label className={`block ${className}`}>
@@ -102,7 +117,7 @@ const PricingForm: React.FC = () => {
       try {
         const res = await fetch('/api/pricing', { cache: 'no-store' });
         const json = res.ok ? await res.json() : null;
-        setCfg(json?.types?.length ? json : clone(DEFAULT_PRICING));
+        setCfg(withDefaults(json?.types?.length ? json : clone(DEFAULT_PRICING)));
       } catch {
         setCfg(clone(DEFAULT_PRICING));
       }
