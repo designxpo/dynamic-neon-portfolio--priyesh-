@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ContactData } from '../types';
 import Section from './Section';
 import { EmailIcon, PhoneIcon } from './icons/Icons';
@@ -58,7 +58,12 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
     { code: '+62', country: 'Indonesia' },
   ];
 
+  // Once the visitor edits anything, stop auto-filling from geo so we never
+  // clobber what they typed.
+  const touched = useRef(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    touched.current = true;
     const { name, value } = e.target;
     if (name === 'contactNumber') {
       // Allow only digits for the local phone number part
@@ -86,6 +91,32 @@ const Contact: React.FC<ContactProps> = ({ data }) => {
     };
     checkHealth();
     return () => { cancelled = true; };
+  }, []);
+
+  // Pre-fill location + phone country code from the visitor's IP (best-effort).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const API_BASE = getApiBase();
+        const res = await fetch(`${API_BASE}/api/geo`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const g = await res.json();
+        if (cancelled || touched.current) return;
+        const loc = [g?.city, g?.countryName].filter(Boolean).join(', ');
+        const dialInList = g?.callingCode && countryCodes.some((c) => c.code === g.callingCode);
+        setFormData((prev) => (touched.current ? prev : {
+          ...prev,
+          location: prev.location || loc,
+          // Only override the default code, and only if it's in the dropdown.
+          countryCode: dialInList && prev.countryCode === '+91' ? g.callingCode : prev.countryCode,
+        }));
+      } catch {
+        /* geo unavailable (local dev / blocked) — leave defaults */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
