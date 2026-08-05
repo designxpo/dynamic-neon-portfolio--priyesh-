@@ -26,10 +26,25 @@ const GrowthSchema = new Schema(
   { _id: false },
 );
 
+const RegionSchema = new Schema(
+  {
+    code: String,
+    label: String,
+    currencySymbol: String,
+    currencyCode: String,
+    countries: { type: [String], default: [] },
+    multiplier: { type: Number, default: 1 },
+    roundTo: { type: Number, default: 100 },
+  },
+  { _id: false },
+);
+
 const PricingConfigSchema: Schema = new Schema(
   {
     currencySymbol: { type: String, default: '$' },
     currencyCode: { type: String, default: 'USD' },
+    regions: { type: [RegionSchema], default: [] },
+    defaultRegion: { type: String, default: 'base' },
     types: { type: [TypeSchema], default: [] },
     sizes: { type: [SizeSchema], default: [] },
     features: { type: [FeatureSchema], default: [] },

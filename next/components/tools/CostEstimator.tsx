@@ -9,6 +9,8 @@ import {
   formatMoney,
   encodeSelection,
   decodeSelection,
+  allRegions,
+  getRegion,
   type PricingConfig,
   type EstimatorSelection,
 } from '@/lib/estimatorPricing';
@@ -35,6 +37,7 @@ const unselectedCls = 'border-white/10 bg-white/[0.03] text-gray-300 hover:borde
 const CostEstimator: React.FC = () => {
   const [config, setConfig] = useState<PricingConfig>(DEFAULT_PRICING);
   const [sel, setSel] = useState<EstimatorSelection>(() => defaultSelection(DEFAULT_PRICING));
+  const [regionCode, setRegionCode] = useState<string>('base');
   const [embed, setEmbed] = useState(false);
   const [copied, setCopied] = useState<'link' | 'embed' | null>(null);
 
@@ -46,12 +49,14 @@ const CostEstimator: React.FC = () => {
 
     (async () => {
       let cfg = DEFAULT_PRICING;
+      let detectedRegion: string | undefined;
       try {
         const res = await fetch('/api/pricing', { cache: 'no-store' });
         if (res.ok) {
-          const json = (await res.json()) as PricingConfig;
+          const json = (await res.json()) as PricingConfig & { detectedRegion?: string };
           // Guard against an empty/partial doc — fall back if core lists are missing.
           if (json?.types?.length && json?.sizes?.length && json?.designLevels?.length) cfg = json;
+          detectedRegion = json?.detectedRegion;
         }
       } catch {
         /* offline / embedded off-site — DEFAULT_PRICING is fine */
@@ -59,6 +64,13 @@ const CostEstimator: React.FC = () => {
       if (!alive) return;
       setConfig(cfg);
       setSel(normalizeSelection(decodeSelection(search), cfg));
+      // Region priority: explicit URL choice → server geo-detection → config default.
+      const urlRegion = new URLSearchParams(search).get('region');
+      const codes = allRegions(cfg).map((r) => r.code);
+      const pick = [urlRegion, detectedRegion, cfg.defaultRegion, 'base'].find(
+        (c) => c && codes.includes(c),
+      );
+      setRegionCode(pick || 'base');
     })();
 
     return () => {
@@ -66,14 +78,17 @@ const CostEstimator: React.FC = () => {
     };
   }, []);
 
-  // Mirror selection into the URL so the current estimate is always shareable.
+  // Mirror selection + region into the URL so the current estimate is shareable.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const qs = encodeSelection(sel);
-    window.history.replaceState(null, '', `${window.location.pathname}?${qs}${embed ? '&embed=1' : ''}`);
-  }, [sel, embed]);
+    const regionQs = regionCode && regionCode !== 'base' ? `&region=${regionCode}` : '';
+    window.history.replaceState(null, '', `${window.location.pathname}?${qs}${regionQs}${embed ? '&embed=1' : ''}`);
+  }, [sel, regionCode, embed]);
 
   const result = useMemo(() => estimate(config, sel), [config, sel]);
+  const region = useMemo(() => getRegion(config, regionCode), [config, regionCode]);
+  const regions = useMemo(() => allRegions(config), [config]);
   const currentType = config.types.find((t) => t.key === sel.type) ?? config.types[0];
 
   const toggle = (key: 'features' | 'growth', id: string) =>
@@ -82,10 +97,11 @@ const CostEstimator: React.FC = () => {
       [key]: s[key].includes(id) ? s[key].filter((x) => x !== id) : [...s[key], id],
     }));
 
-  const shareUrl = `${SITE_URL}${PATH}?${encodeSelection(sel)}`;
+  const regionQs = regionCode && regionCode !== 'base' ? `&region=${regionCode}` : '';
+  const shareUrl = `${SITE_URL}${PATH}?${encodeSelection(sel)}${regionQs}`;
   const embedCode = `<iframe src="${SITE_URL}${PATH}?${encodeSelection(
     sel,
-  )}&embed=1" width="100%" height="720" style="border:0;border-radius:16px" title="Project Cost Estimator by Priyesh Mishra" loading="lazy"></iframe>`;
+  )}${regionQs}&embed=1" width="100%" height="720" style="border:0;border-radius:16px" title="Project Cost Estimator by Priyesh Mishra" loading="lazy"></iframe>`;
 
   const copy = async (text: string, which: 'link' | 'embed') => {
     try {
@@ -256,14 +272,31 @@ const CostEstimator: React.FC = () => {
         {/* ---- Result (sticky) ---- */}
         <aside className="lg:sticky lg:top-24">
           <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-brand-purple/20 to-white/[0.02] p-6 shadow-2xl">
-            <p className="text-xs uppercase tracking-wider text-brand-purple-light">Estimated investment</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs uppercase tracking-wider text-brand-purple-light">Estimated investment</p>
+              {regions.length > 1 && (
+                <select
+                  aria-label="Currency / region"
+                  value={regionCode}
+                  onChange={(e) => setRegionCode(e.target.value)}
+                  className="rounded-md border border-white/15 bg-black/30 text-xs text-gray-200 px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple"
+                >
+                  {regions.map((r) => (
+                    <option key={r.code} value={r.code} className="bg-dark-bg text-white">
+                      {r.currencyCode}
+                      {r.code !== 'base' && r.label ? ` · ${r.label}` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <p className="mt-2 text-3xl md:text-4xl font-bold text-white leading-tight">
-              {formatMoney(config, result.costMin)}
+              {formatMoney(region, result.costMin)}
               <span className="text-gray-500 font-normal"> – </span>
-              {formatMoney(config, result.costMax)}
+              {formatMoney(region, result.costMax)}
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              {config.currencyCode} · ballpark for {currentType?.label.toLowerCase()}
+              {region.currencyCode} · ballpark for {currentType?.label.toLowerCase()}
             </p>
 
             <div className="mt-5 flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-4 py-3">

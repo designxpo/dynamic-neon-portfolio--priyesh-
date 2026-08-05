@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/mongoose';
 import PricingConfig from '@/models/PricingConfig';
 import { requireAdmin } from '@/lib/adminAuth';
-import { DEFAULT_PRICING, type PricingConfig as PricingConfigType } from '@/lib/estimatorPricing';
+import {
+  DEFAULT_PRICING,
+  regionForCountry,
+  type PricingConfig as PricingConfigType,
+} from '@/lib/estimatorPricing';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -15,12 +19,30 @@ const str = (v: unknown, fallback = ''): string =>
   typeof v === 'string' ? v : fallback;
 const range = (v: any) => ({ min: num(v?.min), max: num(v?.max) });
 
+const countryList = (v: unknown): string[] => {
+  if (Array.isArray(v)) return v.map((c) => str(c).toUpperCase().trim()).filter(Boolean);
+  if (typeof v === 'string') return v.split(',').map((c) => c.trim().toUpperCase()).filter(Boolean);
+  return [];
+};
+
 // Whitelist + coerce the incoming payload so only well-formed pricing is stored.
 function sanitize(body: any): PricingConfigType {
   const b = body || {};
   return {
     currencySymbol: str(b.currencySymbol, '$') || '$',
     currencyCode: str(b.currencyCode, 'USD') || 'USD',
+    defaultRegion: str(b.defaultRegion, 'base') || 'base',
+    regions: Array.isArray(b.regions)
+      ? b.regions.map((r: any) => ({
+          code: str(r?.code).trim(),
+          label: str(r?.label),
+          currencySymbol: str(r?.currencySymbol, '$') || '$',
+          currencyCode: str(r?.currencyCode).toUpperCase(),
+          countries: countryList(r?.countries),
+          multiplier: num(r?.multiplier, 1) || 1,
+          roundTo: num(r?.roundTo, 100) || 1,
+        })).filter((r: any) => r.code && r.currencyCode && r.code !== 'base')
+      : [],
     types: Array.isArray(b.types)
       ? b.types.map((t: any) => ({
           key: str(t?.key),
@@ -70,8 +92,21 @@ function sanitize(body: any): PricingConfigType {
   };
 }
 
+// Geo-detect the visitor's country from the CDN header (Vercel / Cloudflare),
+// then resolve which pricing region applies. Attached to the GET response so the
+// tool can pre-select the right currency without an extra request.
+function detect(req: Request, cfg: any) {
+  const country = (
+    req.headers.get('x-vercel-ip-country') ||
+    req.headers.get('cf-ipcountry') ||
+    ''
+  ).toUpperCase();
+  const region = regionForCountry(cfg, country);
+  return { detectedCountry: country || null, detectedRegion: region.code };
+}
+
 // GET /api/pricing — public. Returns the singleton config, seeding defaults once.
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await connectDB();
     let cfg: any = await PricingConfig.findOne({}, {}, { sort: { updatedAt: -1 } }).lean();
@@ -79,11 +114,11 @@ export async function GET() {
       const created = await PricingConfig.create(DEFAULT_PRICING);
       cfg = created.toObject();
     }
-    return NextResponse.json(cfg);
+    return NextResponse.json({ ...cfg, ...detect(req, cfg) });
   } catch (err: any) {
     // Never break the public tool on a DB hiccup — it falls back to defaults.
     console.error('[Pricing GET] DB error:', err?.message || err);
-    return NextResponse.json(DEFAULT_PRICING);
+    return NextResponse.json({ ...DEFAULT_PRICING, ...detect(req, DEFAULT_PRICING) });
   }
 }
 
