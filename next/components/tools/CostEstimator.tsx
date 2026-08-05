@@ -11,6 +11,7 @@ import {
   decodeSelection,
   allRegions,
   getRegion,
+  regionForCountry,
   type PricingConfig,
   type EstimatorSelection,
 } from '@/lib/estimatorPricing';
@@ -64,10 +65,26 @@ const CostEstimator: React.FC = () => {
       if (!alive) return;
       setConfig(cfg);
       setSel(normalizeSelection(decodeSelection(search), cfg));
-      // Region priority: explicit URL choice → server geo-detection → config default.
+      // Region priority: explicit URL → server geo-detection → browser locale → default.
       const urlRegion = new URLSearchParams(search).get('region');
+      // Browser-locale fallback (helps when the server had no CDN geo header).
+      const localeCountry = (() => {
+        try {
+          const langs = [navigator.language, ...(navigator.languages || [])].filter(Boolean);
+          for (const l of langs) {
+            const parts = String(l).split('-');
+            const reg = parts.length > 1 ? parts[parts.length - 1].toUpperCase() : '';
+            if (/^[A-Z]{2}$/.test(reg)) return reg;
+          }
+        } catch {
+          /* no navigator */
+        }
+        return '';
+      })();
+      const localeRegion = localeCountry ? regionForCountry(cfg, localeCountry).code : undefined;
+      const nonBase = (c?: string) => (c && c !== 'base' ? c : undefined);
       const codes = allRegions(cfg).map((r) => r.code);
-      const pick = [urlRegion, detectedRegion, cfg.defaultRegion, 'base'].find(
+      const pick = [urlRegion, nonBase(detectedRegion), nonBase(localeRegion), cfg.defaultRegion, 'base'].find(
         (c) => c && codes.includes(c),
       );
       setRegionCode(pick || 'base');
