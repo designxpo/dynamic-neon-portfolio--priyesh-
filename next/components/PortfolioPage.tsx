@@ -7,7 +7,6 @@ import Services from './Services';
 import RecentWorks from './RecentWorks';
 import Roadmap from './Roadmap';
 import Experience from './Experience';
-import Education from './Education';
 import Skills from './Skills';
 import Blogs from './Blogs';
 import Faq from './Faq';
@@ -23,7 +22,6 @@ import {
     getServicesData,
     getProjectsData,
     getExperiencesData,
-    getEducationsData,
     getSkillsData,
     getTestimonialsData,
     getContactData,
@@ -123,7 +121,6 @@ const PortfolioPage = () => {
             timers.push(setTimeout(() => loadSection('contact', getContactData, 'contact'), 300));
 
             // Lower priority sections
-            timers.push(setTimeout(() => loadSection('educations', getEducationsData, 'educations'), 400));
             timers.push(setTimeout(() => loadSection('skills', getSkillsData, 'skills'), 500));
             timers.push(setTimeout(() => loadSection('testimonials', getTestimonialsData, 'testimonials'), 600));
 
@@ -254,12 +251,6 @@ const PortfolioPage = () => {
                     </AnimatedSection>
                 )}
 
-                {/* Education section */}
-                {sectionsLoaded.educations && (
-                    <AnimatedSection>
-                        <Education data={portfolioData?.educations || []} />
-                    </AnimatedSection>
-                )}
 
                 {/* Skills section */}
                 {sectionsLoaded.skills && (

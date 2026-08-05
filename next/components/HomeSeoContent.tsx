@@ -6,7 +6,7 @@ import Link from 'next/link';
  * The interactive portfolio (PortfolioPage) is a client-only component, so the
  * raw HTML that search/social/AI crawlers receive would otherwise be just a
  * loading shell. This server component puts the real body text — bio, services,
- * projects, skills, experience, education — into the initial HTML, with internal
+ * projects, skills, experience — into the initial HTML, with internal
  * links to the dedicated /projects/[slug] pages. It is rendered inside a
  * <noscript> on the home page, so it stays in the served HTML for no-JS
  * crawlers/social scrapers but is never shown to JS-enabled users (no flash).
@@ -17,7 +17,6 @@ type Data = {
   services?: any[];
   projects?: any[];
   experiences?: any[];
-  educations?: any[];
   skills?: any[];
 };
 
@@ -26,7 +25,6 @@ export default function HomeSeoContent({ data }: { data: Data }) {
   const services = data.services || [];
   const projects = data.projects || [];
   const experiences = data.experiences || [];
-  const educations = data.educations || [];
   const skills = data.skills || [];
 
   return (
@@ -88,21 +86,6 @@ export default function HomeSeoContent({ data }: { data: Data }) {
               <li key={i} className="text-gray-300">
                 <strong className="text-white">{e.positionTitle}</strong>
                 {e.companyName ? ` @ ${e.companyName}` : ''}
-                {e.startYear || e.endYear ? ` (${e.startYear || ''}${e.endYear ? `–${e.endYear}` : ''})` : ''}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {educations.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-2xl font-semibold mb-3">Education</h2>
-          <ul className="space-y-2">
-            {educations.map((e: any, i: number) => (
-              <li key={i} className="text-gray-300">
-                <strong className="text-white">{e.degree}</strong>
-                {e.institution ? ` — ${e.institution}` : ''}
                 {e.startYear || e.endYear ? ` (${e.startYear || ''}${e.endYear ? `–${e.endYear}` : ''})` : ''}
               </li>
             ))}

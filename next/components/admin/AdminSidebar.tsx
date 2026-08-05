@@ -2,7 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import {
-  LayoutDashboard, Target, Zap, Rocket, Briefcase, GraduationCap,
+  LayoutDashboard, Target, Zap, Rocket, Briefcase,
   Award, Star, FileText, Mail, Inbox, Settings, LogOut, Search,
   MessageCircle, FileCog, Tags, Calculator,
 } from 'lucide-react';
@@ -67,7 +67,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
       title: 'About',
       items: [
         { tab: 'experience',   label: 'Experience',   icon: <Briefcase size={18} strokeWidth={1.75} /> },
-        { tab: 'education',    label: 'Education',    icon: <GraduationCap size={18} strokeWidth={1.75} /> },
         { tab: 'skills',       label: 'Skills',       icon: <Award size={18} strokeWidth={1.75} /> },
         { tab: 'testimonials', label: 'Testimonials', icon: <Star size={18} strokeWidth={1.75} /> },
         { tab: 'blogs',        label: 'Blog Posts',   icon: <FileText size={18} strokeWidth={1.75} /> },
