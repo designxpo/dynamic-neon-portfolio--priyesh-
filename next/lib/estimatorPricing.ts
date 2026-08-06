@@ -27,6 +27,10 @@ export type FeatureCfg = { id: string; label: string; cost: Range; weeks: number
 
 export type DesignCfg = { key: string; label: string; hint: string; mult: number };
 
+// Industry / product domain — a single-select cost multiplier (e-commerce,
+// SaaS, fintech, …) reflecting how much complexity that domain adds.
+export type DomainCfg = { key: string; label: string; mult: number };
+
 export type GrowthCfg = { id: string; label: string; hint: string; cost: Range; weeks: number };
 
 // A pricing region: a currency + which countries resolve to it + how base
@@ -50,6 +54,7 @@ export type PricingConfig = {
   sizes: SizeCfg[];
   features: FeatureCfg[];
   designLevels: DesignCfg[];
+  domains: DomainCfg[];
   growth: GrowthCfg[];
   rushCostMult: number; // cost premium for rush timeline
   rushWeeksMult: number; // timeline compression for rush (< 1)
@@ -60,6 +65,7 @@ export type EstimatorSelection = {
   size: string; // SizeCfg.key
   features: string[]; // FeatureCfg.id[]
   design: string; // DesignCfg.key
+  domain: string; // DomainCfg.key
   growth: string[]; // GrowthCfg.id[]
   timeline: 'standard' | 'rush';
 };
@@ -114,6 +120,18 @@ export const DEFAULT_PRICING: PricingConfig = {
     { key: 'custom', label: 'Custom', hint: 'Bespoke UI', mult: 1.0 },
     { key: 'premium', label: 'Premium', hint: 'Full design system', mult: 1.35 },
   ],
+  // Industry/product domain multipliers — more regulated / complex domains cost more.
+  domains: [
+    { key: 'general', label: 'General / Business', mult: 1.0 },
+    { key: 'ecommerce', label: 'E-commerce', mult: 1.25 },
+    { key: 'saas', label: 'SaaS / Dashboard', mult: 1.2 },
+    { key: 'marketplace', label: 'Marketplace', mult: 1.45 },
+    { key: 'fintech', label: 'Fintech', mult: 1.4 },
+    { key: 'healthcare', label: 'Healthcare', mult: 1.35 },
+    { key: 'education', label: 'Education / E-learning', mult: 1.15 },
+    { key: 'social', label: 'Social / Community', mult: 1.2 },
+    { key: 'ai', label: 'AI / Data', mult: 1.35 },
+  ],
   growth: [
     { id: 'seo', label: 'SEO foundation', hint: 'Technical + on-page', cost: { min: 800, max: 2000 }, weeks: 1 },
     { id: 'aeo', label: 'AEO / GEO (AI search)', hint: 'Answer & generative-engine optimization', cost: { min: 1000, max: 2500 }, weeks: 1.5 },
@@ -135,6 +153,7 @@ export function defaultSelection(cfg: PricingConfig): EstimatorSelection {
     size: cfg.sizes[Math.min(1, cfg.sizes.length - 1)]?.key ?? cfg.sizes[0]?.key ?? '',
     features: [],
     design: (byKey(cfg.designLevels, 'custom') ?? cfg.designLevels[0])?.key ?? '',
+    domain: cfg.domains?.[0]?.key ?? '',
     growth: [],
     timeline: 'standard',
   };
@@ -146,10 +165,12 @@ export function normalizeSelection(sel: Partial<EstimatorSelection>, cfg: Pricin
   const validType = sel.type && byKey(cfg.types, sel.type) ? sel.type : base.type;
   const validSize = sel.size && byKey(cfg.sizes, sel.size) ? sel.size : base.size;
   const validDesign = sel.design && byKey(cfg.designLevels, sel.design) ? sel.design : base.design;
+  const validDomain = sel.domain && byKey(cfg.domains || [], sel.domain) ? sel.domain : base.domain;
   return {
     type: validType,
     size: validSize,
     design: validDesign,
+    domain: validDomain,
     timeline: sel.timeline === 'rush' ? 'rush' : 'standard',
     features: (sel.features ?? []).filter((id) => byId(cfg.features, id)),
     growth: (sel.growth ?? []).filter((id) => byId(cfg.growth, id)),
@@ -167,9 +188,10 @@ export function estimate(cfg: PricingConfig, s: EstimatorSelection): EstimateRes
 
   const timelineCost = s.timeline === 'rush' ? cfg.rushCostMult : 1.0;
   const timelineWeeks = s.timeline === 'rush' ? cfg.rushWeeksMult : 1.0;
+  const domainMult = (byKey(cfg.domains || [], s.domain) ?? cfg.domains?.[0])?.mult ?? 1.0;
 
-  let costMin = t.base.min * size.cost * design.mult;
-  let costMax = t.base.max * size.cost * design.mult;
+  let costMin = t.base.min * size.cost * design.mult * domainMult;
+  let costMax = t.base.max * size.cost * design.mult * domainMult;
   let weeksMin = t.weeks.min * size.weeks;
   let weeksMax = t.weeks.max * size.weeks;
 
@@ -259,6 +281,7 @@ export function encodeSelection(s: EstimatorSelection): string {
   p.set('type', s.type);
   p.set('size', s.size);
   p.set('design', s.design);
+  if (s.domain) p.set('domain', s.domain);
   p.set('timeline', s.timeline);
   if (s.features.length) p.set('features', s.features.join(','));
   if (s.growth.length) p.set('growth', s.growth.join(','));
@@ -273,6 +296,7 @@ export function decodeSelection(search: string): Partial<EstimatorSelection> {
     type: p.get('type') || undefined,
     size: p.get('size') || undefined,
     design: p.get('design') || undefined,
+    domain: p.get('domain') || undefined,
     timeline: p.get('timeline') === 'rush' ? 'rush' : 'standard',
     features: list('features'),
     growth: list('growth'),

@@ -157,10 +157,30 @@ const CostEstimator: React.FC = () => {
             </div>
           </fieldset>
 
+          {/* Industry / domain */}
+          {(config.domains || []).length > 0 && (
+            <fieldset>
+              <legend className="text-sm font-semibold text-white mb-3">2. Industry / domain</legend>
+              <div className="flex flex-wrap gap-2.5">
+                {(config.domains || []).map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setSel((s) => ({ ...s, domain: d.key }))}
+                    aria-pressed={sel.domain === d.key}
+                    className={`${cardBase} px-3.5 py-2 text-sm font-medium ${sel.domain === d.key ? selectedCls : unselectedCls}`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
           {/* Size */}
           <fieldset>
             <legend className="text-sm font-semibold text-white mb-3">
-              2. Rough size <span className="text-gray-500 font-normal">({currentType?.unit})</span>
+              3. Rough size <span className="text-gray-500 font-normal">({currentType?.unit})</span>
             </legend>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {config.sizes.map((sz) => (
@@ -184,7 +204,7 @@ const CostEstimator: React.FC = () => {
           {config.features.length > 0 && (
             <fieldset>
               <legend className="text-sm font-semibold text-white mb-3">
-                3. Features <span className="text-gray-500 font-normal">(optional)</span>
+                4. Features <span className="text-gray-500 font-normal">(optional)</span>
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {config.features.map((f) => {
@@ -216,7 +236,7 @@ const CostEstimator: React.FC = () => {
           {/* Design + Timeline */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <fieldset>
-              <legend className="text-sm font-semibold text-white mb-3">4. Design level</legend>
+              <legend className="text-sm font-semibold text-white mb-3">5. Design level</legend>
               <div className="space-y-2.5">
                 {config.designLevels.map((d) => (
                   <button
@@ -234,7 +254,7 @@ const CostEstimator: React.FC = () => {
             </fieldset>
 
             <fieldset>
-              <legend className="text-sm font-semibold text-white mb-3">5. Timeline</legend>
+              <legend className="text-sm font-semibold text-white mb-3">6. Timeline</legend>
               <div className="space-y-2.5">
                 {(['standard', 'rush'] as const).map((k) => (
                   <button
