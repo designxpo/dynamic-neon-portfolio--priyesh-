@@ -78,26 +78,31 @@ export const DEFAULT_PRICING: PricingConfig = {
   // prices well below FX parity; the Gulf and AU sit slightly above. Tune any of
   // these in the admin to match your exact positioning.
   defaultRegion: 'base',
+  // Region multiplier = (cost relative to US, from research) × (USD→local FX).
+  // Research US-relative factors: IN 0.35, EU 0.80, GB 0.85, AE 0.75, AU 0.95, CA 0.90.
+  // See docs/estimator-pricing-research.md for sources.
   regions: [
-    // ×38 ≈ FX ~83 × ~0.45 market factor — Indian professional rates run well below straight FX.
-    { code: 'IN', label: 'India', currencySymbol: '₹', currencyCode: 'INR', countries: ['IN'], multiplier: 38, roundTo: 1000 },
-    // ~parity with USD in EUR terms (EU agency rates track US closely).
-    { code: 'EU', label: 'Europe', currencySymbol: '€', currencyCode: 'EUR', countries: ['DE', 'FR', 'ES', 'IT', 'NL', 'IE', 'PT', 'AT', 'BE', 'FI', 'GR', 'LU'], multiplier: 0.95, roundTo: 100 },
-    // FX ~0.79 × ~1.1 UK premium.
-    { code: 'GB', label: 'United Kingdom', currencySymbol: '£', currencyCode: 'GBP', countries: ['GB'], multiplier: 0.88, roundTo: 100 },
-    // FX ~3.67 × ~1.05 Gulf premium.
-    { code: 'AE', label: 'UAE / Gulf', currencySymbol: 'AED ', currencyCode: 'AED', countries: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'], multiplier: 3.85, roundTo: 500 },
-    // FX ~1.5 × ~1.05.
-    { code: 'AU', label: 'Australia', currencySymbol: 'A$', currencyCode: 'AUD', countries: ['AU', 'NZ'], multiplier: 1.58, roundTo: 100 },
-    // FX ~1.37 (rates track US closely).
-    { code: 'CA', label: 'Canada', currencySymbol: 'C$', currencyCode: 'CAD', countries: ['CA'], multiplier: 1.37, roundTo: 100 },
+    // 0.35 × ~84 INR. Indian rates ~35% of US (Clutch $25–49/hr; SO salary gap).
+    { code: 'IN', label: 'India', currencySymbol: '₹', currencyCode: 'INR', countries: ['IN'], multiplier: 29, roundTo: 1000 },
+    // 0.80 × ~0.92 EUR (Germany/W-EU freelance ~$70–85/hr).
+    { code: 'EU', label: 'Europe', currencySymbol: '€', currencyCode: 'EUR', countries: ['DE', 'FR', 'ES', 'IT', 'NL', 'IE', 'PT', 'AT', 'BE', 'FI', 'GR', 'LU'], multiplier: 0.74, roundTo: 100 },
+    // 0.85 × ~0.79 GBP (UK freelance ~$75–95/hr).
+    { code: 'GB', label: 'United Kingdom', currencySymbol: '£', currencyCode: 'GBP', countries: ['GB'], multiplier: 0.67, roundTo: 100 },
+    // 0.75 × ~3.67 AED — LOW confidence: Gulf market is bimodal (~3× internal spread).
+    { code: 'AE', label: 'UAE / Gulf', currencySymbol: 'AED ', currencyCode: 'AED', countries: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'], multiplier: 2.75, roundTo: 500 },
+    // 0.95 × ~1.52 AUD (~$93/hr; Clutch $100–149/hr).
+    { code: 'AU', label: 'Australia', currencySymbol: 'A$', currencyCode: 'AUD', countries: ['AU', 'NZ'], multiplier: 1.44, roundTo: 100 },
+    // 0.90 × ~1.37 CAD (freelance ~$85–100/hr).
+    { code: 'CA', label: 'Canada', currencySymbol: 'C$', currencyCode: 'CAD', countries: ['CA'], multiplier: 1.23, roundTo: 100 },
   ],
   types: [
-    { key: 'website', label: 'Website', blurb: 'Marketing / brand site', base: { min: 1500, max: 4000 }, weeks: { min: 2, max: 4 }, unit: 'pages' },
-    { key: 'webapp', label: 'Web App', blurb: 'SaaS / dashboard product', base: { min: 6000, max: 15000 }, weeks: { min: 6, max: 12 }, unit: 'screens' },
-    { key: 'mobileapp', label: 'Mobile App', blurb: 'iOS / Android / cross-platform', base: { min: 8000, max: 20000 }, weeks: { min: 8, max: 14 }, unit: 'screens' },
-    { key: 'software', label: 'Custom Software', blurb: 'Internal tools / platforms', base: { min: 12000, max: 30000 }, weeks: { min: 10, max: 20 }, unit: 'modules' },
-    { key: 'design', label: 'UI/UX Design', blurb: 'Design-only (no build)', base: { min: 1500, max: 5000 }, weeks: { min: 2, max: 5 }, unit: 'screens' },
+    // Base = US-baseline range for a SMALL project (size ×1); size tiers scale it up.
+    // Calibrated so small→enterprise spans the researched market ranges (see docs).
+    { key: 'website', label: 'Website', blurb: 'Marketing / brand site', base: { min: 2000, max: 5000 }, weeks: { min: 2, max: 4 }, unit: 'pages' },
+    { key: 'webapp', label: 'Web App', blurb: 'SaaS / dashboard product', base: { min: 9000, max: 22000 }, weeks: { min: 6, max: 12 }, unit: 'screens' },
+    { key: 'mobileapp', label: 'Mobile App', blurb: 'iOS / Android / cross-platform', base: { min: 12000, max: 30000 }, weeks: { min: 8, max: 14 }, unit: 'screens' },
+    { key: 'software', label: 'Custom Software', blurb: 'Internal tools / platforms', base: { min: 15000, max: 40000 }, weeks: { min: 10, max: 20 }, unit: 'modules' },
+    { key: 'design', label: 'UI/UX Design', blurb: 'Design-only (no build)', base: { min: 3000, max: 9000 }, weeks: { min: 2, max: 5 }, unit: 'screens' },
   ],
   sizes: [
     { key: 'small', label: 'Small', hint: '1–5', cost: 1.0, weeks: 1.0 },
@@ -115,28 +120,31 @@ export const DEFAULT_PRICING: PricingConfig = {
     { id: 'i18n', label: 'Multi-language', cost: { min: 500, max: 1500 }, weeks: 1 },
     { id: 'ai', label: 'AI features (chatbot, gen-AI)', cost: { min: 1200, max: 3500 }, weeks: 2 },
   ],
+  // Research: template ~2–4× cheaper than custom; design system +30–80%.
   designLevels: [
-    { key: 'template', label: 'Template-based', hint: 'Theme + polish', mult: 0.85 },
+    { key: 'template', label: 'Template-based', hint: 'Theme + polish', mult: 0.65 },
     { key: 'custom', label: 'Custom', hint: 'Bespoke UI', mult: 1.0 },
-    { key: 'premium', label: 'Premium', hint: 'Full design system', mult: 1.35 },
+    { key: 'premium', label: 'Premium', hint: 'Full design system', mult: 1.45 },
   ],
-  // Industry/product domain multipliers — more regulated / complex domains cost more.
+  // Industry/domain multipliers — ordering is well-supported (compliance/talent
+  // premiums); exact decimals are a calibrated modelling choice. See docs.
   domains: [
     { key: 'general', label: 'General / Business', mult: 1.0 },
-    { key: 'ecommerce', label: 'E-commerce', mult: 1.25 },
-    { key: 'saas', label: 'SaaS / Dashboard', mult: 1.2 },
-    { key: 'marketplace', label: 'Marketplace', mult: 1.45 },
-    { key: 'fintech', label: 'Fintech', mult: 1.4 },
-    { key: 'healthcare', label: 'Healthcare', mult: 1.35 },
-    { key: 'education', label: 'Education / E-learning', mult: 1.15 },
-    { key: 'social', label: 'Social / Community', mult: 1.2 },
-    { key: 'ai', label: 'AI / Data', mult: 1.35 },
+    { key: 'ecommerce', label: 'E-commerce', mult: 1.4 },
+    { key: 'saas', label: 'SaaS / Dashboard', mult: 1.5 },
+    { key: 'marketplace', label: 'Marketplace', mult: 1.8 },
+    { key: 'fintech', label: 'Fintech', mult: 1.65 },
+    { key: 'healthcare', label: 'Healthcare', mult: 1.45 },
+    { key: 'education', label: 'Education / E-learning', mult: 1.2 },
+    { key: 'social', label: 'Social / Community', mult: 1.4 },
+    { key: 'ai', label: 'AI / Data', mult: 1.7 },
   ],
   growth: [
     { id: 'seo', label: 'SEO foundation', hint: 'Technical + on-page', cost: { min: 800, max: 2000 }, weeks: 1 },
     { id: 'aeo', label: 'AEO / GEO (AI search)', hint: 'Answer & generative-engine optimization', cost: { min: 1000, max: 2500 }, weeks: 1.5 },
   ],
-  rushCostMult: 1.3,
+  // Research: freelance rush norm +25-100%; ~+50% for a sub-50%-time compression.
+  rushCostMult: 1.5,
   rushWeeksMult: 0.65,
 };
 

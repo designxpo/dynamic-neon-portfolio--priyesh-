@@ -12,11 +12,11 @@ const UPDATED_LABEL = 'August 5, 2026';
 
 // Typical starting ranges (USD) shown as a comparison table — great for AI/table snippets.
 const COST_ROWS = [
-  { type: 'Website (marketing / brand)', range: '$1,500 – $10,000+', time: '2–6 weeks' },
-  { type: 'Web app / SaaS dashboard', range: '$6,000 – $40,000+', time: '6–16 weeks' },
-  { type: 'Mobile app (iOS / Android)', range: '$8,000 – $50,000+', time: '8–20 weeks' },
-  { type: 'Custom software / platform', range: '$12,000 – $80,000+', time: '10–24 weeks' },
-  { type: 'UI/UX design only', range: '$1,500 – $15,000', time: '2–8 weeks' },
+  { type: 'Website (marketing / brand)', range: '$2,000 – $15,000', time: '2–6 weeks' },
+  { type: 'Web app / SaaS dashboard', range: '$9,000 – $90,000+', time: '6–16 weeks' },
+  { type: 'Mobile app (iOS / Android)', range: '$12,000 – $150,000+', time: '8–20 weeks' },
+  { type: 'Custom software / platform', range: '$15,000 – $200,000+', time: '10–24 weeks' },
+  { type: 'UI/UX design only', range: '$3,000 – $30,000', time: '2–8 weeks' },
 ];
 
 export const metadata: Metadata = {
@@ -189,10 +189,10 @@ export default function ProjectCostEstimatorPage({
           className="mb-10 md:mb-12 max-w-3xl rounded-xl border border-brand-purple/25 bg-brand-purple/[0.07] p-5 text-gray-200 leading-relaxed"
         >
           <strong className="text-white">In short:</strong> a professional website typically starts around{' '}
-          <strong className="text-white">$1,500</strong>, web and mobile apps from{' '}
-          <strong className="text-white">$6,000–$8,000</strong>, and custom software from{' '}
-          <strong className="text-white">$12,000+</strong>. Final cost depends on scope, features, design level, and
-          timeline. Use the free estimator below for a ballpark in your local currency, then send it for a fixed quote.
+          <strong className="text-white">$2,000</strong>, web and mobile apps from{' '}
+          <strong className="text-white">$9,000–$12,000</strong>, and custom software from{' '}
+          <strong className="text-white">$15,000+</strong>. Final cost depends on scope, features, industry, design level,
+          and timeline. Use the free estimator below for a ballpark in your local currency, then send it for a fixed quote.
         </p>
 
         <CostEstimator />
