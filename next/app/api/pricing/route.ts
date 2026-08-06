@@ -78,6 +78,13 @@ function sanitize(body: any): PricingConfigType {
           mult: num(d?.mult, 1),
         })).filter((d: any) => d.key && d.label)
       : [],
+    domains: Array.isArray(b.domains)
+      ? b.domains.map((d: any) => ({
+          key: str(d?.key),
+          label: str(d?.label),
+          mult: num(d?.mult, 1),
+        })).filter((d: any) => d.key && d.label)
+      : [],
     growth: Array.isArray(b.growth)
       ? b.growth.map((g: any) => ({
           id: str(g?.id),
@@ -105,14 +112,17 @@ function detect(req: Request, cfg: any) {
   return { detectedCountry: country || null, detectedRegion: region.code };
 }
 
-// A stored record created before the regions feature has no regions, so no
-// country can ever match → everyone sees base currency. Backfill the default
-// regions for display so regional pricing works without a manual admin save.
-function ensureRegions(cfg: any) {
+// A stored record created before a feature (regions, domains) lacks those
+// arrays, so nothing matches → the tool falls back or a control is empty.
+// Backfill defaults for display so it works without a manual admin save.
+function ensureDefaults(cfg: any) {
   if (!cfg) return cfg;
   if (!Array.isArray(cfg.regions) || cfg.regions.length === 0) {
     cfg.regions = DEFAULT_PRICING.regions;
     if (!cfg.defaultRegion) cfg.defaultRegion = DEFAULT_PRICING.defaultRegion;
+  }
+  if (!Array.isArray(cfg.domains) || cfg.domains.length === 0) {
+    cfg.domains = DEFAULT_PRICING.domains;
   }
   return cfg;
 }
@@ -126,7 +136,7 @@ export async function GET(req: Request) {
       const created = await PricingConfig.create(DEFAULT_PRICING);
       cfg = created.toObject();
     }
-    ensureRegions(cfg);
+    ensureDefaults(cfg);
     return NextResponse.json({ ...cfg, ...detect(req, cfg) });
   } catch (err: any) {
     // Never break the public tool on a DB hiccup — it falls back to defaults.

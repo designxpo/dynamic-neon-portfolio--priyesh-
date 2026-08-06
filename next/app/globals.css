@@ -53,6 +53,27 @@ div[id] {
   animation: fade-in 0.6s ease-out forwards;
 }
 
+/* Skills marquee — seamless infinite auto-scroll. The track holds two identical
+   copies of the row and translates -50%, so the loop is invisible. Each item
+   uses margin-right (not flex gap) so the two copies tile exactly. */
+@keyframes skills-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-skills-marquee {
+  animation: skills-marquee 35s linear infinite;
+  will-change: transform;
+}
+.skills-marquee-viewport:hover .animate-skills-marquee {
+  animation-play-state: paused;
+}
+@media (max-width: 768px) {
+  .animate-skills-marquee { animation-duration: 22s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-skills-marquee { animation: none; transform: none; }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -12,7 +12,7 @@ const withDefaults = (c) => {
   const cfg = { ...clone(DEFAULT_PRICING), ...(c || {}) };
   // Absent arrays already inherit DEFAULT_PRICING via the spread above; this only
   // repairs null / non-array values (an intentionally-saved [] is preserved).
-  for (const k of ['types', 'sizes', 'features', 'designLevels', 'growth', 'regions']) {
+  for (const k of ['types', 'sizes', 'features', 'designLevels', 'domains', 'growth', 'regions']) {
     if (!Array.isArray(cfg[k])) cfg[k] = clone(DEFAULT_PRICING[k]);
   }
   if (!cfg.defaultRegion) cfg.defaultRegion = 'base';
@@ -329,6 +329,22 @@ const PricingForm: React.FC = () => {
             <Txt label="Label" value={d.label} onChange={(v) => setItem('designLevels', i, { label: v })} className="w-36" />
             <Txt label="Hint" value={d.hint} onChange={(v) => setItem('designLevels', i, { hint: v })} className="w-40" />
             <Num label="Cost ×" value={d.mult} step="0.05" onChange={(v) => setItem('designLevels', i, { mult: v })} className="w-24" />
+          </Row>
+        ))}
+      </Section>
+
+      {/* Industry / domain */}
+      <Section
+        title="Industry / domain multipliers"
+        hint="Single-select cost multiplier by product domain (e-commerce, SaaS, fintech, …). Applied to the base like design level."
+        addLabel="Add domain"
+        onAdd={() => addItem('domains', { key: 'new-domain', label: 'New Domain', mult: 1 })}
+      >
+        {(cfg.domains || []).map((d, i) => (
+          <Row key={i} onRemove={() => removeItem('domains', i)}>
+            <Txt label="Key" value={d.key} onChange={(v) => setItem('domains', i, { key: v })} className="w-32" />
+            <Txt label="Label" value={d.label} onChange={(v) => setItem('domains', i, { label: v })} className="w-48" />
+            <Num label="Cost ×" value={d.mult} step="0.05" onChange={(v) => setItem('domains', i, { mult: v })} className="w-24" />
           </Row>
         ))}
       </Section>
