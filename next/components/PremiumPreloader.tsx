@@ -80,8 +80,13 @@ export default function PremiumPreloader({ children, durationMs = 400, waitForEv
   return (
     <>
       {children}
+      {/* Without JS the timers never fire, so the overlay would cover the page forever. */}
+      <noscript>
+        <style>{'[data-preloader]{display:none!important}'}</style>
+      </noscript>
       {!removed && (
         <div
+          data-preloader
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
           aria-label="Loading designer experience"
           role="status"

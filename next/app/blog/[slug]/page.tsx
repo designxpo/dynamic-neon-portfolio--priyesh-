@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getPublishedBlogs, getBlogBySlug } from '@/lib/content';
+import { getPublishedBlogs, getBlogBySlug, publicImageUrl } from '@/lib/content';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
 
@@ -23,7 +23,7 @@ export async function generateMetadata(
   const title = blog.metaTitle || `${blog.title} — Priyesh Mishra`;
   const description = blog.metaDescription || blog.excerpt || (blog.content || '').slice(0, 160);
   const url = `${SITE_URL}/blog/${blog.slug}`;
-  const image = blog.ogImage || blog.thumbnail?.url;
+  const image = publicImageUrl(blog.ogImage, blog.thumbnail?.url);
 
   return {
     title,
@@ -57,7 +57,7 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
     '@type': 'BlogPosting',
     headline: blog.title,
     description: blog.excerpt || blog.metaDescription || '',
-    image: blog.thumbnail?.url || blog.ogImage || undefined,
+    image: publicImageUrl(blog.thumbnail?.url, blog.ogImage),
     url,
     mainEntityOfPage: url,
     author: { '@type': 'Person', name: blog.author || 'Priyesh Mishra', url: SITE_URL },

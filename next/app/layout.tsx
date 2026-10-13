@@ -76,7 +76,14 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const apiBase = process.env.NEXT_PUBLIC_SITE_URL
       || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-    const res = await fetch(`${apiBase}/api/seo?page=home`, { cache: 'no-store' });
+    // Revalidated rather than no-store: a no-store fetch here makes every page
+    // dynamic, so nothing is CDN-cached and the home page streams its loading.tsx
+    // fallback first — non-JS crawlers then only ever see "Preparing awesomeness…".
+    // The timeout keeps a slow /api/seo from stalling static generation; we fall back to defaults.
+    const res = await fetch(`${apiBase}/api/seo?page=home`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) return defaults;
     const seo = await res.json();
     const canonical = seo.canonicalUrl || SITE_URL;

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getProjects, getProjectBySlug } from '@/lib/content';
+import { getProjects, getProjectBySlug, publicImageUrl } from '@/lib/content';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
 
@@ -23,7 +23,7 @@ export async function generateMetadata(
   const title = `${project.title} — Case Study by Priyesh Mishra`;
   const description = project.descriptionShort || project.descriptionLong || `${project.title} case study by Priyesh Mishra.`;
   const url = `${SITE_URL}/projects/${project.slug}`;
-  const image = project.coverImage?.url;
+  const image = publicImageUrl(project.coverImage?.url);
 
   return {
     title,
@@ -57,7 +57,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
     headline: project.title,
     description: project.descriptionShort || project.descriptionLong || '',
     url,
-    image: project.coverImage?.url || undefined,
+    image: publicImageUrl(project.coverImage?.url),
     keywords: (project.technologies || []).join(', ') || undefined,
     genre: project.category || undefined,
     author: { '@type': 'Person', name: 'Priyesh Mishra', url: SITE_URL },
