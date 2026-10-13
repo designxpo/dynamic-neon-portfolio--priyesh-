@@ -122,12 +122,16 @@ export default async function HomePage() {
         />
       ))}
       {/* Crawlable body content in the initial HTML for no-JS crawlers/social
-          scrapers. Wrapped in <noscript> so real (JS-enabled) users never see
-          it — the browser only renders it when JS is off, which removes the
-          on-load flash of plain content the timing-based approach caused. */}
+          scrapers. Not wrapped in <noscript>: many crawlers and HTML-to-text
+          converters drop noscript content and saw only the loader. The
+          .home-seo-fallback rule in globals.css hides it before first paint
+          (no flash for JS users); the <noscript> style shows it when JS is off. */}
       <noscript>
-        <HomeSeoContent data={content} />
+        <style>{'.home-seo-fallback{display:block!important}'}</style>
       </noscript>
+      <div className="home-seo-fallback">
+        <HomeSeoContent data={content} />
+      </div>
       <HomeClient />
     </>
   );

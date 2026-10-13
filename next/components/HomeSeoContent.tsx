@@ -7,9 +7,9 @@ import Link from 'next/link';
  * raw HTML that search/social/AI crawlers receive would otherwise be just a
  * loading shell. This server component puts the real body text — bio, services,
  * projects, skills, experience — into the initial HTML, with internal
- * links to the dedicated /projects/[slug] pages. It is rendered inside a
- * <noscript> on the home page, so it stays in the served HTML for no-JS
- * crawlers/social scrapers but is never shown to JS-enabled users (no flash).
+ * links to the dedicated /projects/[slug] pages. On the home page it sits in
+ * a CSS-hidden wrapper (not <noscript>, which many crawlers discard), so it is
+ * in the served HTML for crawlers but never shown to JS-enabled users (no flash).
  */
 
 type Data = {
