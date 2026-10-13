@@ -3,7 +3,7 @@ import { connectDB } from '@/lib/db/mongoose';
 import Blog from '@/models/Blog';
 import HomeClient from './HomeClient';
 import HomeSeoContent from '../components/HomeSeoContent';
-import { getPortfolioContent } from '@/lib/content';
+import { getPortfolioContent, publicImageUrl } from '@/lib/content';
 import { FAQS } from '@/data/faqs';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.priyeshmishra.com';
@@ -51,7 +51,7 @@ function buildBlogPostingSchemas(blogs: any[]) {
       '@type': 'BlogPosting',
       headline: b.title,
       description: b.excerpt || b.metaDescription || '',
-      image: b.thumbnail?.url || b.ogImage || undefined,
+      image: publicImageUrl(b.thumbnail?.url, b.ogImage),
       url: b.url || b.canonicalUrl || SITE_URL,
       mainEntityOfPage: SITE_URL,
       author: { ...PERSON, '@type': 'Person' },

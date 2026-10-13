@@ -28,6 +28,15 @@ function plain<T>(value: T): T {
   return JSON.parse(JSON.stringify(value ?? null));
 }
 
+/**
+ * First candidate that is a real URL, for JSON-LD and og:image. Uploaded images
+ * are stored as base64 data URIs; inlining those into metadata added ~5 MB to
+ * the home page HTML (twice, via the RSC payload) and crawlers can't use them.
+ */
+export function publicImageUrl(...candidates: Array<string | null | undefined>): string | undefined {
+  return candidates.find((u): u is string => !!u && !u.startsWith('data:'));
+}
+
 export type ContentProject = {
   slug: string;
   title: string;
