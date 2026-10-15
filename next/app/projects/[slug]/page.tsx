@@ -64,6 +64,16 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
     creator: { '@type': 'Person', name: 'Priyesh Mishra', url: SITE_URL },
   };
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Projects', item: `${SITE_URL}/projects` },
+      { '@type': 'ListItem', position: 3, name: project.title, item: url },
+    ],
+  };
+
   const categories = project.categories && project.categories.length
     ? project.categories
     : project.category
@@ -78,6 +88,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <article className="max-w-4xl mx-auto px-4 py-16 md:py-24">
         <nav className="mb-8 text-sm text-gray-400">
           <Link href="/" className="hover:text-white">Home</Link>

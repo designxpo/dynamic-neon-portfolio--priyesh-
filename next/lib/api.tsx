@@ -130,7 +130,8 @@ export const createExperience = async (exp: Experience): Promise<Experience> => 
 };
 export async function getTestimonialsData() {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/admin/testimonials`, {
+        // Public endpoint: robots.txt disallows /api/admin, so Googlebot can't load it when rendering.
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/testimonials`, {
             cache: 'no-store',
             next: { revalidate: 0 }
         });
@@ -141,8 +142,8 @@ export async function getTestimonialsData() {
         }
 
         const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-            return data.data;
+        if (Array.isArray(data)) {
+            return data;
         } else {
             console.warn('⚠ Unexpected testimonials response:', data);
             return [];
@@ -364,9 +365,11 @@ export const updateHeroData = async (data: RawHeroData): Promise<void> => {
 export const getServicesData = async (): Promise<Service[]> => {
     return withFallback<Service[]>(
         async () => {
-            const res = await withTimeout(fetch('/api/admin/services', { cache: 'no-store' }));
+            // Public endpoint: robots.txt disallows /api/admin, so Googlebot can't load it when rendering.
+            const res = await withTimeout(fetch('/api/services', { cache: 'no-store' }));
             if (!res.ok) throw new Error('Failed services');
-            const raw = await res.json();
+            // /api/services returns only _id; the admin endpoint's id was the same value.
+            const raw = (await res.json() || []).map((s: any) => ({ ...s, id: s.id ?? s._id }));
             return (raw || []).map(toService).sort((a, b) => a.order - b.order);
         },
         () => {

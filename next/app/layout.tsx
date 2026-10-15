@@ -260,21 +260,8 @@ gtag('config', '${GA_ID}');`,
             },
           }) }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-              { '@type': 'ListItem', position: 2, name: 'Works', item: `${SITE_URL}/#works` },
-              { '@type': 'ListItem', position: 3, name: 'Services', item: `${SITE_URL}/#services` },
-              { '@type': 'ListItem', position: 4, name: 'Experience', item: `${SITE_URL}/#experience` },
-              { '@type': 'ListItem', position: 5, name: 'Blog', item: `${SITE_URL}/blog` },
-              { '@type': 'ListItem', position: 6, name: 'Contact', item: `${SITE_URL}/#contact` },
-            ],
-          }) }}
-        />
+        {/* No site-wide BreadcrumbList here: it told Google every page (including the
+            home page) was "Home › Works › … › Blog › Contact". Pages define their own. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify({

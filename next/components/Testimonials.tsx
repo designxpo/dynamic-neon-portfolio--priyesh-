@@ -20,11 +20,12 @@ export default function Testimonials() {
   useEffect(() => {
     async function loadTestimonials() {
       try {
-        const response = await fetch('/api/admin/testimonials', { cache: 'no-store' });
+        // Public endpoint (returns a bare array): robots.txt disallows /api/admin for Googlebot.
+        const response = await fetch('/api/testimonials', { cache: 'no-store' });
         const result = await response.json();
 
-        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-          setTestimonials(result.data);
+        if (Array.isArray(result) && result.length > 0) {
+          setTestimonials(result);
         } else {
           console.warn('No testimonials found or unexpected API format:', result);
         }

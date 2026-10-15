@@ -66,6 +66,16 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
     keywords: blog.metaKeywords || undefined,
   };
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
+      { '@type': 'ListItem', position: 3, name: blog.title, item: url },
+    ],
+  };
+
   // Posts may be canonical elsewhere (e.g. Medium); if so, surface a "read full article" link.
   const externalUrl = blog.url && /^https?:\/\//.test(blog.url) ? blog.url : null;
 
@@ -75,6 +85,7 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <article className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         <nav className="mb-8 text-sm text-gray-400">
           <Link href="/" className="hover:text-white">Home</Link>

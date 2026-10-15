@@ -23,8 +23,18 @@ export const metadata: Metadata = {
 export default async function BlogIndexPage() {
   const blogs = await getPublishedBlogs();
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-dark-bg to-purple-900/20 text-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="max-w-5xl mx-auto px-4 py-16 md:py-24">
         <nav className="mb-8 text-sm text-gray-400">
           <Link href="/" className="hover:text-white">Home</Link>
