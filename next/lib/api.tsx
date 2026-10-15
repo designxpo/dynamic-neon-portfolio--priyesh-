@@ -156,6 +156,17 @@ export async function getTestimonialsData() {
 import React from 'react';
 // Mongo-backed API client helpers for client components to call Next API routes
 import * as Icons from '@/components/icons/Icons';
+import { PenTool, CodeXml, Globe, Smartphone, Search } from 'lucide-react';
+
+// Every icon a service / social link can name: the custom set plus these lucide-react icons.
+const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+    ...Icons,
+    PenTool,
+    CodeXml,
+    Globe,
+    Smartphone,
+    Search,
+};
 import {
     HeroData, RawHeroData, Service, RawService, Skill, RawSkill, SocialLink,
     Project, RawProject, Testimonial, ContactData, RawContactData,
@@ -248,8 +259,6 @@ export const convertFileToBase64 = async (file: File): Promise<string> => {
 
 // Helper function to get an icon component by its string name
 export const getIcon = (iconName: string): React.ReactNode => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const iconsAny = Icons as any;
     const raw = (iconName || '').trim();
     const tryNames: string[] = [];
 
@@ -268,14 +277,15 @@ export const getIcon = (iconName: string): React.ReactNode => {
     }
 
     for (const name of tryNames) {
-        const IconComponent = iconsAny[name];
-        if (IconComponent) return <IconComponent />;
+        const IconComponent = ICONS[name];
+        // className sizes the lucide icons to match the custom set (h-8 w-8); custom icons ignore it.
+        if (IconComponent) return <IconComponent className="h-8 w-8" />;
     }
     // Fallback to a safe default so UI doesn't look empty in production
     if (process.env.NODE_ENV !== 'production') {
         console.warn(`[getIcon] Unknown icon name: "${iconName}". Falling back to BrandingIcon.`);
     }
-    const Fallback = iconsAny['BrandingIcon'];
+    const Fallback = ICONS['BrandingIcon'];
     return Fallback ? <Fallback /> : null;
 };
 
@@ -324,10 +334,13 @@ const toProject = (raw: RawProject): Project => ({
     id: raw.id || '',
 });
 
-const getIconName = (iconNode: React.ReactNode): string => {
+// Registered name of an icon element, for saving. Don't use type.name: production
+// builds minify component names, which saved services with icons "g", "n", "u", "h".
+export const getIconName = (iconNode: React.ReactNode): string => {
     if (typeof iconNode === 'string') return iconNode;
-    if (React.isValidElement(iconNode) && (iconNode.type as any).name) {
-        return (iconNode.type as any).name;
+    if (React.isValidElement(iconNode)) {
+        const entry = Object.entries(ICONS).find(([, Icon]) => Icon === iconNode.type);
+        if (entry) return entry[0];
     }
     return '';
 };

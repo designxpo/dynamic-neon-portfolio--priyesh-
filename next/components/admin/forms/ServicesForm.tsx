@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Service, RawService } from '@/types';
-import { getServicesData, updateServices } from '@/lib/api';
+import { getServicesData, updateServices, getIconName } from '@/lib/api';
 import Modal from '@/components/admin/common/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Edit2, Trash2, Plus, Zap } from 'lucide-react';
@@ -44,12 +44,6 @@ const ServicesForm: React.FC = () => {
         const data = await getServicesData();
         setServices(data);
         setIsLoading(false);
-    };
-
-    const getIconName = (iconNode: React.ReactNode): string => {
-        if (typeof iconNode === 'string') return iconNode;
-        if (React.isValidElement(iconNode) && (iconNode.type as any).name) return (iconNode.type as any).name;
-        return '';
     };
 
     const handleEdit = (service: Service) => {
@@ -184,7 +178,7 @@ const ServicesForm: React.FC = () => {
                         <div>
                             <label className="admin-label" htmlFor="service-icon">Icon Name</label>
                             <input type="text" id="service-icon" name="icon" value={currentItem.icon} onChange={e => setCurrentItem(p => p ? {...p, icon: e.target.value} : null)} className="admin-input" placeholder="e.g., BrandingIcon" />
-                            <p className="text-xs text-gray-500 mt-1">Icon component name from your icons library</p>
+                            <p className="text-xs text-gray-500 mt-1">Icon component name, e.g. BrandingIcon, UXIcon, PenTool, CodeXml, Globe, Smartphone, Search</p>
                         </div>
                         <div>
                             <label className="admin-label" htmlFor="service-order">Display Order</label>
